@@ -156,22 +156,22 @@ def find_images(directory):
             if Path(file).suffix.lower() in supported_formats:
                 yield os.path.join(root, file)
 
-def analyze_image(model, image_path, threshold):
-    dbg(f"analyze_image(model, {image_path}, {threshold})")
+def analyze_image(model, image_path):
+    dbg(f"analyze_image(model, {image_path})")
     try:
         results = model(image_path)
         predictions = results.pred[0]
-        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= threshold]
+        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= 0]
         return detections
     except (OSError, RuntimeError):
         return None
 
-def process_image(image_path, model, threshold, conn, progress, progress_task):
-    dbg(f"process_image({image_path}, model, {threshold}, conn)")
+def process_image(image_path, model, conn, progress, progress_task):
+    dbg(f"process_image({image_path}, model, conn)")
     image_id, md5_hash = add_image_metadata(conn, image_path)
 
     # Check for empty image (no detections found)
-    detections = analyze_image(model, image_path, threshold)
+    detections = analyze_image(model, image_path)
     if detections:
         add_detections(conn, image_id, args.model, detections)
     else:
@@ -228,7 +228,7 @@ def main():
         ) as progress:
             task = progress.add_task("Indexing images...", total=total_images)
             for image_path in image_paths:
-                process_image(image_path, model, args.threshold, conn, progress, task)
+                process_image(image_path, model, conn, progress, task)
 
     if args.search:
         cursor = conn.cursor()
