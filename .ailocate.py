@@ -320,7 +320,7 @@ def show_statistics(conn, file_path=None):
                           GROUP BY detections.label''', (file_path, args.threshold,))
         stats = cursor.fetchall()
         cursor.close()
-        table = Table(title=f"Statistics for {file_path}")
+        table = Table(title=f"Statistics for {file_path} with confidence {args.threshold}")
         table.add_column("Label", justify="left", style="cyan")
         table.add_column("Count", justify="right", style="green")
         for row in stats:
