@@ -22,6 +22,7 @@ parser.add_argument("search", nargs="?", help="Search term for indexed results",
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
@@ -231,6 +232,11 @@ def main():
             console=console,
         ) as progress:
             task = progress.add_task("Indexing images...", total=total_images)
+
+            if args.shuffle_index:
+                import random
+                image_paths = random.shuffle(image_paths)
+
             for image_path in image_paths:
                 if is_image_indexed(conn, image_path, args.model):
                     progress.update(task, advance=1)
