@@ -131,7 +131,7 @@ def add_image_metadata(conn, file_path):
         sys.exit(12)
 
 def is_image_indexed(conn, file_path, model):
-    dbg(f"is_image_indexed(conn, {file_path}, {model})")
+    dbg(f"is_image_indexed(conn, {file_path}, model)")
     cursor = conn.cursor()
     stats = os.stat(file_path)
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
