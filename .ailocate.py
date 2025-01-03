@@ -167,15 +167,21 @@ def add_image_metadata(conn, file_path):
     md5_hash = calculate_md5(file_path)
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
-    try:
-        cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5)
-                          VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
-        conn.commit()
-        cursor.close()
-        return cursor.lastrowid, md5_hash
-    except sqlite3.OperationalError as e:
-        console.print(f"\n[red]Probably old table. Delete {args.dbfile}, error:[/] {e}")
-        sys.exit(12)
+    
+    while True:
+        try:
+            cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) 
+                            VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
+            conn.commit()
+            cursor.close()
+            return cursor.lastrowid, md5_hash
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+            else:
+                console.print(f"\n[red]Error: {e}[/]")
+                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
 
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, model)")
