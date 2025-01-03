@@ -297,6 +297,7 @@ def main():
             "[progress.percentage]{task.percentage:>3.0f}%",
             "[bold green]{task.completed}/{task.total} images",
             TimeElapsedColumn(),
+            "[bold]Remaining[/]",
             TimeRemainingColumn(),
             console=console,
         ) as progress:
