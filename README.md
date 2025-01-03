@@ -1,6 +1,6 @@
-# Ailocate - YOLO File Indexer
+# ailocate - YOLO File Indexer
 
-Ailocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. Ailocate uses an SQLite database to efficiently store and search image data.
+ailocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. ailocate uses an SQLite database to efficiently store and search image data.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/index.gif" alt="Indexing" width="600"/>
@@ -33,7 +33,7 @@ cd ailocate
 ./ailocate --index --dir ~/Pictures
 ```
 
-Ailocate will automatically install all necessary dependencies, and YOLO is already included.
+ailocate will automatically install all necessary dependencies, and YOLO is already included.
 
 # Usage
 
