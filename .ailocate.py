@@ -92,14 +92,14 @@ def find_images(directory):
 
 # Analyze an image using YOLO
 def analyze_image(model, image_path, threshold):
-    dbg(f"analyze_image({model}, {image_path}, {threshold})")
+    dbg(f"analyze_image(model, {image_path}, {threshold})")
     results = model(image_path)
     detections = [(pred['name'], pred['confidence']) for pred in results if pred['confidence'] >= threshold]
     return detections
 
 # Process a single image
 def process_image(image_path, model, threshold, conn):
-    dbg(f"process_image({image_path}, {model}, {threshold}, {conn})")
+    dbg(f"process_image({image_path}, model, {threshold}, {conn})")
     image_id = add_image_metadata(conn, image_path)
     detections = analyze_image(model, image_path, threshold)
     add_detections(conn, image_id, model.model_name, detections)
