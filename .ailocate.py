@@ -187,8 +187,10 @@ def is_image_indexed(conn, file_path, model):
                           AND detections.model = ?
                           AND images.last_modified_at = ?''',
                        (file_path, model, last_modified_at))
+        res = cursor.fetchone()[0]
         cursor.close()
-        return cursor.fetchone()[0] > 0
+
+        return res > 0
     except FileNotFoundError:
         return True
 
