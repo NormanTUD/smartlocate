@@ -171,10 +171,6 @@ def analyze_image(model, image_path):
 def process_image(image_path, model, conn, progress, progress_task):
     dbg(f"process_image({image_path}, model, conn)")
 
-    if is_image_indexed(conn, image_path, args.model):
-        progress.update(progress_task, advance=1)
-        return
-
     image_id, md5_hash = add_image_metadata(conn, image_path)
 
     # Check for empty image (no detections found)
@@ -235,7 +231,10 @@ def main():
         ) as progress:
             task = progress.add_task("Indexing images...", total=total_images)
             for image_path in image_paths:
-                process_image(image_path, model, conn, progress, task)
+                if is_image_indexed(conn, image_path, args.model):
+                    progress.update(progress_task, advance=1)
+                else:
+                    process_image(image_path, model, conn, progress, task)
 
     if args.search:
         cursor = conn.cursor()
