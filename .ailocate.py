@@ -84,7 +84,7 @@ def display_sixel(image_path):
     
     try:
         # Bildgröße anpassen und speichern
-        resize_image(image_path, unique_filenam, args.size)
+        resize_image(image_path, unique_filename, args.size)
         
         # Konvertierung in SIXEL
         c = converter.SixelConverter(unique_filename)
