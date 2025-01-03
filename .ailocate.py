@@ -290,14 +290,14 @@ def main():
         existing_files = load_existing_images(conn)
 
     if args.delete_non_existing_files:
-        existing_files = delete_non_existing_files()
+        existing_files = delete_non_existing_files(conn, existing_files)
 
     if args.index:
         model = yolov5.load(args.model)
         model.conf = 0
 
         if not args.delete_non_existing_files:
-            existing_files = delete_non_existing_files()
+            existing_files = delete_non_existing_files(conn, existing_files)
 
         image_paths = []
 
