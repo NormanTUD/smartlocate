@@ -303,22 +303,32 @@ def show_statistics(conn, file_path=None):
 def delete_entries_by_filename(conn, file_path):
     """Löscht alle Einträge aus der Datenbank, die mit dem angegebenen Dateinamen verknüpft sind."""
     dbg(f"delete_entries_by_filename(conn, {file_path})")
-
-    cursor = conn.cursor()
-
-    # Lösche alle Detections für das Bild
-    cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
-
-    # Lösche das Bild selbst aus der Tabelle 'images'
-    cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
-
-    # Lösche die MD5-Hash-Informationen aus der Tabelle 'empty_images' (falls vorhanden)
-    cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
-
-    cursor.close()
-
-    conn.commit()
-    console.print(f"[red]Deleted all entries for {file_path}[/]")
+    
+    while True:
+        try:
+            cursor = conn.cursor()
+            
+            # Lösche alle Detections für das Bild
+            cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
+            
+            # Lösche das Bild selbst aus der Tabelle 'images'
+            cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
+            
+            # Lösche die MD5-Hash-Informationen aus der Tabelle 'empty_images' (falls vorhanden)
+            cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+            
+            cursor.close()
+            conn.commit()
+            
+            console.print(f"[red]Deleted all entries for {file_path}[/]")
+            return  # Erfolgreich abgeschlossen, Funktion beenden
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+            else:
+                console.print(f"\n[red]Error: {e}[/]")
+                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
 
 def delete_non_existing_files(conn, existing_files):
     for file in existing_files:
