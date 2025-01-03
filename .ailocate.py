@@ -196,11 +196,20 @@ def is_image_indexed(conn, file_path, model):
         return True
 
 def add_detections(conn, image_id, model, detections):
-    dbg(f"add_detections(conn, {image_id}, detections)")
+    dbg(f"add_detections(conn, {image_id}, detections)")  
     cursor = conn.cursor()
     for label, confidence in detections:
-        cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
-                          VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
+        while True:
+            try:
+                cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
+                                VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
+                break  # Erfolgreich ausgeführt, Schleife beenden
+            except sqlite3.OperationalError as e:
+                if "database is locked" in str(e):
+                    console.print("[yellow]Database is locked, retrying...[/]")
+                    time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+                else:
+                    raise e  # Andere Fehler weiterwerfen
     cursor.close()
     conn.commit()
 
