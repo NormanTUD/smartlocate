@@ -8,6 +8,7 @@ import hashlib
 from rich.console import Console
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.table import Table
+import random
 
 # Constants
 DEFAULT_DB_PATH = os.path.expanduser('~/.ailocate_db')
@@ -234,7 +235,6 @@ def main():
             task = progress.add_task("Indexing images...", total=total_images)
 
             if args.shuffle_index:
-                import random
                 image_paths = random.shuffle(image_paths)
 
             for image_path in image_paths:
