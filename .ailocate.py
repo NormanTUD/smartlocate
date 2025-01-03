@@ -436,7 +436,7 @@ def main():
         cursor = conn.cursor()
         cursor.execute('''SELECT images.file_path, detections.label, detections.confidence
                           FROM images JOIN detections ON images.id = detections.image_id
-                          WHERE detections.label LIKE ?''', (f"%{args.search}%",))
+                          WHERE detections.label LIKE ? GROUP BY images.file_path''', (f"%{args.search}%",))
         results = cursor.fetchall()
         cursor.close()
 
