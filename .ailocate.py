@@ -88,7 +88,7 @@ def is_image_indexed(conn, file_path, model):
                        (file_path, model, last_modified_at))
         return cursor.fetchone()[0] > 0
     except sqlite3.OperationalError:
-        print(f"You were using an old database. Please remove the file {args.dbfile}")
+        print(f"You were using an old database. Please remove the file {args.dbfile} and re-index.")
         sys.exit(11)
 
 # Add detections to the database
