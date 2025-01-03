@@ -105,23 +105,32 @@ def add_empty_image(conn, file_path):
 
     # Überprüfen, ob die Datei bereits in der leeren Liste ist
     cursor = conn.cursor()
-    cursor.execute('''SELECT md5 FROM empty_images WHERE file_path = ?''', (file_path,))
-    existing_hash = cursor.fetchone()
+    
+    while True:
+        try:
+            cursor.execute('''SELECT md5 FROM empty_images WHERE file_path = ?''', (file_path,))
+            existing_hash = cursor.fetchone()
 
-    if existing_hash:
-        # Wenn der Hash sich geändert hat, aktualisiere ihn
-        if existing_hash[0] != md5_hash:
-            cursor.execute('''UPDATE empty_images SET md5 = ? WHERE file_path = ?''', (md5_hash, file_path))
-            conn.commit()
-            dbg(f"Updated MD5 hash for {file_path}")
-    else:
-        # Wenn das Bild noch nicht in der Tabelle ist, füge es hinzu
-        cursor.execute('''INSERT INTO empty_images (file_path, md5) VALUES (?, ?)''', (file_path, md5_hash))
-        conn.commit()
-        dbg(f"Added empty image: {file_path}")
-
-
-    cursor.close()
+            if existing_hash:
+                # Wenn der Hash sich geändert hat, aktualisiere ihn
+                if existing_hash[0] != md5_hash:
+                    cursor.execute('''UPDATE empty_images SET md5 = ? WHERE file_path = ?''', (md5_hash, file_path))
+                    conn.commit()
+                    dbg(f"Updated MD5 hash for {file_path}")
+            else:
+                # Wenn das Bild noch nicht in der Tabelle ist, füge es hinzu
+                cursor.execute('''INSERT INTO empty_images (file_path, md5) VALUES (?, ?)''', (file_path, md5_hash))
+                conn.commit()
+                dbg(f"Added empty image: {file_path}")
+            cursor.close()
+            return  # Erfolgreich abgeschlossen, Funktion beenden
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+            else:
+                console.print(f"\n[red]Error: {e}[/]")
+                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
 
 # Datenbankstruktur für leere Bilder mit MD5-Hash
 def init_database(db_path):
