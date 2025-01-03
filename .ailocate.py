@@ -38,8 +38,9 @@ try:
     import warnings
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
-    import torch
-    import yolov5
+    if args.index:
+        import torch
+        import yolov5
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
