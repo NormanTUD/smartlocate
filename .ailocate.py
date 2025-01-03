@@ -271,6 +271,14 @@ def delete_entries_by_filename(conn, file_path):
     conn.commit()
     console.print(f"[red]Deleted all entries for {file_path}[/]")
 
+def delete_non_existing_files(conn, existing_files):
+    for file in existing_files:
+        if not os.path.exists(file):
+            delete_entries_by_filename(conn, file)
+    existing_files = load_existing_images(conn)
+
+    return existing_files
+
 def main():
     dbg(f"Arguments: {args}")
 
@@ -282,14 +290,14 @@ def main():
         existing_files = load_existing_images(conn)
 
     if args.delete_non_existing_files:
-        for file in existing_files:
-            if not os.path.exists(file):
-                delete_entries_by_filename(conn, file)
-        existing_files = load_existing_images(conn)
+        existing_files = delete_non_existing_files()
 
     if args.index:
         model = yolov5.load(args.model)
         model.conf = 0
+
+        if not args.delete_non_existing_files:
+            existing_files = delete_non_existing_files()
 
         image_paths = []
 
