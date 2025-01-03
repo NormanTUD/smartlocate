@@ -11,6 +11,7 @@ from rich.table import Table
 from rich.console import Console
 from pprint import pprint
 import random
+import PIL
 
 def dier(msg):
     pprint(msg)
