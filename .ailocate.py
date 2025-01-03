@@ -235,7 +235,7 @@ def main():
             task = progress.add_task("Indexing images...", total=total_images)
 
             if args.shuffle_index:
-                image_paths = random.shuffle(image_paths)
+                random.shuffle(image_paths)
 
             for image_path in image_paths:
                 if is_image_indexed(conn, image_path, args.model):
