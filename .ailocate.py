@@ -24,6 +24,9 @@ parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLit
 args = parser.parse_args()
 
 try:
+    import warnings
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     import torch
     import yolov5
     from pprint import pprint
