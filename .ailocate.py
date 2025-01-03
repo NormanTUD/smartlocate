@@ -245,7 +245,9 @@ def main():
 
         results = cursor.fetchall()
         for row in results:
-            table.add_row(*map(str, row))
+            conf = row[2]
+            if conf >= args.threshold:
+                table.add_row(*map(str, row))
 
         console.print(table)
 
