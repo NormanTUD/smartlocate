@@ -79,13 +79,17 @@ def is_image_indexed(conn, file_path, model):
     cursor = conn.cursor()
     stats = os.stat(file_path)
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
-    cursor.execute('''SELECT COUNT(*) FROM images
-                      JOIN detections ON images.id = detections.image_id
-                      WHERE images.file_path = ?
-                      AND detections.model = ?
-                      AND images.last_modified_at = ?''',
-                   (file_path, model, last_modified_at))
-    return cursor.fetchone()[0] > 0
+    try:
+        cursor.execute('''SELECT COUNT(*) FROM images
+                          JOIN detections ON images.id = detections.image_id
+                          WHERE images.file_path = ?
+                          AND detections.model = ?
+                          AND images.last_modified_at = ?''',
+                       (file_path, model, last_modified_at))
+        return cursor.fetchone()[0] > 0
+    except sqlite3.OperationalError:
+        print(f"You were using an old database. Please remove the file {args.dbfile}")
+        sys.exit(11)
 
 # Add detections to the database
 def add_detections(conn, image_id, model, detections):
