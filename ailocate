@@ -1,0 +1,7 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname $(realpath "$0"))
+
+source .install
+
+python3 .ailocate.py $*
