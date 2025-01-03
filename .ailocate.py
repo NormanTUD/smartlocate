@@ -147,7 +147,7 @@ def is_image_indexed(conn, file_path, model):
     return cursor.fetchone()[0] > 0
 
 def add_detections(conn, image_id, model, detections):
-    dbg(f"add_detections(conn, {image_id}, {detections})")
+    dbg(f"add_detections(conn, {image_id}, detections)")
     cursor = conn.cursor()
     for label, confidence in detections:
         cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
