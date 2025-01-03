@@ -162,32 +162,33 @@ def add_empty_image(conn, file_path):
 
 # Datenbankstruktur für leere Bilder mit MD5-Hash
 def init_database(db_path):
-    dbg(f"init_database({db_path})")
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS images (
-                        id INTEGER PRIMARY KEY,
-                        file_path TEXT UNIQUE,
-                        size INTEGER,
-                        created_at TEXT,
-                        last_modified_at TEXT,
-                        md5 TEXT
-                    )''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
-                        id INTEGER PRIMARY KEY,
-                        image_id INTEGER,
-                        model TEXT,
-                        label TEXT,
-                        confidence REAL,
-                        FOREIGN KEY(image_id) REFERENCES images(id)
-                    )''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
-                        file_path TEXT UNIQUE,
-                        md5 TEXT
-                    )''')  # Hinzugefügt: MD5-Hash für leere Bilder
-    cursor.close()
-    conn.commit()
-    return conn
+    with console.status("[bold green]Initializing database...") as status:
+        dbg(f"init_database({db_path})")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS images (
+                            id INTEGER PRIMARY KEY,
+                            file_path TEXT UNIQUE,
+                            size INTEGER,
+                            created_at TEXT,
+                            last_modified_at TEXT,
+                            md5 TEXT
+                        )''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
+                            id INTEGER PRIMARY KEY,
+                            image_id INTEGER,
+                            model TEXT,
+                            label TEXT,
+                            confidence REAL,
+                            FOREIGN KEY(image_id) REFERENCES images(id)
+                        )''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
+                            file_path TEXT UNIQUE,
+                            md5 TEXT
+                        )''')  # Hinzugefügt: MD5-Hash für leere Bilder
+        cursor.close()
+        conn.commit()
+        return conn
 
 def calculate_md5(file_path):
     """Calculate the MD5 checksum of a file."""
