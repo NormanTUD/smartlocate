@@ -168,16 +168,19 @@ def add_image_metadata(conn, file_path):
 
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, model)")
-    cursor = conn.cursor()
-    stats = os.stat(file_path)
-    last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
-    cursor.execute('''SELECT COUNT(*) FROM images
-                      JOIN detections ON images.id = detections.image_id
-                      WHERE images.file_path = ?
-                      AND detections.model = ?
-                      AND images.last_modified_at = ?''',
-                   (file_path, model, last_modified_at))
-    return cursor.fetchone()[0] > 0
+    try:
+        cursor = conn.cursor()
+        stats = os.stat(file_path)
+        last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
+        cursor.execute('''SELECT COUNT(*) FROM images
+                          JOIN detections ON images.id = detections.image_id
+                          WHERE images.file_path = ?
+                          AND detections.model = ?
+                          AND images.last_modified_at = ?''',
+                       (file_path, model, last_modified_at))
+        return cursor.fetchone()[0] > 0
+    except FileNotFoundError:
+        return True
 
 def add_detections(conn, image_id, model, detections):
     dbg(f"add_detections(conn, {image_id}, detections)")
