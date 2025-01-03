@@ -5,11 +5,11 @@ import concurrent.futures
 from pathlib import Path
 from datetime import datetime
 import torch
-from yolov5 import YOLO
+import yolov5
 
 # Constants
 DEFAULT_DB_PATH = os.path.expanduser('~/.ailocate_db')
-DEFAULT_MODEL = "yolov5"
+DEFAULT_MODEL = "yolov5s.pt"
 DEFAULT_THRESHOLD = 0.3
 DEFAULT_DIR = "/"
 
@@ -92,7 +92,7 @@ def main():
     conn = init_database(args.dbfile)
 
     if args.index:
-        model = YOLO(args.model)
+        model = yolov5.load(args.model)
         with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_concurrency) as executor:
             futures = []
             for image_path in find_images(args.dir):
