@@ -181,11 +181,11 @@ def add_detections(conn, image_id, model, detections):
                           VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
     conn.commit()
 
-def find_images(directory):
-    dbg(f"find_images({directory})")
+def find_images(directory, existing_files):
+    dbg(f"find_images({directory}, existing_files)")
     for root, _, files in os.walk(directory):
         for file in files:
-            if Path(file).suffix.lower() in supported_formats:
+            if Path(file).suffix.lower() in supported_formats and file not in existing_files:
                 yield os.path.join(root, file)
 
 def analyze_image(model, image_path):
@@ -255,7 +255,7 @@ def main():
         image_paths = []
 
         with console.status("[bold green]Finding images...") as status:
-            image_paths = list(find_images(args.dir))
+            image_paths = list(find_images(args.dir, existing_files))
         total_images = len(image_paths)
 
         with Progress(
