@@ -8,7 +8,15 @@ import hashlib
 from rich.console import Console
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.table import Table
+from rich.console import Console
 import random
+
+console: Console = Console(
+    force_interactive=True,
+    soft_wrap=True,
+    color_system="256",
+    force_terminal=not ci_env
+)
 
 # Constants
 DEFAULT_DB_PATH = os.path.expanduser('~/.ailocate_db')
@@ -41,8 +49,10 @@ try:
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     if args.index:
-        import torch
-        import yolov5
+        with console.status("[bold green]Loading torch...") as status:
+            import torch
+        with console.status("[bold green]Loading yolov5...") as status:
+            import yolov5
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
