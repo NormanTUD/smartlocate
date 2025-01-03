@@ -316,7 +316,8 @@ def show_statistics(conn, file_path=None):
         cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
                           JOIN images ON images.id = detections.image_id
                           WHERE images.file_path = ?
-                          GROUP BY detections.label''', (file_path,))
+                          AND detections.confidence >= ?
+                          GROUP BY detections.label''', (file_path, args.threshold,))
         stats = cursor.fetchall()
         cursor.close()
         table = Table(title=f"Statistics for {file_path}")
