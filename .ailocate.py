@@ -71,6 +71,7 @@ def load_existing_images(conn):
     cursor = conn.cursor()
     cursor.execute('''SELECT file_path, md5 FROM images''')
     rows = cursor.fetchall()
+    cursor.close()
     # Gibt ein Dictionary zurück, das die Dateipfade mit den MD5-Hashes verknüpft
     return {row[0]: row[1] for row in rows}
 
@@ -83,7 +84,10 @@ def is_file_in_db(conn, file_path, existing_files):
         # Ansonsten führen wir die Datenbankabfrage durch
         cursor = conn.cursor()
         cursor.execute('''SELECT COUNT(*) FROM images WHERE file_path = ?''', (file_path,))
-        return cursor.fetchone()[0] > 0
+        res = cursor.fetchone()[0]
+        cursor.close()
+
+        return res > 0
 
 def get_md5(file_path):
     """Berechnet den MD5-Hash einer Datei."""
@@ -114,6 +118,9 @@ def add_empty_image(conn, file_path):
         conn.commit()
         dbg(f"Added empty image: {file_path}")
 
+
+    cursor.close()
+
 # Datenbankstruktur für leere Bilder mit MD5-Hash
 def init_database(db_path):
     dbg(f"init_database({db_path})")
@@ -139,6 +146,7 @@ def init_database(db_path):
                         file_path TEXT UNIQUE,
                         md5 TEXT
                     )''')  # Hinzugefügt: MD5-Hash für leere Bilder
+    cursor.close()
     conn.commit()
     return conn
 
@@ -161,6 +169,7 @@ def add_image_metadata(conn, file_path):
         cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5)
                           VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
         conn.commit()
+        cursor.close()
         return cursor.lastrowid, md5_hash
     except sqlite3.OperationalError as e:
         console.print(f"\n[red]Probably old table. Delete {args.dbfile}, error:[/] {e}")
@@ -178,6 +187,7 @@ def is_image_indexed(conn, file_path, model):
                           AND detections.model = ?
                           AND images.last_modified_at = ?''',
                        (file_path, model, last_modified_at))
+        cursor.close()
         return cursor.fetchone()[0] > 0
     except FileNotFoundError:
         return True
@@ -188,6 +198,7 @@ def add_detections(conn, image_id, model, detections):
     for label, confidence in detections:
         cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
                           VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
+    cursor.close()
     conn.commit()
 
 def find_images(directory, existing_files):
@@ -209,6 +220,9 @@ def analyze_image(model, image_path):
         return None
     except ValueError as e:
         console.print(f"[red]Error: {e}[/]")
+        return None
+    except PIL.Image.DecompressionBombError as e:
+        console.print(f"[red]Error: {e}, probably the image is too large[/]")
         return None
 
 def process_image(image_path, model, conn, progress, progress_task):
@@ -234,6 +248,7 @@ def show_statistics(conn, file_path=None):
                           WHERE images.file_path = ?
                           GROUP BY detections.label''', (file_path,))
         stats = cursor.fetchall()
+        cursor.close()
         table = Table(title=f"Statistics for {file_path}")
         table.add_column("Label", justify="left", style="cyan")
         table.add_column("Count", justify="right", style="green")
@@ -246,6 +261,7 @@ def show_statistics(conn, file_path=None):
                           JOIN images ON images.id = detections.image_id
                           GROUP BY detections.label''')
         stats = cursor.fetchall()
+        cursor.close()
         table = Table(title="Category Statistics")
         table.add_column("Label", justify="left", style="cyan")
         table.add_column("Count", justify="right", style="green")
@@ -267,6 +283,8 @@ def delete_entries_by_filename(conn, file_path):
 
     # Lösche die MD5-Hash-Informationen aus der Tabelle 'empty_images' (falls vorhanden)
     cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+
+    cursor.close()
 
     conn.commit()
     console.print(f"[red]Deleted all entries for {file_path}[/]")
@@ -345,6 +363,7 @@ def main():
         table.add_column("Confidence", justify="right", style="green")
 
         results = cursor.fetchall()
+        cursor.close()
         for row in results:
             conf = row[2]
             if conf >= args.threshold:
