@@ -60,7 +60,24 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
-import hashlib
+def load_existing_images(conn):
+    """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
+    cursor = conn.cursor()
+    cursor.execute('''SELECT file_path, md5 FROM images''')
+    rows = cursor.fetchall()
+    # Gibt ein Dictionary zurück, das die Dateipfade mit den MD5-Hashes verknüpft
+    return {row[0]: row[1] for row in rows}
+
+def is_file_in_db(conn, file_path, existing_files):
+    """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
+    # Wenn der Dateipfad bereits im Dictionary vorhanden ist, ist die Datei bereits in der DB
+    if file_path in existing_files:
+        return True
+    else:
+        # Ansonsten führen wir die Datenbankabfrage durch
+        cursor = conn.cursor()
+        cursor.execute('''SELECT COUNT(*) FROM images WHERE file_path = ?''', (file_path,))
+        return cursor.fetchone()[0] > 0
 
 def get_md5(file_path):
     """Berechnet den MD5-Hash einer Datei."""
@@ -230,6 +247,8 @@ def main():
     conn = init_database(args.dbfile)
 
     if args.index:
+        existing_files = load_existing_images(conn)
+
         model = yolov5.load(args.model)
         model.conf = 0
 
@@ -254,11 +273,16 @@ def main():
                 random.shuffle(image_paths)
 
             for image_path in image_paths:
-                if is_image_indexed(conn, image_path, args.model):
-                    console.print(f"[bright_yellow]Image {image_path} already indexed. Skipping it.[/]")
+                # Überprüfe, ob die Datei bereits in der Datenbank ist
+                if is_file_in_db(conn, image_path, existing_files):
+                    console.print(f"[bright_yellow]Image {image_path} already in database. Skipping it.[/]")
                     progress.update(task, advance=1)
                 else:
-                    process_image(image_path, model, conn, progress, task)
+                    if is_image_indexed(conn, image_path, args.model):
+                        console.print(f"[bright_yellow]Image {image_path} already indexed. Skipping it.[/]")
+                        progress.update(task, advance=1)
+                    else:
+                        process_image(image_path, model, conn, progress, task)
 
     if args.search:
         cursor = conn.cursor()
