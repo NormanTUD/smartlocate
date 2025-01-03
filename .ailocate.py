@@ -22,7 +22,6 @@ parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
-parser.add_argument("--max_concurrency", type=int, default=1, help="Maximum concurrency for processing")
 args = parser.parse_args()
 
 try:
