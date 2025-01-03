@@ -9,7 +9,12 @@ from rich.console import Console
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.table import Table
 from rich.console import Console
+from pprint import pprint
 import random
+
+def dier(msg):
+    pprint(msg)
+    sys.exit(10)
 
 console: Console = Console(
     force_interactive=True,
@@ -31,6 +36,7 @@ parser.add_argument("search", nargs="?", help="Search term for indexed results",
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
@@ -246,9 +252,16 @@ def main():
 
     conn = init_database(args.dbfile)
 
-    if args.index:
+    existing_files = None
+
+    if args.index or args.delete_non_existing_files:
         existing_files = load_existing_images(conn)
 
+    if args.delete_non_existing_files:
+        dier(existing_files)
+        existing_files = load_existing_images(conn)
+
+    if args.index:
         model = yolov5.load(args.model)
         model.conf = 0
 
