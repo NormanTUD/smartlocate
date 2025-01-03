@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import sqlite3
 import concurrent.futures
@@ -24,8 +25,15 @@ parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLit
 parser.add_argument("--max_concurrency", type=int, default=1, help="Maximum concurrency for processing")
 args = parser.parse_args()
 
-import torch
-import yolov5
+try:
+    import torch
+    import yolov5
+except ModuleNotFoundError as e:
+    print(f"Module not found: {e}")
+    sys.exit(1)
+except KeyboardInterrupt:
+    print(f"CTRL+c was pressed")
+    sys.exit(0)
 
 def dbg(msg):
     if args.debug:
