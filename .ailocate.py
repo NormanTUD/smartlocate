@@ -98,6 +98,8 @@ def analyze_image(model, image_path, threshold):
         return detections
     except OSError:
         return None
+    except RuntimeError:
+        return None
 
 # Process a single image
 def process_image(image_path, model, threshold, conn):
