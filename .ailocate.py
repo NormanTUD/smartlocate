@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 import hashlib
 from rich.console import Console
-from rich.progress import Progress, BarColumn, TextColumn
+from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.table import Table
 from rich.console import Console
 import random
@@ -244,6 +244,8 @@ def main():
             BarColumn(),
             "[progress.percentage]{task.percentage:>3.0f}%",
             "[bold green]{task.completed}/{task.total} images",
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
             console=console,
         ) as progress:
             task = progress.add_task("Indexing images...", total=total_images)
