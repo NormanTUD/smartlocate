@@ -275,11 +275,11 @@ def main():
             for image_path in image_paths:
                 # Überprüfe, ob die Datei bereits in der Datenbank ist
                 if is_file_in_db(conn, image_path, existing_files):
-                    console.print(f"[bright_yellow]Image {image_path} already in database. Skipping it.[/]")
+                    console.print(f"[green]Image {image_path} already in database. Skipping it.[/]")
                     progress.update(task, advance=1)
                 else:
                     if is_image_indexed(conn, image_path, args.model):
-                        console.print(f"[bright_yellow]Image {image_path} already indexed. Skipping it.[/]")
+                        console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
                         progress.update(task, advance=1)
                     else:
                         process_image(image_path, model, conn, progress, task)
