@@ -113,7 +113,7 @@ def main():
     if args.index:
         model = yolov5.load(args.model)
         for image_path in find_images(args.dir):
-            process_image(image_path, model, args.threshold, conn))
+            process_image(image_path, model, args.threshold, conn)
 
     if args.search:
         cursor = conn.cursor()
