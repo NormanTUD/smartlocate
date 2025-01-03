@@ -283,6 +283,7 @@ def main():
                         progress.update(task, advance=1)
                     else:
                         process_image(image_path, model, conn, progress, task)
+                        existing_files[image_path] = get_md5(image_path)
 
     if args.search:
         cursor = conn.cursor()
