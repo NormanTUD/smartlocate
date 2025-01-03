@@ -89,6 +89,8 @@ def display_sixel(image_path):
         # Konvertierung in SIXEL
         c = converter.SixelConverter(unique_filename)
         c.write(sys.stdout)
+    except FileNotFoundError:
+        console.print(f"[red]Could not find {image_path}[/]")
     finally:
         # Datei löschen, falls sie existiert
         if os.path.exists(unique_filename):
