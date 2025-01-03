@@ -420,6 +420,7 @@ def main():
                 if conf >= args.threshold:
                     print(f"{row[0]} (certainty: {conf:.2f})")
                     display_sixel(row[0])
+                    print("\n")
         else:
             table = Table(title="Search Results")
             table.add_column("File Path", justify="left", style="cyan")
