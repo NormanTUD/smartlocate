@@ -15,7 +15,7 @@ console: Console = Console(
     force_interactive=True,
     soft_wrap=True,
     color_system="256",
-    force_terminal=not ci_env
+    force_terminal=True
 )
 
 # Constants
