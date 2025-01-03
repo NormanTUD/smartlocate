@@ -290,7 +290,7 @@ def main():
 
         image_paths = []
 
-        with console.status("[bold green]Finding images...") as status:
+        with console.status(f"[bold green]Finding images in {args.dir}...") as status:
             image_paths = list(find_images(args.dir, existing_files))
         total_images = len(image_paths)
 
