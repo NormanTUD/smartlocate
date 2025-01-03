@@ -47,7 +47,38 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
-# Database setup
+import hashlib
+
+def get_md5(file_path):
+    """Berechnet den MD5-Hash einer Datei."""
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def add_empty_image(conn, file_path):
+    dbg(f"add_empty_image(conn, {file_path})")
+    md5_hash = get_md5(file_path)
+
+    # Überprüfen, ob die Datei bereits in der leeren Liste ist
+    cursor = conn.cursor()
+    cursor.execute('''SELECT md5 FROM empty_images WHERE file_path = ?''', (file_path,))
+    existing_hash = cursor.fetchone()
+
+    if existing_hash:
+        # Wenn der Hash sich geändert hat, aktualisiere ihn
+        if existing_hash[0] != md5_hash:
+            cursor.execute('''UPDATE empty_images SET md5 = ? WHERE file_path = ?''', (md5_hash, file_path))
+            conn.commit()
+            dbg(f"Updated MD5 hash for {file_path}")
+    else:
+        # Wenn das Bild noch nicht in der Tabelle ist, füge es hinzu
+        cursor.execute('''INSERT INTO empty_images (file_path, md5) VALUES (?, ?)''', (file_path, md5_hash))
+        conn.commit()
+        dbg(f"Added empty image: {file_path}")
+
+# Datenbankstruktur für leere Bilder mit MD5-Hash
 def init_database(db_path):
     dbg(f"init_database({db_path})")
     conn = sqlite3.connect(db_path)
@@ -57,8 +88,7 @@ def init_database(db_path):
                         file_path TEXT UNIQUE,
                         size INTEGER,
                         created_at TEXT,
-                        last_modified_at TEXT,
-                        md5 TEXT
+                        last_modified_at TEXT
                     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                         id INTEGER PRIMARY KEY,
@@ -69,10 +99,9 @@ def init_database(db_path):
                         FOREIGN KEY(image_id) REFERENCES images(id)
                     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
-                        id INTEGER PRIMARY KEY,
                         file_path TEXT UNIQUE,
                         md5 TEXT
-                    )''')
+                    )''')  # Hinzugefügt: MD5-Hash für leere Bilder
     conn.commit()
     return conn
 
@@ -147,10 +176,7 @@ def process_image(image_path, model, threshold, conn, progress, progress_task):
         add_detections(conn, image_id, args.model, detections)
     else:
         # Mark image as "empty" and store MD5 hash in empty_images table
-        cursor = conn.cursor()
-        cursor.execute('''INSERT INTO empty_images (file_path, md5)
-                          VALUES (?, ?)''', (image_path, md5_hash))
-        conn.commit()
+        add_empty_image(conn, image_path)
 
     progress.update(progress_task, advance=1)
 
