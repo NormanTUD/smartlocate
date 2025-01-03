@@ -174,7 +174,9 @@ def find_images(directory):
 def analyze_image(model, image_path):
     dbg(f"analyze_image(model, {image_path})")
     try:
-        results = model(image_path)
+        results = None
+        with console.status(f"[bold green]Predicting image {image_path}...") as status:
+            results = model(image_path)
         predictions = results.pred[0]
         detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= 0]
         return detections
