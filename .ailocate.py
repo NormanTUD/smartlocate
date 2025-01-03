@@ -47,7 +47,8 @@ def init_database(db_path):
                         id INTEGER PRIMARY KEY,
                         file_path TEXT UNIQUE,
                         size INTEGER,
-                        created_at TEXT
+                        created_at TEXT,
+                        last_modified_at TEXT
                     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                         id INTEGER PRIMARY KEY,
@@ -66,10 +67,25 @@ def add_image_metadata(conn, file_path):
     cursor = conn.cursor()
     stats = os.stat(file_path)
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
-    cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at)
-                      VALUES (?, ?, ?)''', (file_path, stats.st_size, created_at))
+    last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
+    cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at)
+                      VALUES (?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at))
     conn.commit()
     return cursor.lastrowid
+
+# Check if an image is already indexed with the same model and last modified date
+def is_image_indexed(conn, file_path, model):
+    dbg(f"is_image_indexed({conn}, {file_path}, {model})")
+    cursor = conn.cursor()
+    stats = os.stat(file_path)
+    last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
+    cursor.execute('''SELECT COUNT(*) FROM images
+                      JOIN detections ON images.id = detections.image_id
+                      WHERE images.file_path = ?
+                      AND detections.model = ?
+                      AND images.last_modified_at = ?''',
+                   (file_path, model, last_modified_at))
+    return cursor.fetchone()[0] > 0
 
 # Add detections to the database
 def add_detections(conn, image_id, model, detections):
@@ -104,6 +120,10 @@ def analyze_image(model, image_path, threshold):
 # Process a single image
 def process_image(image_path, model, threshold, conn):
     dbg(f"process_image({image_path}, model, {threshold}, {conn})")
+    if is_image_indexed(conn, image_path, args.model):
+        dbg(f"Skipping already indexed image: {image_path}")
+        return
+
     image_id = add_image_metadata(conn, image_path)
     detections = analyze_image(model, image_path, threshold)
     if detections:
@@ -130,5 +150,8 @@ def main():
             print(row)
 
 if __name__ == "__main__":
-    main()
-
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("You pressed CTRL+C")
+        sys.exit(0)
