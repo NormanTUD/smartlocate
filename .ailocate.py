@@ -279,6 +279,10 @@ def analyze_image(model, image_path):
     dbg(f"analyze_image(model, {image_path})")
     try:
         console.print(f"[bright_yellow]Predicting {image_path}[/]")
+
+        if args.sixel:
+            display_sixel(image_path)
+
         results = model(image_path)
         predictions = results.pred[0]
         detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= 0]
