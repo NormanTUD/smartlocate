@@ -34,7 +34,7 @@ except ModuleNotFoundError as e:
     print(f"Module not found: {e}")
     sys.exit(1)
 except KeyboardInterrupt:
-    print(f"CTRL+c was pressed")
+    print("\nYou pressed CTRL+C")
     sys.exit(0)
 
 def dbg(msg):
@@ -160,5 +160,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("You pressed CTRL+C")
+        print("\nYou pressed CTRL+C")
         sys.exit(0)
