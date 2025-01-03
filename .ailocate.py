@@ -127,6 +127,14 @@ def process_image(image_path, model, threshold, conn, progress, progress_task):
     detections = analyze_image(model, image_path, threshold)
     if detections:
         add_detections(conn, image_id, args.model, detections)
+    else:
+        # Mark image as "empty" if no detections are found
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
+                          VALUES (?, ?, 'empty', 0)''', (image_id, args.model))
+        conn.commit()
+
+    progress.update(progress_task, advance=1)
 
 def main():
     dbg(f"Arguments: {args}")
@@ -149,7 +157,7 @@ def main():
         ) as progress:
             task = progress.add_task("Indexing images...", total=total_images)
             for image_path in image_paths:
-                process_image(image_path, model, args.threshold, conn, progress, progress)
+                process_image(image_path, model, args.threshold, conn, progress, task)
 
     if args.search:
         cursor = conn.cursor()
