@@ -247,6 +247,24 @@ def show_statistics(conn, file_path=None):
             table.add_row(row[0], str(row[1]))
         console.print(table)
 
+def delete_entries_by_filename(conn, file_path):
+    """Löscht alle Einträge aus der Datenbank, die mit dem angegebenen Dateinamen verknüpft sind."""
+    dbg(f"delete_entries_by_filename(conn, {file_path})")
+
+    cursor = conn.cursor()
+
+    # Lösche alle Detections für das Bild
+    cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
+
+    # Lösche das Bild selbst aus der Tabelle 'images'
+    cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
+
+    # Lösche die MD5-Hash-Informationen aus der Tabelle 'empty_images' (falls vorhanden)
+    cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+
+    conn.commit()
+    console.print(f"[red]Deleted all entries for {file_path}[/]")
+
 def main():
     dbg(f"Arguments: {args}")
 
@@ -258,7 +276,9 @@ def main():
         existing_files = load_existing_images(conn)
 
     if args.delete_non_existing_files:
-        dier(existing_files)
+        for file in existing_files:
+            if not os.path.exists(file):
+                delete_entries_by_filename(conn, file)
         existing_files = load_existing_images(conn)
 
     if args.index:
