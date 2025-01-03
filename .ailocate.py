@@ -216,7 +216,7 @@ def main():
 
     if args.index:
         model = yolov5.load(args.model)
-        model.conf = args.threshold
+        model.conf = 0
 
         image_paths = list(find_images(args.dir))
         total_images = len(image_paths)
