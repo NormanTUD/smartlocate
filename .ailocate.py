@@ -1,3 +1,4 @@
+import uuid
 import os
 import sys
 import argparse
@@ -77,10 +78,20 @@ def resize_image(input_path, output_path, max_size=100):
         img.save(output_path)
 
 def display_sixel(image_path):
-    resized_path = "/tmp/resized_image.png"
-    resize_image(image_path, resized_path)
-    c = converter.SixelConverter(resized_path)
-    c.write(sys.stdout)
+    # Generiere einen eindeutigen Dateinamen mit UUID
+    unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
+    
+    try:
+        # Bildgröße anpassen und speichern
+        resize_image(image_path, unique_filename)
+        
+        # Konvertierung in SIXEL
+        c = converter.SixelConverter(unique_filename)
+        c.write(sys.stdout)
+    finally:
+        # Datei löschen, falls sie existiert
+        if os.path.exists(unique_filename):
+            os.remove(unique_filename)
 
 def load_existing_images(conn):
     """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
