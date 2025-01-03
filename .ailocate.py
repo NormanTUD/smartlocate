@@ -112,11 +112,8 @@ def main():
 
     if args.index:
         model = yolov5.load(args.model)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_concurrency) as executor:
-            futures = []
-            for image_path in find_images(args.dir):
-                futures.append(executor.submit(process_image, image_path, model, args.threshold, conn))
-            concurrent.futures.wait(futures)
+        for image_path in find_images(args.dir):
+            process_image(image_path, model, args.threshold, conn))
 
     if args.search:
         cursor = conn.cursor()
