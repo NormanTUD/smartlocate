@@ -232,7 +232,10 @@ def main():
         model = yolov5.load(args.model)
         model.conf = 0
 
-        image_paths = list(find_images(args.dir))
+        image_paths = []
+
+        with console.status("[bold green]Finding images...") as status:
+            image_paths = list(find_images(args.dir))
         total_images = len(image_paths)
 
         with Progress(
