@@ -4,6 +4,7 @@ import argparse
 import sqlite3
 from pathlib import Path
 from datetime import datetime
+import hashlib
 from rich.console import Console
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.table import Table
@@ -24,6 +25,7 @@ parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
+parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 args = parser.parse_args()
 
 console = Console()
@@ -55,7 +57,8 @@ def init_database(db_path):
                         file_path TEXT UNIQUE,
                         size INTEGER,
                         created_at TEXT,
-                        last_modified_at TEXT
+                        last_modified_at TEXT,
+                        md5 TEXT
                     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                         id INTEGER PRIMARY KEY,
@@ -65,19 +68,36 @@ def init_database(db_path):
                         confidence REAL,
                         FOREIGN KEY(image_id) REFERENCES images(id)
                     )''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
+                        id INTEGER PRIMARY KEY,
+                        file_path TEXT UNIQUE,
+                        md5 TEXT
+                    )''')
     conn.commit()
     return conn
+
+def calculate_md5(file_path):
+    """Calculate the MD5 checksum of a file."""
+    hash_md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 def add_image_metadata(conn, file_path):
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
+    md5_hash = calculate_md5(file_path)
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
-    cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at)
-                      VALUES (?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at))
-    conn.commit()
-    return cursor.lastrowid
+    try:
+        cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5)
+                          VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
+        conn.commit()
+        return cursor.lastrowid, md5_hash
+    except sqlite3.OperationalError:
+        console.print(f"\n[red]Probably old table. Delete {args.db_path}[/]")
 
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, {model})")
@@ -119,22 +139,47 @@ def analyze_image(model, image_path, threshold):
 
 def process_image(image_path, model, threshold, conn, progress, progress_task):
     dbg(f"process_image({image_path}, model, {threshold}, conn)")
-    if is_image_indexed(conn, image_path, args.model):
-        dbg(f"Skipping already indexed image: {image_path}")
-        return
+    image_id, md5_hash = add_image_metadata(conn, image_path)
 
-    image_id = add_image_metadata(conn, image_path)
+    # Check for empty image (no detections found)
     detections = analyze_image(model, image_path, threshold)
     if detections:
         add_detections(conn, image_id, args.model, detections)
     else:
-        # Mark image as "empty" if no detections are found
+        # Mark image as "empty" and store MD5 hash in empty_images table
         cursor = conn.cursor()
-        cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
-                          VALUES (?, ?, 'empty', 0)''', (image_id, args.model))
+        cursor.execute('''INSERT INTO empty_images (file_path, md5)
+                          VALUES (?, ?)''', (image_path, md5_hash))
         conn.commit()
 
     progress.update(progress_task, advance=1)
+
+def show_statistics(conn, file_path=None):
+    if file_path:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
+                          JOIN images ON images.id = detections.image_id
+                          WHERE images.file_path = ?
+                          GROUP BY detections.label''', (file_path,))
+        stats = cursor.fetchall()
+        table = Table(title=f"Statistics for {file_path}")
+        table.add_column("Label", justify="left", style="cyan")
+        table.add_column("Count", justify="right", style="green")
+        for row in stats:
+            table.add_row(row[0], str(row[1]))
+        console.print(table)
+    else:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
+                          JOIN images ON images.id = detections.image_id
+                          GROUP BY detections.label''')
+        stats = cursor.fetchall()
+        table = Table(title="Category Statistics")
+        table.add_column("Label", justify="left", style="cyan")
+        table.add_column("Count", justify="right", style="green")
+        for row in stats:
+            table.add_row(row[0], str(row[1]))
+        console.print(table)
 
 def main():
     dbg(f"Arguments: {args}")
@@ -175,6 +220,9 @@ def main():
             table.add_row(*map(str, row))
 
         console.print(table)
+
+    if args.stat:
+        show_statistics(conn, args.stat if args.stat != "/" else None)
 
 if __name__ == "__main__":
     try:
