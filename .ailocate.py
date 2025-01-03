@@ -239,6 +239,7 @@ def main():
 
             for image_path in image_paths:
                 if is_image_indexed(conn, image_path, args.model):
+                    dbg(f"Image {image_path} already indexed. Skipping it.")
                     progress.update(task, advance=1)
                 else:
                     process_image(image_path, model, conn, progress, task)
