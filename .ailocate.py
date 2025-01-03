@@ -370,12 +370,13 @@ def delete_entries_by_filename(conn, file_path):
                 sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
 
 def delete_non_existing_files(conn, existing_files):
-    for file in existing_files:
-        if not os.path.exists(file):
-            delete_entries_by_filename(conn, file)
-    existing_files = load_existing_images(conn)
+    with console.status("[bold green]Deleting files from DB that do not exist...") as status:
+        for file in existing_files:
+            if not os.path.exists(file):
+                delete_entries_by_filename(conn, file)
+        existing_files = load_existing_images(conn)
 
-    return existing_files
+        return existing_files
 
 def main():
     dbg(f"Arguments: {args}")
