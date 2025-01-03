@@ -127,6 +127,7 @@ def add_image_metadata(conn, file_path):
         return cursor.lastrowid, md5_hash
     except sqlite3.OperationalError:
         console.print(f"\n[red]Probably old table. Delete {args.dbfile}[/]")
+        return None
 
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, {model})")
