@@ -330,7 +330,8 @@ def show_statistics(conn, file_path=None):
         cursor = conn.cursor()
         cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
                           JOIN images ON images.id = detections.image_id
-                          GROUP BY detections.label''')
+                          WHERE detections.confidence >= ?
+                          GROUP BY detections.label''', (args.threshold,))
         stats = cursor.fetchall()
         cursor.close()
         table = Table(title="Category Statistics")
