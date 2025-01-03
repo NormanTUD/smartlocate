@@ -63,7 +63,7 @@ def init_database(db_path):
 
 # Add image metadata to the database
 def add_image_metadata(conn, file_path):
-    dbg(f"add_image_metadata({conn}, {file_path})")
+    dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
@@ -75,7 +75,7 @@ def add_image_metadata(conn, file_path):
 
 # Check if an image is already indexed with the same model and last modified date
 def is_image_indexed(conn, file_path, model):
-    dbg(f"is_image_indexed({conn}, {file_path}, {model})")
+    dbg(f"is_image_indexed(conn, {file_path}, {model})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
@@ -93,7 +93,7 @@ def is_image_indexed(conn, file_path, model):
 
 # Add detections to the database
 def add_detections(conn, image_id, model, detections):
-    dbg(f"add_detections({conn}, {image_id}, {detections})")
+    dbg(f"add_detections(conn, {image_id}, {detections})")
     cursor = conn.cursor()
     for label, confidence in detections:
         cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
@@ -123,7 +123,7 @@ def analyze_image(model, image_path, threshold):
 
 # Process a single image
 def process_image(image_path, model, threshold, conn):
-    dbg(f"process_image({image_path}, model, {threshold}, {conn})")
+    dbg(f"process_image({image_path}, model, {threshold}, conn)")
     if is_image_indexed(conn, image_path, args.model):
         dbg(f"Skipping already indexed image: {image_path}")
         return
