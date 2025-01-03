@@ -232,7 +232,7 @@ def main():
             task = progress.add_task("Indexing images...", total=total_images)
             for image_path in image_paths:
                 if is_image_indexed(conn, image_path, args.model):
-                    progress.update(progress_task, advance=1)
+                    progress.update(task, advance=1)
                 else:
                     process_image(image_path, model, conn, progress, task)
 
