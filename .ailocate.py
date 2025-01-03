@@ -204,6 +204,9 @@ def analyze_image(model, image_path):
         return detections
     except (OSError, RuntimeError):
         return None
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/]")
+        return None
 
 def process_image(image_path, model, conn, progress, progress_task):
     dbg(f"process_image({image_path}, model, conn)")
