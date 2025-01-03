@@ -13,6 +13,8 @@ from pprint import pprint
 import time
 import random
 import PIL
+from PIL import Image
+from sixel import converter
 
 def dier(msg):
     pprint(msg)
@@ -38,6 +40,7 @@ parser.add_argument("search", nargs="?", help="Search term for indexed results",
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+parser.add_argument("--sixel", action="store_true", help="Show sixel graphics")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
@@ -67,6 +70,17 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
+
+def resize_image(input_path, output_path, max_size=100):
+    with Image.open(input_path) as img:
+        img.thumbnail((max_size, max_size))
+        img.save(output_path)
+
+def display_sixel(image_path):
+    resized_path = "/tmp/resized_image.png"
+    resize_image(image_path, resized_path)
+    c = converter.SixelConverter(resized_path)
+    c.write(sys.stdout)
 
 def load_existing_images(conn):
     """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
@@ -397,20 +411,26 @@ def main():
         cursor.execute('''SELECT images.file_path, detections.label, detections.confidence
                           FROM images JOIN detections ON images.id = detections.image_id
                           WHERE detections.label LIKE ?''', (f"%{args.search}%",))
-
-        table = Table(title="Search Results")
-        table.add_column("File Path", justify="left", style="cyan")
-        table.add_column("Label", justify="center", style="magenta")
-        table.add_column("Confidence", justify="right", style="green")
-
         results = cursor.fetchall()
         cursor.close()
-        for row in results:
-            conf = row[2]
-            if conf >= args.threshold:
-                table.add_row(*map(str, row))
 
-        console.print(table)
+        if args.sixel:
+            for row in results:
+                conf = row[2]
+                if conf >= args.threshold:
+                    print(f"{row[0]} (certainty: {conf:.2f})")
+                    display_sixel(row[0])
+        else:
+            table = Table(title="Search Results")
+            table.add_column("File Path", justify="left", style="cyan")
+            table.add_column("Label", justify="center", style="magenta")
+            table.add_column("Confidence", justify="right", style="green")
+            for row in results:
+                conf = row[2]
+                if conf >= args.threshold:
+                    table.add_row(*map(str, row))
+
+            console.print(table)
 
     if args.stat:
         show_statistics(conn, args.stat if args.stat != "/" else None)
