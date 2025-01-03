@@ -27,12 +27,17 @@ args = parser.parse_args()
 try:
     import torch
     import yolov5
+    from pprint import pprint
 except ModuleNotFoundError as e:
     print(f"Module not found: {e}")
     sys.exit(1)
 except KeyboardInterrupt:
     print(f"CTRL+c was pressed")
     sys.exit(0)
+
+def dier (itm):
+    pprint(itm)
+    sys.exit(10)
 
 def dbg(msg):
     if args.debug:
@@ -93,6 +98,7 @@ def find_images(directory):
 def analyze_image(model, image_path, threshold):
     dbg(f"analyze_image(model, {image_path}, {threshold})")
     results = model(image_path)
+    dier(results)
     detections = [(pred['name'], pred['confidence']) for pred in results if pred['confidence'] >= threshold]
     return detections
 
