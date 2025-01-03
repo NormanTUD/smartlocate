@@ -88,7 +88,8 @@ def init_database(db_path):
                         file_path TEXT UNIQUE,
                         size INTEGER,
                         created_at TEXT,
-                        last_modified_at TEXT
+                        last_modified_at TEXT,
+                        md5 TEXT
                     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                         id INTEGER PRIMARY KEY,
