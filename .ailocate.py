@@ -39,7 +39,7 @@ supported_formats = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 parser = argparse.ArgumentParser(description="YOLO File Indexer")
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
-parser.add_argument("--size", type=int, default=200, help="Size to which the image should be resized (default: 200).")
+parser.add_argument("--size", type=int, default=400, help="Size to which the image should be resized (default: 400).")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("--sixel", action="store_true", help="Show sixel graphics")
