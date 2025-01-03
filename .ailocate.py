@@ -227,6 +227,9 @@ def analyze_image(model, image_path):
     except PIL.Image.DecompressionBombError as e:
         console.print(f"[red]Error: {e}, probably the image is too large[/]")
         return None
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/]")
+        return None
 
 def process_image(image_path, model, conn, progress, progress_task):
     dbg(f"process_image({image_path}, model, conn)")
