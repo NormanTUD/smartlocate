@@ -2,7 +2,6 @@ import os
 import sys
 import argparse
 import sqlite3
-import concurrent.futures
 from pathlib import Path
 from datetime import datetime
 
@@ -34,10 +33,6 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     print(f"CTRL+c was pressed")
     sys.exit(0)
-
-def dier (itm):
-    pprint(itm)
-    sys.exit(10)
 
 def dbg(msg):
     if args.debug:
@@ -78,10 +73,9 @@ def add_image_metadata(conn, file_path):
 
 # Add detections to the database
 def add_detections(conn, image_id, model, detections):
-    dbg(f"add_detections({conn}, {image_id}, {detection})")
+    dbg(f"add_detections({conn}, {image_id}, {detections})")
     cursor = conn.cursor()
-    for detection in detections:
-        label, confidence = detection
+    for label, confidence in detections:
         cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
                           VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
     conn.commit()
@@ -98,8 +92,8 @@ def find_images(directory):
 def analyze_image(model, image_path, threshold):
     dbg(f"analyze_image(model, {image_path}, {threshold})")
     results = model(image_path)
-    dier(results)
-    detections = [(pred['name'], pred['confidence']) for pred in results if pred['confidence'] >= threshold]
+    predictions = results.pred[0]  # Access predictions for the first image
+    detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= threshold]
     return detections
 
 # Process a single image
@@ -107,7 +101,7 @@ def process_image(image_path, model, threshold, conn):
     dbg(f"process_image({image_path}, model, {threshold}, {conn})")
     image_id = add_image_metadata(conn, image_path)
     detections = analyze_image(model, image_path, threshold)
-    add_detections(conn, image_id, model.model_name, detections)
+    add_detections(conn, image_id, args.model, detections)
 
 # Main function
 def main():
@@ -117,6 +111,7 @@ def main():
 
     if args.index:
         model = yolov5.load(args.model)
+        model.conf = args.threshold  # Set confidence threshold
         for image_path in find_images(args.dir):
             process_image(image_path, model, args.threshold, conn)
 
@@ -130,3 +125,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
