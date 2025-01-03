@@ -10,6 +10,7 @@ from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, Ti
 from rich.table import Table
 from rich.console import Console
 from pprint import pprint
+import time
 import random
 import PIL
 
