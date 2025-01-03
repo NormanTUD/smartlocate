@@ -125,8 +125,8 @@ def add_image_metadata(conn, file_path):
                           VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
         conn.commit()
         return cursor.lastrowid, md5_hash
-    except sqlite3.OperationalError:
-        console.print(f"\n[red]Probably old table. Delete {args.dbfile}[/]")
+    except sqlite3.OperationalError as e:
+        console.print(f"\n[red]Probably old table. Delete {args.dbfile}, error:[/] {e}")
         sys.exit(12)
 
 def is_image_indexed(conn, file_path, model):
