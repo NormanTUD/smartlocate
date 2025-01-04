@@ -274,7 +274,6 @@ def execute_with_retry(conn, query, params):
     cursor.close()
     conn.commit()
 
-
 def add_image_metadata(conn, file_path):
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
@@ -498,8 +497,6 @@ def search_description (conn):
         if len(ocr_results):
             console.print(table)
 
-
-
 def search_ocr(conn):
     ocr_results = None
 
@@ -553,7 +550,6 @@ def get_image_description(image_path):
     caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
 
     return caption
-
 
 def describe_img(conn, image_path):
     if args.describe:
