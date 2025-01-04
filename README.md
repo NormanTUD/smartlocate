@@ -2,6 +2,8 @@
 
 ailocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. ailocate uses an SQLite database to efficiently store and search image data.
 
+If the parameter `--ocr` is enabled while indexing, all images are also OCRed and the found text is searchable. You can set the language with `--ocr_lang tr` for example. Default is `["de", "en"]`.
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/index.gif" alt="Indexing" width="600"/>
 </p>
@@ -64,6 +66,8 @@ The tool will search the indexed images for the object and display the results.
 - `--dir DIR`: Specifies the directory to search or index.
 - `--debug`: Enables debug mode to output detailed logs.
 - `--sixel`: Displays results as Sixel graphics.
+- `--ocr`: Enable OCR.
+- `--ocr_lang`: OCR languages, default: de, en. Accepts multiple languages.
 - `--delete_non_existing_files`: Deletes non-existing files from the database.
 - `--shuffle_index`: Shuffles the list of files before indexing.
 - `--model MODEL`: Specifies the YOLO model for object detection.
