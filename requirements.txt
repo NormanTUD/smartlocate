@@ -2,3 +2,4 @@ torch
 yolov5
 rich
 sixel
+easyocr

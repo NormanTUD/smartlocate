@@ -46,6 +46,7 @@ parser.add_argument("--sixel", action="store_true", help="Show sixel graphics")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
+parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
@@ -66,12 +67,25 @@ try:
             import torch
         with console.status("[bold green]Loading yolov5...") as status:
             import yolov5
+        with console.status("[bold green]Loading easyocr...") as status:
+            import easyocr
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
+
+
+def ocr_img(img):
+    if os.path.exists(img):
+        reader = easyocr.Reader(args.ocr_lang) # this needs to run only once to load the model into memory
+        result = reader.readtext(img)
+
+        return result
+    else:
+        console.print(f"[color]ocr_img: file {img} not found[/]")
+        return None
 
 def resize_image(input_path, output_path, max_size):
     with Image.open(input_path) as img:
@@ -105,7 +119,18 @@ def load_existing_images(conn):
     # Gibt ein Dictionary zurück, das die Dateipfade mit den MD5-Hashes verknüpft
     return {row[0]: row[1] for row in rows}
 
-def is_file_in_db(conn, file_path, existing_files):
+def is_file_in_ocr_db(conn, file_path):
+    """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
+    # Wenn der Dateipfad bereits im Dictionary vorhanden ist, ist die Datei bereits in der DB
+    cursor = conn.cursor()
+    cursor.execute('''SELECT COUNT(*) FROM ocr_results WHERE file_path = ?''', (file_path,))
+    res = cursor.fetchone()[0]
+    cursor.close()
+
+    return res > 0
+
+
+def is_file_in_yolo_db(conn, file_path, existing_files):
     """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
     # Wenn der Dateipfad bereits im Dictionary vorhanden ist, ist die Datei bereits in der DB
     if file_path in existing_files:
@@ -166,6 +191,7 @@ def init_database(db_path):
         dbg(f"init_database({db_path})")
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS images (
                             id INTEGER PRIMARY KEY,
                             file_path TEXT UNIQUE,
@@ -174,6 +200,7 @@ def init_database(db_path):
                             last_modified_at TEXT,
                             md5 TEXT
                         )''')
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                             id INTEGER PRIMARY KEY,
                             image_id INTEGER,
@@ -182,10 +209,19 @@ def init_database(db_path):
                             confidence REAL,
                             FOREIGN KEY(image_id) REFERENCES images(id)
                         )''')
+
         cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
                             file_path TEXT UNIQUE,
                             md5 TEXT
-                        )''')  # Hinzugefügt: MD5-Hash für leere Bilder
+                        )''')
+
+        cursor.execute('''CREATE TABLE IF NOT EXISTS ocr_results (
+                            id INTEGER PRIMARY KEY,
+                            file_path TEXT UNIQUE,
+                            extracted_text TEXT,
+                            md5 TEXT
+                        )''')
+
         cursor.close()
         conn.commit()
         return conn
@@ -382,6 +418,28 @@ def delete_non_existing_files(conn, existing_files):
 
         return existing_files
 
+def add_ocr_result(conn, file_path, extracted_text):
+    """
+    Fügt ein OCR-Ergebnis in die Tabelle 'ocr_results' ein.
+    """
+    dbg(f"add_ocr_result(conn, {file_path}, <extracted_text>)")
+    md5_hash = get_md5(file_path)
+    cursor = conn.cursor()
+    while True:
+        try:
+            cursor.execute('''INSERT INTO ocr_results (file_path, extracted_text, md5)
+                              VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
+            break  # Erfolgreich ausgeführt, Schleife beenden
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+            else:
+                raise e  # Andere Fehler weiterwerfen
+    cursor.close()
+    conn.commit()
+
+
 def main():
     dbg(f"Arguments: {args}")
 
@@ -418,15 +476,15 @@ def main():
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("Indexing images...", total=total_images)
+            task = progress.add_task("Indexing images...", total=total_images * 2) # * 2 because its ocr and yolo
 
             if args.shuffle_index:
                 random.shuffle(image_paths)
 
             for image_path in image_paths:
                 # Überprüfe, ob die Datei bereits in der Datenbank ist
-                if is_file_in_db(conn, image_path, existing_files):
-                    console.print(f"[green]Image {image_path} already in database. Skipping it.[/]")
+                if is_file_in_yolo_db(conn, image_path, existing_files):
+                    console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
                     progress.update(task, advance=1)
                 else:
                     if is_image_indexed(conn, image_path, args.model):
@@ -435,6 +493,22 @@ def main():
                     else:
                         process_image(image_path, model, conn, progress, task)
                         existing_files[image_path] = get_md5(image_path)
+
+                if is_file_in_ocr_db(conn, image_path):
+                    console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
+                    progress.update(task, advance=1)
+                else:
+                    extracted_text = ocr_img(image_path)
+                    if extracted_text:
+                        add_ocr_result(conn, file_path, extracted_text)
+                        console.print(f"[green]Saved OCR for {image_path}.[/]")
+                    else:
+                        add_ocr_result(conn, file_path, "")
+                        console.print(f"[yellow]Image {image_path} contains no text. Skipping it.[/]") # TODO: Save it to not contain text
+
+                    progress.update(task, advance=1)
+
+
 
     if args.search:
         cursor = conn.cursor()
