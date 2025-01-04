@@ -524,7 +524,7 @@ def main():
                                 text = " ".join(texts)
                                 if text:
                                     add_ocr_result(conn, image_path, text)
-                                    console.print(f"[green]Saved OCR for {image_path}.[/]")
+                                    console.print(f"[green]Saved OCR for {image_path}[/]")
                                 else:
                                     console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
                                     add_ocr_result(conn, image_path, "")
