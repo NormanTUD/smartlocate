@@ -46,6 +46,7 @@ parser.add_argument("--sixel", action="store_true", help="Show sixel graphics")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
+parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
@@ -494,23 +495,22 @@ def main():
                         process_image(image_path, model, conn, progress, task)
                         existing_files[image_path] = get_md5(image_path)
 
-                if is_file_in_ocr_db(conn, image_path):
-                    console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
-                    progress.update(task, advance=1)
-                else:
-                    extracted_text = ocr_img(image_path)
-                    texts = [item[1] for item in extracted_text]
-                    text = " ".join(texts)
-                    if text:
-                        add_ocr_result(conn, image_path, text)
-                        console.print(f"[green]Saved OCR for {image_path}.[/]")
+                if args.ocr:
+                    if is_file_in_ocr_db(conn, image_path):
+                        console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
+                        progress.update(task, advance=1)
                     else:
-                        add_ocr_result(conn, image_path, "")
-                        console.print(f"[yellow]Image {image_path} contains no text. Skipping it.[/]") # TODO: Save it to not contain text
+                        extracted_text = ocr_img(image_path)
+                        texts = [item[1] for item in extracted_text]
+                        text = " ".join(texts)
+                        if text:
+                            add_ocr_result(conn, image_path, text)
+                            console.print(f"[green]Saved OCR for {image_path}.[/]")
+                        else:
+                            add_ocr_result(conn, image_path, "")
+                            console.print(f"[yellow]Image {image_path} contains no text. Skipping it.[/]") # TODO: Save it to not contain text
 
-                    progress.update(task, advance=1)
-
-
+                        progress.update(task, advance=1)
 
     if args.search:
         cursor = conn.cursor()
