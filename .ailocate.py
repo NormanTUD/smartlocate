@@ -540,29 +540,28 @@ def main():
             if len(results):
                 console.print(table)
 
+        cursor = conn.cursor()
+        cursor.execute('''SELECT file_path, extracted_text
+                          FROM ocr_results
+                          WHERE extracted_text LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
+        results = cursor.fetchall()
+        cursor.close()
 
-            cursor = conn.cursor()
-            cursor.execute('''SELECT file_path, extracted_text
-                              FROM ocr_results
-                              WHERE extracted_text LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
-            results = cursor.fetchall()
-            cursor.close()
-
-            if args.sixel:
-                for row in results:
-                    print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
-                    display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
-                    print("\n")
-            else:
-                table = Table(title="OCR Search Results")
-                table.add_column("File Path", justify="left", style="cyan")
-                table.add_column("Extracted Text", justify="center", style="magenta")
-                for row in results:
-                    file_path, extracted_text = row
-                    table.add_row(file_path, extracted_text)
-                
-                if len(results):
-                    console.print(table)
+        if args.sixel:
+            for row in results:
+                print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
+                display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
+                print("\n")
+        else:
+            table = Table(title="OCR Search Results")
+            table.add_column("File Path", justify="left", style="cyan")
+            table.add_column("Extracted Text", justify="center", style="magenta")
+            for row in results:
+                file_path, extracted_text = row
+                table.add_row(file_path, extracted_text)
+            
+            if len(results):
+                console.print(table)
 
     if args.stat:
         show_statistics(conn, args.stat if args.stat != "/" else None)
