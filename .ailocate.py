@@ -285,7 +285,6 @@ def add_image_metadata(conn, file_path):
 
     execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
-
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, {model})")
 
