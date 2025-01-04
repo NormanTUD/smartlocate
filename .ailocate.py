@@ -28,7 +28,6 @@ console: Console = Console(
     force_terminal=True
 )
 
-# Constants
 DEFAULT_DB_PATH = os.path.expanduser('~/.ailocate_db')
 DEFAULT_MODEL = "yolov5s.pt"
 DEFAULT_THRESHOLD = 0.3
@@ -116,20 +115,16 @@ def resize_image(input_path, output_path, max_size):
         img.save(output_path)
 
 def display_sixel(image_path):
-    # Generiere einen eindeutigen Dateinamen mit UUID
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
     
     try:
-        # Bildgröße anpassen und speichern
         resize_image(image_path, unique_filename, args.size)
         
-        # Konvertierung in SIXEL
         c = converter.SixelConverter(unique_filename)
         c.write(sys.stdout)
     except FileNotFoundError:
         console.print(f"[red]Could not find {image_path}[/]")
     finally:
-        # Datei löschen, falls sie existiert
         if os.path.exists(unique_filename):
             os.remove(unique_filename)
 
@@ -143,7 +138,6 @@ def load_existing_images(conn):
     ''')
     rows = cursor.fetchall()
     cursor.close()
-    # Gibt ein Dictionary zurück, das die Dateipfade mit den MD5-Hashes verknüpft
     return {row[0]: row[1] for row in rows}
 
 def is_file_in_img_desc_db(conn, file_path):
@@ -155,8 +149,6 @@ def is_file_in_img_desc_db(conn, file_path):
     return res > 0
 
 def is_file_in_ocr_db(conn, file_path):
-    """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
-    # Wenn der Dateipfad bereits im Dictionary vorhanden ist, ist die Datei bereits in der DB
     cursor = conn.cursor()
     cursor.execute('''SELECT COUNT(*) FROM ocr_results WHERE file_path = ?''', (file_path,))
     res = cursor.fetchone()[0]
@@ -165,12 +157,9 @@ def is_file_in_ocr_db(conn, file_path):
     return res > 0
 
 def is_file_in_yolo_db(conn, file_path, existing_files):
-    """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
-    # Wenn der Dateipfad bereits im Dictionary vorhanden ist, ist die Datei bereits in der DB
     if file_path in existing_files:
         return True
     else:
-        # Ansonsten führen wir die Datenbankabfrage durch
         cursor = conn.cursor()
         cursor.execute('''SELECT COUNT(*) FROM images WHERE file_path = ?''', (file_path,))
         res = cursor.fetchone()[0]
@@ -179,7 +168,6 @@ def is_file_in_yolo_db(conn, file_path, existing_files):
         return res > 0
 
 def get_md5(file_path):
-    """Berechnet den MD5-Hash einer Datei."""
     hash_md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -190,7 +178,6 @@ def add_empty_image(conn, file_path):
     dbg(f"add_empty_image(conn, {file_path})")
     md5_hash = get_md5(file_path)
 
-    # Überprüfen, ob die Datei bereits in der leeren Liste ist
     cursor = conn.cursor()
     
     while True:
@@ -199,27 +186,24 @@ def add_empty_image(conn, file_path):
             existing_hash = cursor.fetchone()
 
             if existing_hash:
-                # Wenn der Hash sich geändert hat, aktualisiere ihn
                 if existing_hash[0] != md5_hash:
                     cursor.execute('''UPDATE empty_images SET md5 = ? WHERE file_path = ?''', (md5_hash, file_path))
                     conn.commit()
                     dbg(f"Updated MD5 hash for {file_path}")
             else:
-                # Wenn das Bild noch nicht in der Tabelle ist, füge es hinzu
                 cursor.execute('''INSERT INTO empty_images (file_path, md5) VALUES (?, ?)''', (file_path, md5_hash))
                 conn.commit()
                 dbg(f"Added empty image: {file_path}")
             cursor.close()
-            return  # Erfolgreich abgeschlossen, Funktion beenden
+            return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+                time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
-                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
+                sys.exit(12)
 
-# Datenbankstruktur für leere Bilder mit MD5-Hash
 def init_database(db_path):
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
@@ -285,9 +269,9 @@ def execute_with_retry(conn, query, params):
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # Wait 1 second before retrying
+                time.sleep(1)
             else:
-                raise e  # Re-raise other errors
+                raise e
 
     cursor.close()
     conn.commit()
@@ -327,10 +311,10 @@ def is_image_indexed(conn, file_path, model):
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+                time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
-                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
+                sys.exit(12)
         except FileNotFoundError:
             return True
 
@@ -372,12 +356,10 @@ def process_image(image_path, model, conn, progress):
 
     image_id, md5_hash = add_image_metadata(conn, image_path)
 
-    # Check for empty image (no detections found)
     detections = analyze_image(model, image_path)
     if detections:
         add_detections(conn, image_id, args.model, detections)
     else:
-        # Mark image as "empty" and store MD5 hash in empty_images table
         add_empty_image(conn, image_path)
 
 def show_statistics(conn, file_path=None):
@@ -433,14 +415,14 @@ def delete_entries_by_filename(conn, file_path):
             conn.commit()
             
             console.print(f"[red]Deleted all entries for {file_path}[/]")
-            return  # Erfolgreich abgeschlossen, Funktion beenden
+            return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+                time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
-                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
+                sys.exit(12)
 
 def delete_non_existing_files(conn, existing_files):
     with console.status("[bold green]Deleting files from DB that do not exist...") as status:
@@ -506,7 +488,7 @@ def search_description (conn):
     if args.sixel:
         for row in ocr_results:
             print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
-            display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
+            display_sixel(row[0])
             print("\n")
     else:
         table = Table(title="OCR Search Results")
@@ -535,7 +517,7 @@ def search_ocr(conn):
     if args.sixel:
         for row in ocr_results:
             print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
-            display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
+            display_sixel(row[0])
             print("\n")
     else:
         table = Table(title="OCR Search Results")
@@ -637,9 +619,6 @@ def main():
     if args.index:
         model = yolov5.load(args.model)
         model.conf = 0
-
-        #if not args.delete_non_existing_files:
-        #    existing_files = delete_non_existing_files(conn, existing_files)
 
         image_paths = []
 
