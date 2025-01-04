@@ -499,8 +499,10 @@ def main():
                     progress.update(task, advance=1)
                 else:
                     extracted_text = ocr_img(image_path)
-                    if extracted_text:
-                        add_ocr_result(conn, image_path, extracted_text)
+                    texts = [item[1] for item in extracted_text]
+                    text = "\n".join(texts)
+                    if text:
+                        add_ocr_result(conn, image_path, text)
                         console.print(f"[green]Saved OCR for {image_path}.[/]")
                     else:
                         add_ocr_result(conn, image_path, "")
