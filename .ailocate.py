@@ -55,9 +55,6 @@ args = parser.parse_args()
 
 reader = None
 
-if args.index and args.ocr:
-    reader = easyocr.Reader(args.ocr_lang)
-
 console = Console()
 
 def dbg(msg):
@@ -73,8 +70,9 @@ try:
             import torch
         with console.status("[bold green]Loading yolov5...") as status:
             import yolov5
-        with console.status("[bold green]Loading easyocr...") as status:
-            import easyocr
+        if args.ocr:
+            with console.status("[bold green]Loading easyocr...") as status:
+                import easyocr
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
@@ -82,6 +80,8 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
+if args.index and args.ocr:
+    reader = easyocr.Reader(args.ocr_lang)
 
 def ocr_img(img):
     if os.path.exists(img):
