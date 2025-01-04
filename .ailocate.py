@@ -328,7 +328,7 @@ def add_detections(conn: sqlite3.Connection, image_id: int, model_name: str, det
     for label, confidence in detections:
         execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model_name, label, confidence))
 
-def find_images(existing_files: list) -> Generator:
+def find_images(existing_files: dict) -> Generator:
     for root, _, files in os.walk(args.dir):
         for file in files:
             if Path(file).suffix.lower() in supported_formats and file not in existing_files:
