@@ -367,7 +367,7 @@ def analyze_image(model, image_path):
         console.print(f"[red]Error: {e}[/]")
         return None
 
-def process_image(image_path, model, conn, progress, progress_task):
+def process_image(image_path, model, conn, progress):
     dbg(f"process_image({image_path}, model, conn)")
 
     image_id, md5_hash = add_image_metadata(conn, image_path)
@@ -562,7 +562,7 @@ def yolo_file(conn, image_path, existing_files, progress, task):
         if is_image_indexed(conn, image_path, args.model):
             console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
         else:
-            process_image(image_path, model, conn, progress, task)
+            process_image(image_path, model, conn, progress)
             existing_files[image_path] = get_md5(image_path)
 
 def get_image_description(image_path):
