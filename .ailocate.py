@@ -515,26 +515,30 @@ def main():
                         console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
                         progress.update(task, advance=1)
                     else:
-                        file_size = os.path.getsize(image_path)
+                        try:
+                            file_size = os.path.getsize(image_path)
 
-                        if file_size < args.max_ocr_size * 1024 * 1024:
-                            extracted_text = ocr_img(image_path)
-                            if extracted_text:
-                                texts = [item[1] for item in extracted_text]
-                                text = " ".join(texts)
-                                if text:
-                                    add_ocr_result(conn, image_path, text)
-                                    console.print(f"[green]Saved OCR for {image_path}[/]")
+                            if file_size < args.max_ocr_size * 1024 * 1024:
+                                extracted_text = ocr_img(image_path)
+                                if extracted_text:
+                                    texts = [item[1] for item in extracted_text]
+                                    text = " ".join(texts)
+                                    if text:
+                                        add_ocr_result(conn, image_path, text)
+                                        console.print(f"[green]Saved OCR for {image_path}[/]")
+                                    else:
+                                        console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+                                        add_ocr_result(conn, image_path, "")
                                 else:
                                     console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
                                     add_ocr_result(conn, image_path, "")
-                            else:
-                                console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
-                                add_ocr_result(conn, image_path, "")
 
-                            progress.update(task, advance=1)
-                        else:
-                            console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
+                                progress.update(task, advance=1)
+                            else:
+                                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
+                                progress.update(task, advance=1)
+                        except FileNotFoundError:
+                            console.print(f"[red]File {image_path} not found[/]")
                             progress.update(task, advance=1)
 
 
