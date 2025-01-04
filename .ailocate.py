@@ -410,20 +410,31 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
         try:
             cursor = conn.cursor()
 
-            cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
+            with console.status("[bold green]Deleting files from DB that do not exist...") as delete_status:
+                delete_status.update(f"[bold green]Deleting detections for {file_path}...")
+                cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
+                delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
 
-            cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleting from images for {file_path}...")
+                cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleted from images for {file_path}.")
 
-            cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
+                cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
 
-            cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
+                cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
-            cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
+                cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
 
-            cursor.close()
-            conn.commit()
+                cursor.close()
+                conn.commit()
 
-            console.print(f"[red]Deleted all entries for {file_path}[/]")
+                console.print(f"[red]Deleted all entries for {file_path}[/]")
             return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
@@ -434,14 +445,13 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 sys.exit(12)
 
 def delete_non_existing_files(conn: sqlite3.Connection, existing_files: Optional[dict]) -> Optional[dict]:
-    with console.status("[bold green]Deleting files from DB that do not exist...") as status:
-        if existing_files:
-            for file in existing_files:
-                if not os.path.exists(file):
-                    delete_entries_by_filename(conn, file)
-            existing_files = load_existing_images(conn)
+    if existing_files:
+        for file in existing_files:
+            if not os.path.exists(file):
+                delete_entries_by_filename(conn, file)
+        existing_files = load_existing_images(conn)
 
-        return existing_files
+    return existing_files
 
 def add_description(conn: sqlite3.Connection, file_path: str, desc: str) -> None:
     dbg(f"add_description(conn, {file_path}, <desc>)")
