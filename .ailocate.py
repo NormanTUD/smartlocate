@@ -77,6 +77,7 @@ try:
         if args.ocr:
             with console.status("[bold green]Loading easyocr...") as status:
                 import easyocr
+                reader = easyocr.Reader(args.ocr_lang)
             with console.status("[bold green]Loading cv2...") as status:
                 import cv2
         if args.describe:
@@ -92,9 +93,6 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
-
-if args.index and args.ocr:
-    reader = easyocr.Reader(args.ocr_lang)
 
 def ocr_img(img):
     try:
