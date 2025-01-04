@@ -445,15 +445,16 @@ def add_ocr_result(conn, file_path, extracted_text):
         try:
             cursor.execute('''INSERT INTO ocr_results (file_path, extracted_text, md5)
                               VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
-            cursor.close()
-            conn.commit()
-            return
+            break
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
             else:
                 raise e  # Andere Fehler weiterwerfen
+
+    cursor.close()
+    conn.commit()
 
 def main():
     dbg(f"Arguments: {args}")
