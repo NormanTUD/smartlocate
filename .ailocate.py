@@ -18,8 +18,6 @@ import PIL
 from PIL import Image
 from sixel import converter
 
-import transformers
-
 def dier(msg: Any) -> None:
     pprint(msg)
     sys.exit(10)
@@ -30,6 +28,11 @@ console: Console = Console(
     color_system="256",
     force_terminal=True
 )
+
+with console.status("[bold green]Loading yolov5...") as load_status:
+    import yolov5
+with console.status("[bold green]Loading transformers...") as load_status:
+    import transformers
 
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.ailocate_db')
 DEFAULT_MODEL: str = "yolov5s.pt"
@@ -73,8 +76,6 @@ try:
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     if args.index:
-        with console.status("[bold green]Loading yolov5...") as load_status:
-            import yolov5
         if args.ocr:
             with console.status("[bold green]Loading easyocr...") as load_status:
                 import easyocr
