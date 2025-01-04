@@ -387,8 +387,6 @@ def process_image(image_path, model, conn, progress, progress_task):
         # Mark image as "empty" and store MD5 hash in empty_images table
         add_empty_image(conn, image_path)
 
-    progress.update(progress_task, advance=1)
-
 def show_statistics(conn, file_path=None):
     if file_path:
         cursor = conn.cursor()
@@ -597,11 +595,9 @@ def search(conn):
 def yolo_file(conn, image_path, existing_files, progress, task):
     if is_file_in_yolo_db(conn, image_path, existing_files):
         console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
-        progress.update(task, advance=1)
     else:
         if is_image_indexed(conn, image_path, args.model):
             console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
-            progress.update(task, advance=1)
         else:
             process_image(image_path, model, conn, progress, task)
             existing_files[image_path] = get_md5(image_path)
@@ -633,13 +629,11 @@ def describe_img(conn, image_path, progress, task):
 
             except FileNotFoundError:
                 console.print(f"[red]File {image_path} not found[/]")
-    progress.update(task, advance=1)
 
 def ocr_file(conn, image_path, progress, task):
     if args.ocr:
         if is_file_in_ocr_db(conn, image_path):
             console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
-            progress.update(task, advance=1)
         else:
             try:
                 file_size = os.path.getsize(image_path)
@@ -659,13 +653,10 @@ def ocr_file(conn, image_path, progress, task):
                         console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
                         add_ocr_result(conn, image_path, "")
 
-                    progress.update(task, advance=1)
                 else:
                     console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
-                    progress.update(task, advance=1)
             except FileNotFoundError:
                 console.print(f"[red]File {image_path} not found[/]")
-                progress.update(task, advance=1)
 
 def main():
     dbg(f"Arguments: {args}")
@@ -712,6 +703,8 @@ def main():
                 yolo_file(conn, image_path, existing_files, progress, task)
                 ocr_file(conn, image_path, progress, task)
                 describe_img(conn, image_path, progress, task)
+
+                progress.update(task, advance=1)
 
     if args.search:
         search(conn)
