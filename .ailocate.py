@@ -116,10 +116,10 @@ def resize_image(input_path, output_path, max_size):
 
 def display_sixel(image_path):
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
-    
+
     try:
         resize_image(image_path, unique_filename, args.size)
-        
+
         c = converter.SixelConverter(unique_filename)
         c.write(sys.stdout)
     except FileNotFoundError:
@@ -179,7 +179,7 @@ def add_empty_image(conn, file_path):
     md5_hash = get_md5(file_path)
 
     cursor = conn.cursor()
-    
+
     while True:
         try:
             cursor.execute('''SELECT md5 FROM empty_images WHERE file_path = ?''', (file_path,))
@@ -284,29 +284,29 @@ def add_image_metadata(conn, file_path):
     md5_hash = calculate_md5(file_path)
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
-    
+
     execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
 
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, {model})")
-    
+
     while True:
         try:
             cursor = conn.cursor()
             stats = os.stat(file_path)
             last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
-            
+
             cursor.execute('''SELECT COUNT(*) FROM images
                                JOIN detections ON images.id = detections.image_id
                                WHERE images.file_path = ?
                                AND detections.model = ?
-                               AND images.last_modified_at = ?''', 
+                               AND images.last_modified_at = ?''',
                            (file_path, model, last_modified_at))
-            
+
             res = cursor.fetchone()[0]
             cursor.close()
-            
+
             return res > 0
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
@@ -319,7 +319,7 @@ def is_image_indexed(conn, file_path, model):
             return True
 
 def add_detections(conn, image_id, model, detections):
-    dbg(f"add_detections(conn, {image_id}, detections)")  
+    dbg(f"add_detections(conn, {image_id}, detections)")
     for label, confidence in detections:
         execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
 
@@ -396,24 +396,24 @@ def show_statistics(conn, file_path=None):
 def delete_entries_by_filename(conn, file_path):
     """Löscht alle Einträge aus der Datenbank, die mit dem angegebenen Dateinamen verknüpft sind."""
     dbg(f"delete_entries_by_filename(conn, {file_path})")
-    
+
     while True:
         try:
             cursor = conn.cursor()
-            
+
             cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
-            
+
             cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
-            
+
             cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
 
             cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
 
             cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
-            
+
             cursor.close()
             conn.commit()
-            
+
             console.print(f"[red]Deleted all entries for {file_path}[/]")
             return
         except sqlite3.OperationalError as e:
@@ -497,7 +497,7 @@ def search_description (conn):
         for row in ocr_results:
             file_path, extracted_text = row
             table.add_row(file_path, extracted_text)
-        
+
         if len(ocr_results):
             console.print(table)
 
@@ -526,7 +526,7 @@ def search_ocr(conn):
         for row in ocr_results:
             file_path, extracted_text = row
             table.add_row(file_path, extracted_text)
-        
+
         if len(ocr_results):
             console.print(table)
 
