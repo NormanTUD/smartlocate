@@ -500,7 +500,7 @@ def main():
                 else:
                     extracted_text = ocr_img(image_path)
                     texts = [item[1] for item in extracted_text]
-                    text = "\n".join(texts)
+                    text = " ".join(texts)
                     if text:
                         add_ocr_result(conn, image_path, text)
                         console.print(f"[green]Saved OCR for {image_path}.[/]")
