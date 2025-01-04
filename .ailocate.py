@@ -70,21 +70,21 @@ try:
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     if args.index:
-        with console.status("[bold green]Loading torch...") as status:
+        with console.status("[bold green]Loading torch...") as load_status:
             import torch
-        with console.status("[bold green]Loading yolov5...") as status:
+        with console.status("[bold green]Loading yolov5...") as load_status:
             import yolov5
         if args.ocr:
-            with console.status("[bold green]Loading easyocr...") as status:
+            with console.status("[bold green]Loading easyocr...") as load_status:
                 import easyocr
                 reader = easyocr.Reader(args.ocr_lang)
-            with console.status("[bold green]Loading cv2...") as status:
+            with console.status("[bold green]Loading cv2...") as load_status:
                 import cv2
         if args.describe:
-            with console.status("[bold green]Loading Blip-Transformers...") as status:
+            with console.status("[bold green]Loading Blip-Transformers...") as load_status:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-            with console.status("[bold green]Loading Blip-Models...") as status:
+            with console.status("[bold green]Loading Blip-Models...") as load_status:
                 blip_processor = BlipProcessor.from_pretrained(blip_model_name)
                 blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
 except ModuleNotFoundError as e:
