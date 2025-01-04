@@ -107,6 +107,19 @@ objects in the images. The index must be re-run whenever new images are added or
 - Python 3.x
 - All dependencies will be automatically installed when the tool is first run.
 
+
+# Ideas
+
+Future ideas would be to expand this to other formats than images as well. Imagine you could say:
+
+```bash
+ailocate "text about cats"
+```
+
+and get all `.txt`, `.md`, `.docx` and so on files in which something about cats is written.
+
+Same for videos and audio files. If someone wants to do it, feel free to contribute!
+
 # License
 
 Licensed under GPL2.
