@@ -392,14 +392,13 @@ def delete_entries_by_filename(conn, file_path):
         try:
             cursor = conn.cursor()
             
-            # Lösche alle Detections für das Bild
             cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
             
-            # Lösche das Bild selbst aus der Tabelle 'images'
             cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
             
-            # Lösche die MD5-Hash-Informationen aus der Tabelle 'empty_images' (falls vorhanden)
             cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+
+            cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
             
             cursor.close()
             conn.commit()
