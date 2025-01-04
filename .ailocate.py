@@ -74,6 +74,7 @@ try:
         if args.ocr:
             with console.status("[bold green]Loading easyocr...") as status:
                 import easyocr
+                import cv2
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
@@ -85,12 +86,16 @@ if args.index and args.ocr:
     reader = easyocr.Reader(args.ocr_lang)
 
 def ocr_img(img):
-    if os.path.exists(img):
-        result = reader.readtext(img)
+    try:
+        if os.path.exists(img):
+            result = reader.readtext(img)
 
-        return result
-    else:
-        console.print(f"[color]ocr_img: file {img} not found[/]")
+            return result
+        else:
+            console.print(f"[red]ocr_img: file {img} not found[/]")
+            return None
+    except cv2.error as e:
+        console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
 def resize_image(input_path, output_path, max_size):
