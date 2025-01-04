@@ -41,7 +41,7 @@ DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_THRESHOLD: float = 0.3
 DEFAULT_DIR: str = "/"
 
-supported_formats: dict = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 
 parser = argparse.ArgumentParser(description="YOLO File Indexer")
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
