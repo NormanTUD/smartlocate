@@ -49,6 +49,7 @@ parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for det
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
+parser.add_argument("--max_ocr_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 args = parser.parse_args()
@@ -503,17 +504,24 @@ def main():
                         console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
                         progress.update(task, advance=1)
                     else:
-                        extracted_text = ocr_img(image_path)
-                        texts = [item[1] for item in extracted_text]
-                        text = " ".join(texts)
-                        if text:
-                            add_ocr_result(conn, image_path, text)
-                            console.print(f"[green]Saved OCR for {image_path}.[/]")
-                        else:
-                            add_ocr_result(conn, image_path, "")
-                            console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]") # TODO: Save it to not contain text
+                        file_size = os.path.getsize(image_path)
 
-                        progress.update(task, advance=1)
+                        if file_size < args.max_ocr_size * 1024 * 1024:
+                            extracted_text = ocr_img(image_path)
+                            texts = [item[1] for item in extracted_text]
+                            text = " ".join(texts)
+                            if text:
+                                add_ocr_result(conn, image_path, text)
+                                console.print(f"[green]Saved OCR for {image_path}.[/]")
+                            else:
+                                add_ocr_result(conn, image_path, "")
+                                console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+
+                            progress.update(task, advance=1)
+                        else:
+                            console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size}MB[/]")
+                            progress.update(task, advance=1)
+
 
     if args.search:
         yolo_results = None
