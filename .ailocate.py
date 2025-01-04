@@ -53,6 +53,11 @@ parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLit
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 args = parser.parse_args()
 
+reader = None
+
+if args.index and args.ocr:
+    reader = easyocr.Reader(args.ocr_lang)
+
 console = Console()
 
 def dbg(msg):
@@ -80,7 +85,6 @@ except KeyboardInterrupt:
 
 def ocr_img(img):
     if os.path.exists(img):
-        reader = easyocr.Reader(args.ocr_lang) # this needs to run only once to load the model into memory
         result = reader.readtext(img)
 
         return result
