@@ -161,7 +161,7 @@ def is_file_in_ocr_db(conn: sqlite3.Connection, file_path: str) -> bool:
 
     return res > 0
 
-def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: list) -> bool:
+def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: dict) -> bool:
     if file_path in existing_files:
         return True
 
@@ -428,7 +428,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def delete_non_existing_files(conn: sqlite3.Connection, existing_files: list) -> dict:
+def delete_non_existing_files(conn: sqlite3.Connection, existing_files: dict) -> dict:
     with console.status("[bold green]Deleting files from DB that do not exist...") as status:
         for file in existing_files:
             if not os.path.exists(file):
@@ -539,7 +539,7 @@ def search(conn: sqlite3.Connection) -> None:
 
     search_description(conn)
 
-def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: list, model: yolov5.models.common.AutoShape) -> None:
+def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: dict, model: yolov5.models.common.AutoShape) -> None:
     if is_file_in_yolo_db(conn, image_path, existing_files):
         console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
     else:
