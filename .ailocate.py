@@ -621,7 +621,6 @@ def describe_img(conn, image_path, progress, task):
     if args.describe:
         if is_file_in_img_desc_db(conn, image_path):
             console.print(f"[green]Image {image_path} already in image-description-database. Skipping it.[/]")
-            progress.update(task, advance=1)
         else:
             try:
                 image_description = get_image_description(image_path)
@@ -632,12 +631,9 @@ def describe_img(conn, image_path, progress, task):
                     console.print(f"[yellow]Image {image_path} could not be described. Saving it as empty.[/]")
                     add_description(conn, image_path, "")
 
-                progress.update(task, advance=1)
             except FileNotFoundError:
                 console.print(f"[red]File {image_path} not found[/]")
-                progress.update(task, advance=1)
-    else:
-        progress.update(task, advance=1)
+    progress.update(task, advance=1)
 
 def ocr_file(conn, image_path, progress, task):
     if args.ocr:
