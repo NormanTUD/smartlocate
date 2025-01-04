@@ -100,9 +100,9 @@ def ocr_img(img):
             result = reader.readtext(img)
 
             return result
-        else:
-            console.print(f"[red]ocr_img: file {img} not found[/]")
-            return None
+
+        console.print(f"[red]ocr_img: file {img} not found[/]")
+        return None
     except (cv2.error, ValueError) as e:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
@@ -157,13 +157,13 @@ def is_file_in_ocr_db(conn, file_path):
 def is_file_in_yolo_db(conn, file_path, existing_files):
     if file_path in existing_files:
         return True
-    else:
-        cursor = conn.cursor()
-        cursor.execute('''SELECT COUNT(*) FROM images WHERE file_path = ?''', (file_path,))
-        res = cursor.fetchone()[0]
-        cursor.close()
 
-        return res > 0
+    cursor = conn.cursor()
+    cursor.execute('''SELECT COUNT(*) FROM images WHERE file_path = ?''', (file_path,))
+    res = cursor.fetchone()[0]
+    cursor.close()
+
+    return res > 0
 
 def get_md5(file_path):
     hash_md5 = hashlib.md5()
