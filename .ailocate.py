@@ -226,6 +226,14 @@ def init_database(db_path: str) -> sqlite3.Connection:
                         )''')
         status.update("[bold green]Created table images.")
 
+        status.update("[bold green]Creating index images(file_path)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_images_file_path ON images(file_path)')
+        status.update("[bold green]Created index images(file_path).")
+
+        status.update("[bold green]Creating index images(md5)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_images_md5 ON images(md5)')
+        status.update("[bold green]Created index images(md5).")
+
         status.update("[bold green]Creating table detections...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                             id INTEGER PRIMARY KEY,
@@ -241,6 +249,10 @@ def init_database(db_path: str) -> sqlite3.Connection:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)')
         status.update("[bold green]Created index detections(image_id).")
 
+        status.update("[bold green]Creating index detections(image_id, model)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_model ON detections(image_id, model)')
+        status.update("[bold green]Created index detections(image_id, model).")
+
         status.update("[bold green]Creating index detections(label)...")
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label);')
         status.update("[bold green]Created index detections(label).")
@@ -252,6 +264,10 @@ def init_database(db_path: str) -> sqlite3.Connection:
                         )''')
         status.update("[bold green]Created table empty_images.")
 
+        status.update("[bold green]Creating index empty_images(file_path)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_empty_images_file_path ON empty_images(file_path)')
+        status.update("[bold green]Created index empty_images(file_path).")
+
         status.update("[bold green]Creating table ocr_results...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS ocr_results (
                             id INTEGER PRIMARY KEY,
@@ -261,6 +277,14 @@ def init_database(db_path: str) -> sqlite3.Connection:
                         )''')
         status.update("[bold green]Created table ocr_results.")
 
+        status.update("[bold green]Creating index ocr_results(file_path)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ocr_results_file_path ON ocr_results(file_path)')
+        status.update("[bold green]Created index ocr_results(file_path).")
+
+        status.update("[bold green]Creating index ocr_results(md5)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ocr_results_md5 ON ocr_results(md5)')
+        status.update("[bold green]Created index ocr_results(md5).")
+
         status.update("[bold green]Creating table image_description...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS image_description (
                             id INTEGER PRIMARY KEY,
@@ -269,6 +293,10 @@ def init_database(db_path: str) -> sqlite3.Connection:
                             md5 TEXT
                         )''')
         status.update("[bold green]Created table image_description.")
+
+        status.update("[bold green]Creating index image_description(file_path)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_image_description_file_path ON image_description(file_path)')
+        status.update("[bold green]Created index image_description(file_path).")
 
         cursor.close()
         conn.commit()
