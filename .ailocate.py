@@ -513,14 +513,18 @@ def main():
 
                         if file_size < args.max_ocr_size * 1024 * 1024:
                             extracted_text = ocr_img(image_path)
-                            texts = [item[1] for item in extracted_text]
-                            text = " ".join(texts)
-                            if text:
-                                add_ocr_result(conn, image_path, text)
-                                console.print(f"[green]Saved OCR for {image_path}.[/]")
+                            if extracted_text:
+                                texts = [item[1] for item in extracted_text]
+                                text = " ".join(texts)
+                                if text:
+                                    add_ocr_result(conn, image_path, text)
+                                    console.print(f"[green]Saved OCR for {image_path}.[/]")
+                                else:
+                                    console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+                                    add_ocr_result(conn, image_path, "")
                             else:
-                                add_ocr_result(conn, image_path, "")
                                 console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+                                add_ocr_result(conn, image_path, "")
 
                             progress.update(task, advance=1)
                         else:
