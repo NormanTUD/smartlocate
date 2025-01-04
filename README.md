@@ -19,7 +19,7 @@ If the parameter `--ocr` is enabled while indexing, all images are also OCRed an
 ## Features
 
 - Object detection in images using YOLO.
-- OCR is done via easyocr, when `--ocr` was set during indexing
+- OCR is done via easyocr, when `--ocr` was set during indexing. Allows you to use `%` as a wildcard.
 - Stores detected objects in a local SQLite database (`~/.ailocate_db`).
 - Fast searching for specific objects in images.
 - Supports Sixel graphics for visualizing results.
