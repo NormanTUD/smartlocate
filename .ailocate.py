@@ -428,12 +428,13 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def delete_non_existing_files(conn: sqlite3.Connection, existing_files: dict) -> dict:
+def delete_non_existing_files(conn: sqlite3.Connection, existing_files: Optional[dict]) -> Optional[dict]:
     with console.status("[bold green]Deleting files from DB that do not exist...") as status:
-        for file in existing_files:
-            if not os.path.exists(file):
-                delete_entries_by_filename(conn, file)
-        existing_files = load_existing_images(conn)
+        if existing_files:
+            for file in existing_files:
+                if not os.path.exists(file):
+                    delete_entries_by_filename(conn, file)
+            existing_files = load_existing_images(conn)
 
         return existing_files
 
