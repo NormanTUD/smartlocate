@@ -215,6 +215,7 @@ def init_database(db_path: str) -> sqlite3.Connection:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+        status.update("[bold green]Creating table images...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS images (
                             id INTEGER PRIMARY KEY,
                             file_path TEXT UNIQUE,
@@ -223,7 +224,9 @@ def init_database(db_path: str) -> sqlite3.Connection:
                             last_modified_at TEXT,
                             md5 TEXT
                         )''')
+        status.update("[bold green]Created table images.")
 
+        status.update("[bold green]Creating table detections...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
                             id INTEGER PRIMARY KEY,
                             image_id INTEGER,
@@ -232,25 +235,40 @@ def init_database(db_path: str) -> sqlite3.Connection:
                             confidence REAL,
                             FOREIGN KEY(image_id) REFERENCES images(id)
                         )''')
+        status.update("[bold green]Created table detections.")
 
+        status.update("[bold green]Creating index detections(image_id)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)')
+        status.update("[bold green]Created index detections(image_id).")
+
+        status.update("[bold green]Creating index detections(label)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label);')
+        status.update("[bold green]Created index detections(label).")
+
+        status.update("[bold green]Creating table empty_images...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
                             file_path TEXT UNIQUE,
                             md5 TEXT
                         )''')
+        status.update("[bold green]Created table empty_images.")
 
+        status.update("[bold green]Creating table ocr_results...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS ocr_results (
                             id INTEGER PRIMARY KEY,
                             file_path TEXT UNIQUE,
                             extracted_text TEXT,
                             md5 TEXT
                         )''')
+        status.update("[bold green]Created table ocr_results.")
 
+        status.update("[bold green]Creating table image_description...")
         cursor.execute('''CREATE TABLE IF NOT EXISTS image_description (
                             id INTEGER PRIMARY KEY,
                             file_path TEXT UNIQUE,
                             image_description TEXT,
                             md5 TEXT
                         )''')
+        status.update("[bold green]Created table image_description.")
 
         cursor.close()
         conn.commit()
