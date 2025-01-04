@@ -328,8 +328,17 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
             else:
                 raise e
 
-    cursor.close()
-    conn.commit()
+    while True:
+        try:
+            cursor.close()
+            conn.commit()
+            break
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)
+            else:
+                raise e
 
 def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, str]:
     dbg(f"add_image_metadata(conn, {file_path})")
