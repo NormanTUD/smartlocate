@@ -606,6 +606,9 @@ def search(conn: sqlite3.Connection) -> None:
     search_description(conn)
 
 def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: yolov5.models.common.AutoShape) -> None:
+    if model is None:
+        return
+
     if is_file_in_yolo_db(conn, image_path, existing_files):
         console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
     else:
@@ -720,8 +723,7 @@ def main() -> None:
 
             for image_path in image_paths:
                 if os.path.exists(image_path):
-                    if model:
-                        yolo_file(conn, image_path, existing_files, model)
+                    yolo_file(conn, image_path, existing_files, model)
                     ocr_file(conn, image_path)
                     describe_img(conn, image_path)
                 else:
