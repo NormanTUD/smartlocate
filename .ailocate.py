@@ -529,6 +529,35 @@ def search_yolo(conn):
         if len(yolo_results):
             console.print(table)
 
+def search_description (conn):
+    ocr_results = None
+
+    with console.status("[bold green]Searching through descriptions...") as status:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT file_path, image_description
+                          FROM image_description
+                          WHERE image_description LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
+        ocr_results = cursor.fetchall()
+        cursor.close()
+
+    if args.sixel:
+        for row in ocr_results:
+            print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
+            display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
+            print("\n")
+    else:
+        table = Table(title="OCR Search Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        table.add_column("Extracted Text", justify="center", style="magenta")
+        for row in ocr_results:
+            file_path, extracted_text = row
+            table.add_row(file_path, extracted_text)
+        
+        if len(ocr_results):
+            console.print(table)
+
+
+
 def search_ocr(conn):
     ocr_results = None
 
@@ -560,6 +589,8 @@ def search(conn):
     search_yolo(conn)
 
     search_ocr(conn)
+
+    search_description(conn)
 
 def yolo_file(conn, image_path, existing_files, progress, task):
     if is_file_in_yolo_db(conn, image_path, existing_files):
