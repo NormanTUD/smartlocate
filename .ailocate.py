@@ -275,6 +275,24 @@ def calculate_md5(file_path):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+def execute_with_retry(conn, query, params):
+    cursor = conn.cursor()
+
+    while True:
+        try:
+            cursor.execute(query, params)
+            break
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)  # Wait 1 second before retrying
+            else:
+                raise e  # Re-raise other errors
+
+    cursor.close()
+    conn.commit()
+
+
 def add_image_metadata(conn, file_path):
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
@@ -283,20 +301,8 @@ def add_image_metadata(conn, file_path):
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
     
-    while True:
-        try:
-            cursor.execute('''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) 
-                            VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
-            conn.commit()
-            cursor.close()
-            return cursor.lastrowid, md5_hash
-        except sqlite3.OperationalError as e:
-            if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
-            else:
-                console.print(f"\n[red]Error: {e}[/]")
-                sys.exit(12)  # Bei anderen Fehlern den Prozess beenden
+    execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
+
 
 def is_image_indexed(conn, file_path, model):
     dbg(f"is_image_indexed(conn, {file_path}, {model})")
@@ -330,21 +336,8 @@ def is_image_indexed(conn, file_path, model):
 
 def add_detections(conn, image_id, model, detections):
     dbg(f"add_detections(conn, {image_id}, detections)")  
-    cursor = conn.cursor()
     for label, confidence in detections:
-        while True:
-            try:
-                cursor.execute('''INSERT INTO detections (image_id, model, label, confidence)
-                                VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
-                break  # Erfolgreich ausgeführt, Schleife beenden
-            except sqlite3.OperationalError as e:
-                if "database is locked" in str(e):
-                    console.print("[yellow]Database is locked, retrying...[/]")
-                    time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
-                else:
-                    raise e  # Andere Fehler weiterwerfen
-    cursor.close()
-    conn.commit()
+        execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
 
 def find_images(directory, existing_files):
     dbg(f"find_images({directory}, existing_files)")
@@ -461,42 +454,12 @@ def delete_non_existing_files(conn, existing_files):
 def add_description(conn, file_path, desc):
     dbg(f"add_description(conn, {file_path}, <desc>)")
     md5_hash = get_md5(file_path)
-    cursor = conn.cursor()
-
-    while True:
-        try:
-            cursor.execute('''INSERT INTO image_description (file_path, image_description, md5)
-                              VALUES (?, ?, ?)''', (file_path, desc, md5_hash))
-            break
-        except sqlite3.OperationalError as e:
-            if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
-            else:
-                raise e  # Andere Fehler weiterwerfen
-
-    cursor.close()
-    conn.commit()
+    execute_with_retry(conn, '''INSERT INTO image_description (file_path, image_description, md5) VALUES (?, ?, ?)''', (file_path, desc, md5_hash))
 
 def add_ocr_result(conn, file_path, extracted_text):
     dbg(f"add_ocr_result(conn, {file_path}, <extracted_text>)")
     md5_hash = get_md5(file_path)
-    cursor = conn.cursor()
-
-    while True:
-        try:
-            cursor.execute('''INSERT INTO ocr_results (file_path, extracted_text, md5)
-                              VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
-            break
-        except sqlite3.OperationalError as e:
-            if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
-                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
-            else:
-                raise e  # Andere Fehler weiterwerfen
-
-    cursor.close()
-    conn.commit()
+    execute_with_retry(conn, '''INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
 
 def search_yolo(conn):
     yolo_results = None
