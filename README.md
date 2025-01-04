@@ -99,10 +99,10 @@ ailocate --sixel cat
 
 ## Indexing:
 
-Indexing with YOLO and OCR:
+Indexing with YOLO, Description and OCR:
 
 ```bash
-ailocate --dir /home/user/images --index --debug --ocr
+ailocate --dir /home/user/images --index --debug --ocr --describe
 ```
 
 ## Display statistics for a specific image:
