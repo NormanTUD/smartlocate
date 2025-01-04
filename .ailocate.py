@@ -161,8 +161,8 @@ def is_file_in_ocr_db(conn: sqlite3.Connection, file_path: str) -> bool:
 
     return res > 0
 
-def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: dict) -> bool:
-    if file_path in existing_files:
+def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: Optional[dict]) -> bool:
+    if existing_files and file_path in existing_files:
         return True
 
     cursor = conn.cursor()
@@ -540,7 +540,7 @@ def search(conn: sqlite3.Connection) -> None:
 
     search_description(conn)
 
-def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: dict, model: yolov5.models.common.AutoShape) -> None:
+def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: yolov5.models.common.AutoShape) -> None:
     if is_file_in_yolo_db(conn, image_path, existing_files):
         console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
     else:
@@ -548,7 +548,8 @@ def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: dict, m
             console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
         else:
             process_image(image_path, model, conn)
-            existing_files[image_path] = get_md5(image_path)
+            if existing_files is not None:
+                existing_files[image_path] = get_md5(image_path)
 
 def get_image_description(image_path: str) -> str:
     image = Image.open(image_path).convert("RGB")
@@ -633,7 +634,8 @@ def main() -> None:
         image_paths = []
 
         with console.status(f"[bold green]Finding images in {args.dir}...") as status:
-            image_paths = list(find_images(existing_files))
+            if existing_files is not None:
+                image_paths = list(find_images(existing_files))
         total_images = len(image_paths)
 
         with Progress(
