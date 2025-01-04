@@ -456,6 +456,69 @@ def add_ocr_result(conn, file_path, extracted_text):
     cursor.close()
     conn.commit()
 
+def search_yolo(conn):
+    yolo_results = None
+
+    with console.status("[bold green]Searching through YOLO-results...") as status:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT images.file_path, detections.label, detections.confidence
+                          FROM images JOIN detections ON images.id = detections.image_id
+                          WHERE detections.label LIKE ? GROUP BY images.file_path''', (f"%{args.search}%",))
+        yolo_results = cursor.fetchall()
+        cursor.close()
+
+    if args.sixel:
+        for row in yolo_results:
+            conf = row[2]
+            if conf >= args.threshold:
+                print(f"{row[0]} (certainty: {conf:.2f})")
+                display_sixel(row[0])
+                print("\n")
+    else:
+        table = Table(title="Search Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        table.add_column("Label", justify="center", style="magenta")
+        table.add_column("Confidence", justify="right", style="green")
+        for row in yolo_results:
+            conf = row[2]
+            if conf >= args.threshold:
+                table.add_row(*map(str, row))
+
+        if len(yolo_results):
+            console.print(table)
+
+def search_ocr(conn):
+    ocr_results = None
+
+    with console.status("[bold green]Searching through OCR results...") as status:
+        cursor = conn.cursor()
+        cursor.execute('''SELECT file_path, extracted_text
+                          FROM ocr_results
+                          WHERE extracted_text LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
+        ocr_results = cursor.fetchall()
+        cursor.close()
+
+    if args.sixel:
+        for row in ocr_results:
+            print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
+            display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
+            print("\n")
+    else:
+        table = Table(title="OCR Search Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        table.add_column("Extracted Text", justify="center", style="magenta")
+        for row in ocr_results:
+            file_path, extracted_text = row
+            table.add_row(file_path, extracted_text)
+        
+        if len(ocr_results):
+            console.print(table)
+
+def search(conn):
+    search_yolo(conn)
+
+    search_ocr(conn)
+
 def main():
     dbg(f"Arguments: {args}")
 
@@ -543,61 +606,7 @@ def main():
 
 
     if args.search:
-        yolo_results = None
-
-        with console.status("[bold green]Searching through YOLO-results...") as status:
-            cursor = conn.cursor()
-            cursor.execute('''SELECT images.file_path, detections.label, detections.confidence
-                              FROM images JOIN detections ON images.id = detections.image_id
-                              WHERE detections.label LIKE ? GROUP BY images.file_path''', (f"%{args.search}%",))
-            yolo_results = cursor.fetchall()
-            cursor.close()
-
-        if args.sixel:
-            for row in yolo_results:
-                conf = row[2]
-                if conf >= args.threshold:
-                    print(f"{row[0]} (certainty: {conf:.2f})")
-                    display_sixel(row[0])
-                    print("\n")
-        else:
-            table = Table(title="Search Results")
-            table.add_column("File Path", justify="left", style="cyan")
-            table.add_column("Label", justify="center", style="magenta")
-            table.add_column("Confidence", justify="right", style="green")
-            for row in yolo_results:
-                conf = row[2]
-                if conf >= args.threshold:
-                    table.add_row(*map(str, row))
-
-            if len(yolo_results):
-                console.print(table)
-
-        ocr_results = None
-
-        with console.status("[bold green]Searching through OCR results...") as status:
-            cursor = conn.cursor()
-            cursor.execute('''SELECT file_path, extracted_text
-                              FROM ocr_results
-                              WHERE extracted_text LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
-            ocr_results = cursor.fetchall()
-            cursor.close()
-
-        if args.sixel:
-            for row in ocr_results:
-                print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
-                display_sixel(row[0])  # Falls `display_sixel` für die Dateianzeige verwendet werden kann
-                print("\n")
-        else:
-            table = Table(title="OCR Search Results")
-            table.add_column("File Path", justify="left", style="cyan")
-            table.add_column("Extracted Text", justify="center", style="magenta")
-            for row in ocr_results:
-                file_path, extracted_text = row
-                table.add_row(file_path, extracted_text)
-            
-            if len(ocr_results):
-                console.print(table)
+        search(conn)
 
     if args.stat:
         show_statistics(conn, args.stat if args.stat != "/" else None)
