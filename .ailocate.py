@@ -281,7 +281,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
     cursor.close()
     conn.commit()
 
-def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> None:
+def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, str]:
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
