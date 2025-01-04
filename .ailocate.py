@@ -18,6 +18,8 @@ import PIL
 from PIL import Image
 from sixel import converter
 
+import transformers
+
 def dier(msg: Any) -> None:
     pprint(msg)
     sys.exit(10)
@@ -56,8 +58,8 @@ parser.add_argument("--stat", nargs="?", help="Display statistics for images or 
 args = parser.parse_args()
 
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
-blip_processor: Optional[str] = None
-blip_model: Optional[str] = None
+blip_processor: Optional[transformers.models.blip.processing_blip.BlipProcessor] = None
+blip_model: Optional[transformers.models.blip.modeling_blip.BlipForConditionalGeneration] = None
 reader: Optional[str] = None
 
 console = Console()
