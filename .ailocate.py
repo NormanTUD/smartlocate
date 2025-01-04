@@ -3,15 +3,16 @@ import os
 import sys
 import argparse
 import sqlite3
+import random
+from pprint import pprint
+import time
+
 from pathlib import Path
 from datetime import datetime
 import hashlib
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.table import Table
 from rich.console import Console
-from pprint import pprint
-import time
-import random
 import PIL
 from PIL import Image
 from sixel import converter
