@@ -74,6 +74,7 @@ try:
         if args.ocr:
             with console.status("[bold green]Loading easyocr...") as status:
                 import easyocr
+            with console.status("[bold green]Loading cv2...") as status:
                 import cv2
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
