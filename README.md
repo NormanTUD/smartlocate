@@ -100,7 +100,7 @@ ailocate --stat /home/user/images/cat_picture.jpg
 # Database
 
 The results of image indexing are stored in the SQLite database `~/.ailocate_db`. This database contains information about detected
-objects and their positions in the images. The index must be re-run whenever new images are added or changes are made.
+objects in the images. The index must be re-run whenever new images are added or changes are made.
 
 # Requirements
 
