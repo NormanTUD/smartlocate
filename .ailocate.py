@@ -694,7 +694,7 @@ def main():
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("Indexing images...", total=total_images * 3) # * 3 because its ocr and yolo and description
+            task = progress.add_task("Indexing images...", total=total_images)
 
             if args.shuffle_index:
                 random.shuffle(image_paths)
