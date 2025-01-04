@@ -33,6 +33,8 @@ with console.status("[bold green]Loading yolov5...") as load_status:
     import yolov5
 with console.status("[bold green]Loading transformers...") as load_status:
     import transformers
+with console.status("[bold green]Loading easyocr...") as load_status:
+    import easyocr
 
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.ailocate_db')
 DEFAULT_MODEL: str = "yolov5s.pt"
@@ -63,7 +65,7 @@ args = parser.parse_args()
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
 blip_processor: Optional[transformers.models.blip.processing_blip.BlipProcessor] = None
 blip_model: Optional[transformers.models.blip.modeling_blip.BlipForConditionalGeneration] = None
-reader: Optional[str] = None
+reader: Optional[easyocr.easyocr.Reader] = None
 
 console = Console()
 
@@ -77,8 +79,7 @@ try:
 
     if args.index:
         if args.ocr:
-            with console.status("[bold green]Loading easyocr...") as load_status:
-                import easyocr
+            with console.status("[bold green]Loading reader...") as load_status:
                 reader = easyocr.Reader(args.ocr_lang)
             with console.status("[bold green]Loading cv2...") as load_status:
                 import cv2
@@ -98,6 +99,10 @@ except KeyboardInterrupt:
 
 def ocr_img(img: str) -> Optional[str]:
     try:
+        if reader is None:
+            console.print("[red]reader was not defined. Will not OCR.[/]")
+            return None
+
         if os.path.exists(img):
             result = reader.readtext(img)
 
