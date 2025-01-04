@@ -125,7 +125,11 @@ def display_sixel(image_path):
 def load_existing_images(conn):
     """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
     cursor = conn.cursor()
-    cursor.execute('''SELECT file_path, md5 FROM images''')
+    cursor.execute('''
+        SELECT file_path, md5 FROM images
+        UNION ALL
+        SELECT file_path, md5 FROM ocr_results;
+    ''')
     rows = cursor.fetchall()
     cursor.close()
     # Gibt ein Dictionary zurück, das die Dateipfade mit den MD5-Hashes verknüpft
