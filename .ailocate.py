@@ -95,7 +95,7 @@ def ocr_img(img):
         else:
             console.print(f"[red]ocr_img: file {img} not found[/]")
             return None
-    except cv2.error as e:
+    except (cv2.error, ValueError) as e:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
