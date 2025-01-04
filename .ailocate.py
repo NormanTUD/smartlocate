@@ -46,6 +46,7 @@ parser.add_argument("--sixel", action="store_true", help="Show sixel graphics")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
+parser.add_argument("--describe", action="store_true", help="Enable image description")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
@@ -54,6 +55,9 @@ parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLit
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 args = parser.parse_args()
 
+blip_model_name = "Salesforce/blip-image-captioning-large"
+blip_processor = None
+blip_model = None
 reader = None
 
 console = Console()
@@ -76,6 +80,13 @@ try:
                 import easyocr
             with console.status("[bold green]Loading cv2...") as status:
                 import cv2
+        if args.describe:
+            with console.status("[bold green]Loading Blip-Transformers...") as status:
+                from transformers import BlipProcessor, BlipForConditionalGeneration
+
+            with console.status("[bold green]Loading Blip-Models...") as status:
+                blip_processor = BlipProcessor.from_pretrained(blip_model_name)
+                blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
@@ -135,6 +146,14 @@ def load_existing_images(conn):
     # Gibt ein Dictionary zurück, das die Dateipfade mit den MD5-Hashes verknüpft
     return {row[0]: row[1] for row in rows}
 
+def is_file_in_img_desc_db(conn, file_path):
+    cursor = conn.cursor()
+    cursor.execute('''SELECT COUNT(*) FROM image_description WHERE file_path = ?''', (file_path,))
+    res = cursor.fetchone()[0]
+    cursor.close()
+
+    return res > 0
+
 def is_file_in_ocr_db(conn, file_path):
     """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
     # Wenn der Dateipfad bereits im Dictionary vorhanden ist, ist die Datei bereits in der DB
@@ -144,7 +163,6 @@ def is_file_in_ocr_db(conn, file_path):
     cursor.close()
 
     return res > 0
-
 
 def is_file_in_yolo_db(conn, file_path, existing_files):
     """Prüft, ob eine Datei bereits in der Datenbank existiert, unter Verwendung des vorab geladenen Dictionaries."""
@@ -235,6 +253,13 @@ def init_database(db_path):
                             id INTEGER PRIMARY KEY,
                             file_path TEXT UNIQUE,
                             extracted_text TEXT,
+                            md5 TEXT
+                        )''')
+
+        cursor.execute('''CREATE TABLE IF NOT EXISTS image_description (
+                            id INTEGER PRIMARY KEY,
+                            file_path TEXT UNIQUE,
+                            image_description TEXT,
                             md5 TEXT
                         )''')
 
@@ -433,10 +458,27 @@ def delete_non_existing_files(conn, existing_files):
 
         return existing_files
 
+def add_description(conn, file_path, desc):
+    dbg(f"add_description(conn, {file_path}, <desc>)")
+    md5_hash = get_md5(file_path)
+    cursor = conn.cursor()
+
+    while True:
+        try:
+            cursor.execute('''INSERT INTO image_description (file_path, image_description, md5)
+                              VALUES (?, ?, ?)''', (file_path, desc, md5_hash))
+            break
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)  # 1 Sekunde warten, bevor erneut versucht wird
+            else:
+                raise e  # Andere Fehler weiterwerfen
+
+    cursor.close()
+    conn.commit()
+
 def add_ocr_result(conn, file_path, extracted_text):
-    """
-    Fügt ein OCR-Ergebnis in die Tabelle 'ocr_results' ein.
-    """
     dbg(f"add_ocr_result(conn, {file_path}, <extracted_text>)")
     md5_hash = get_md5(file_path)
     cursor = conn.cursor()
@@ -531,6 +573,38 @@ def yolo_file(conn, image_path, existing_files, progress, task):
             process_image(image_path, model, conn, progress, task)
             existing_files[image_path] = get_md5(image_path)
 
+def get_image_description(image_path):
+    image = Image.open(image_path).convert("RGB")
+
+    inputs = blip_processor(images=image, return_tensors="pt")
+
+    outputs = blip_model.generate(**inputs)
+    caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
+
+    return caption
+
+
+def describe_img(conn, image_path, progress, task):
+    if args.describe:
+        if is_file_in_img_desc_db(conn, image_path):
+            console.print(f"[green]Image {image_path} already in image-description-database. Skipping it.[/]")
+            progress.update(task, advance=1)
+        else:
+            try:
+                image_description = get_image_description(image_path)
+                if image_description:
+                    console.print(f"[green]Saved description '{image_description}' for {image_path}[/]")
+                    add_description(conn, image_path, image_description)
+                else:
+                    console.print(f"[yellow]Image {image_path} could not be described. Saving it as empty.[/]")
+                    add_description(conn, image_path, "")
+
+                progress.update(task, advance=1)
+            except FileNotFoundError:
+                console.print(f"[red]File {image_path} not found[/]")
+                progress.update(task, advance=1)
+    else:
+        progress.update(task, advance=1)
 
 def ocr_file(conn, image_path, progress, task):
     if args.ocr:
@@ -600,7 +674,7 @@ def main():
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("Indexing images...", total=total_images * 2) # * 2 because its ocr and yolo
+            task = progress.add_task("Indexing images...", total=total_images * 3) # * 3 because its ocr and yolo and description
 
             if args.shuffle_index:
                 random.shuffle(image_paths)
@@ -608,6 +682,7 @@ def main():
             for image_path in image_paths:
                 yolo_file(conn, image_path, existing_files, progress, task)
                 ocr_file(conn, image_path, progress, task)
+                describe_img(conn, image_path, progress, task)
 
     if args.search:
         search(conn)
