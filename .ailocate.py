@@ -70,8 +70,6 @@ try:
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     if args.index:
-        with console.status("[bold green]Loading torch...") as load_status:
-            import torch
         with console.status("[bold green]Loading yolov5...") as load_status:
             import yolov5
         if args.ocr:
