@@ -519,7 +519,7 @@ def main():
 
                             progress.update(task, advance=1)
                         else:
-                            console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size}MB[/]")
+                            console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
                             progress.update(task, advance=1)
 
 
