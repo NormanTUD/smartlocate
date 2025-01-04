@@ -133,7 +133,7 @@ def display_sixel(image_path: str) -> None:
         if os.path.exists(unique_filename):
             os.remove(unique_filename)
 
-def load_existing_images(conn: sqlite3.Connection) -> dict:
+def load_existing_images(conn: sqlite3.Connection) -> dict[Any, Any]:
     """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
     cursor = conn.cursor()
     cursor.execute('''
@@ -552,6 +552,14 @@ def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: list, m
 def get_image_description(image_path: str) -> str:
     image = Image.open(image_path).convert("RGB")
 
+    if blip_processor is None:
+        console.print("blip_processor was none. Cannot describe image.")
+        return ""
+
+    if blip_model is None:
+        console.print("blip_model was none. Cannot describe image.")
+        return ""
+
     inputs = blip_processor(images=image, return_tensors="pt")
 
     outputs = blip_model.generate(**inputs)
@@ -643,9 +651,13 @@ def main() -> None:
                 random.shuffle(image_paths)
 
             for image_path in image_paths:
-                yolo_file(conn, image_path, existing_files, model)
-                ocr_file(conn, image_path)
-                describe_img(conn, image_path)
+                if os.path.exists(image_path):
+                    if model:
+                        yolo_file(conn, image_path, existing_files, model)
+                    ocr_file(conn, image_path)
+                    describe_img(conn, image_path)
+                else:
+                    console.print(f"[red]Could not find {image_path}[/]")
 
                 progress.update(task, advance=1)
 
