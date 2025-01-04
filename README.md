@@ -1,4 +1,4 @@
-# ailocate - YOLO File Indexer
+# ailocate - YOLO and OCR File Indexer
 
 ailocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. ailocate uses an SQLite database to efficiently store and search image data.
 
