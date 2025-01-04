@@ -435,6 +435,8 @@ def delete_entries_by_filename(conn, file_path):
             cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
 
             cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
+
+            cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
             
             cursor.close()
             conn.commit()
