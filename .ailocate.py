@@ -6,7 +6,6 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 import hashlib
-from rich.console import Console
 from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
 from rich.table import Table
 from rich.console import Console
@@ -351,7 +350,7 @@ def analyze_image(model, image_path):
         console.print(f"[red]Error: {e}[/]")
         return None
 
-def process_image(image_path, model, conn, progress):
+def process_image(image_path, model, conn):
     dbg(f"process_image({image_path}, model, conn)")
 
     image_id, md5_hash = add_image_metadata(conn, image_path)
@@ -537,14 +536,14 @@ def search(conn):
 
     search_description(conn)
 
-def yolo_file(conn, image_path, existing_files, progress, task):
+def yolo_file(conn, image_path, existing_files):
     if is_file_in_yolo_db(conn, image_path, existing_files):
         console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
     else:
         if is_image_indexed(conn, image_path, args.model):
             console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
         else:
-            process_image(image_path, model, conn, progress)
+            process_image(image_path, model, conn)
             existing_files[image_path] = get_md5(image_path)
 
 def get_image_description(image_path):
@@ -558,7 +557,7 @@ def get_image_description(image_path):
     return caption
 
 
-def describe_img(conn, image_path, progress, task):
+def describe_img(conn, image_path):
     if args.describe:
         if is_file_in_img_desc_db(conn, image_path):
             console.print(f"[green]Image {image_path} already in image-description-database. Skipping it.[/]")
@@ -575,7 +574,7 @@ def describe_img(conn, image_path, progress, task):
             except FileNotFoundError:
                 console.print(f"[red]File {image_path} not found[/]")
 
-def ocr_file(conn, image_path, progress, task):
+def ocr_file(conn, image_path):
     if args.ocr:
         if is_file_in_ocr_db(conn, image_path):
             console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
@@ -642,9 +641,9 @@ def main():
                 random.shuffle(image_paths)
 
             for image_path in image_paths:
-                yolo_file(conn, image_path, existing_files, progress, task)
-                ocr_file(conn, image_path, progress, task)
-                describe_img(conn, image_path, progress, task)
+                yolo_file(conn, image_path, existing_files)
+                ocr_file(conn, image_path)
+                describe_img(conn, image_path)
 
                 progress.update(task, advance=1)
 
