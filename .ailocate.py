@@ -249,6 +249,10 @@ def init_database(db_path: str) -> sqlite3.Connection:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)')
         status.update("[bold green]Created index detections(image_id).")
 
+        status.update("[bold green]Creating index detections(confidence)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(confidence)')
+        status.update("[bold green]Created index detections(confidence).")
+
         status.update("[bold green]Creating index detections(image_id, model)...")
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_model ON detections(image_id, model)')
         status.update("[bold green]Created index detections(image_id, model).")
