@@ -6,6 +6,7 @@ import sqlite3
 import random
 from pprint import pprint
 import time
+from typing import Optional, Any, Generator
 
 from pathlib import Path
 from datetime import datetime
@@ -17,7 +18,7 @@ import PIL
 from PIL import Image
 from sixel import converter
 
-def dier(msg):
+def dier(msg: Any) -> None:
     pprint(msg)
     sys.exit(10)
 
@@ -28,12 +29,12 @@ console: Console = Console(
     force_terminal=True
 )
 
-DEFAULT_DB_PATH = os.path.expanduser('~/.ailocate_db')
-DEFAULT_MODEL = "yolov5s.pt"
-DEFAULT_THRESHOLD = 0.3
-DEFAULT_DIR = "/"
+DEFAULT_DB_PATH: str = os.path.expanduser('~/.ailocate_db')
+DEFAULT_MODEL: str = "yolov5s.pt"
+DEFAULT_THRESHOLD: float = 0.3
+DEFAULT_DIR: str = "/"
 
-supported_formats = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+supported_formats: dict = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 
 parser = argparse.ArgumentParser(description="YOLO File Indexer")
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
@@ -54,14 +55,14 @@ parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLit
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 args = parser.parse_args()
 
-blip_model_name = "Salesforce/blip-image-captioning-large"
-blip_processor = None
-blip_model = None
-reader = None
+blip_model_name: str = "Salesforce/blip-image-captioning-large"
+blip_processor: Optional[str] = None
+blip_model: Optional[str] = None
+reader: Optional[str] = None
 
 console = Console()
 
-def dbg(msg):
+def dbg(msg: Any) -> None:
     if args.debug:
         console.log(f"[bold yellow]DEBUG:[/] {msg}")
 
@@ -92,7 +93,7 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
-def ocr_img(img):
+def ocr_img(img: str) -> Optional[str]:
     try:
         if os.path.exists(img):
             result = reader.readtext(img)
@@ -105,12 +106,12 @@ def ocr_img(img):
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
-def resize_image(input_path, output_path, max_size):
+def resize_image(input_path: str, output_path: str, max_size: int) -> None:
     with Image.open(input_path) as img:
         img.thumbnail((max_size, max_size))
         img.save(output_path)
 
-def display_sixel(image_path):
+def display_sixel(image_path: str) -> None:
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
 
     try:
@@ -124,7 +125,7 @@ def display_sixel(image_path):
         if os.path.exists(unique_filename):
             os.remove(unique_filename)
 
-def load_existing_images(conn):
+def load_existing_images(conn: sqlite3.Connection) -> dict:
     """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
     cursor = conn.cursor()
     cursor.execute('''
@@ -136,7 +137,7 @@ def load_existing_images(conn):
     cursor.close()
     return {row[0]: row[1] for row in rows}
 
-def is_file_in_img_desc_db(conn, file_path):
+def is_file_in_img_desc_db(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor = conn.cursor()
     cursor.execute('''SELECT COUNT(*) FROM image_description WHERE file_path = ?''', (file_path,))
     res = cursor.fetchone()[0]
@@ -144,7 +145,7 @@ def is_file_in_img_desc_db(conn, file_path):
 
     return res > 0
 
-def is_file_in_ocr_db(conn, file_path):
+def is_file_in_ocr_db(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor = conn.cursor()
     cursor.execute('''SELECT COUNT(*) FROM ocr_results WHERE file_path = ?''', (file_path,))
     res = cursor.fetchone()[0]
@@ -152,7 +153,7 @@ def is_file_in_ocr_db(conn, file_path):
 
     return res > 0
 
-def is_file_in_yolo_db(conn, file_path, existing_files):
+def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: list) -> bool:
     if file_path in existing_files:
         return True
 
@@ -163,14 +164,14 @@ def is_file_in_yolo_db(conn, file_path, existing_files):
 
     return res > 0
 
-def get_md5(file_path):
+def get_md5(file_path: str) -> str:
     hash_md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-def add_empty_image(conn, file_path):
+def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
     dbg(f"add_empty_image(conn, {file_path})")
     md5_hash = get_md5(file_path)
 
@@ -200,7 +201,7 @@ def add_empty_image(conn, file_path):
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def init_database(db_path):
+def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
         conn = sqlite3.connect(db_path)
@@ -247,7 +248,7 @@ def init_database(db_path):
         conn.commit()
         return conn
 
-def calculate_md5(file_path):
+def calculate_md5(file_path: str) -> str:
     """Calculate the MD5 checksum of a file."""
     hash_md5 = hashlib.md5()
     with open(file_path, "rb") as f:
@@ -255,7 +256,7 @@ def calculate_md5(file_path):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-def execute_with_retry(conn, query, params):
+def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> None:
     cursor = conn.cursor()
 
     while True:
@@ -272,7 +273,7 @@ def execute_with_retry(conn, query, params):
     cursor.close()
     conn.commit()
 
-def add_image_metadata(conn, file_path):
+def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> None:
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
@@ -282,8 +283,8 @@ def add_image_metadata(conn, file_path):
 
     execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
-def is_image_indexed(conn, file_path, model):
-    dbg(f"is_image_indexed(conn, {file_path}, {model})")
+def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
+    dbg(f"is_image_indexed(conn, {file_path})")
 
     while True:
         try:
@@ -296,7 +297,7 @@ def is_image_indexed(conn, file_path, model):
                                WHERE images.file_path = ?
                                AND detections.model = ?
                                AND images.last_modified_at = ?''',
-                           (file_path, model, last_modified_at))
+                           (file_path, args.model, last_modified_at))
 
             res = cursor.fetchone()[0]
             cursor.close()
@@ -312,19 +313,20 @@ def is_image_indexed(conn, file_path, model):
         except FileNotFoundError:
             return True
 
-def add_detections(conn, image_id, model, detections):
+    return False
+
+def add_detections(conn: sqlite3.Connection, image_id: int, model_name: str, detections: list) -> None:
     dbg(f"add_detections(conn, {image_id}, detections)")
     for label, confidence in detections:
-        execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model, label, confidence))
+        execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model_name, label, confidence))
 
-def find_images(directory, existing_files):
-    dbg(f"find_images({directory}, existing_files)")
-    for root, _, files in os.walk(directory):
+def find_images(existing_files: list) -> Generator:
+    for root, _, files in os.walk(args.dir):
         for file in files:
             if Path(file).suffix.lower() in supported_formats and file not in existing_files:
                 yield os.path.join(root, file)
 
-def analyze_image(model, image_path):
+def analyze_image(model: yolov5.models.common.AutoShape, image_path: str) -> Optional[list]:
     dbg(f"analyze_image(model, {image_path})")
     try:
         console.print(f"[bright_yellow]Predicting {image_path}[/]")
@@ -345,7 +347,7 @@ def analyze_image(model, image_path):
         console.print(f"[red]Error: {e}[/]")
         return None
 
-def process_image(image_path, model, conn):
+def process_image(image_path: str, model: yolov5.models.common.AutoShape, conn: sqlite3.Connection) -> None:
     dbg(f"process_image({image_path}, model, conn)")
 
     image_id, md5_hash = add_image_metadata(conn, image_path)
@@ -356,7 +358,7 @@ def process_image(image_path, model, conn):
     else:
         add_empty_image(conn, image_path)
 
-def show_statistics(conn, file_path=None):
+def show_statistics(conn: sqlite3.Connection, file_path: Optional[str]) -> None:
     if file_path:
         cursor = conn.cursor()
         cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
@@ -387,7 +389,7 @@ def show_statistics(conn, file_path=None):
             table.add_row(row[0], str(row[1]))
         console.print(table)
 
-def delete_entries_by_filename(conn, file_path):
+def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
     """Löscht alle Einträge aus der Datenbank, die mit dem angegebenen Dateinamen verknüpft sind."""
     dbg(f"delete_entries_by_filename(conn, {file_path})")
 
@@ -418,7 +420,7 @@ def delete_entries_by_filename(conn, file_path):
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def delete_non_existing_files(conn, existing_files):
+def delete_non_existing_files(conn: sqlite3.Connection, existing_files: list) -> dict:
     with console.status("[bold green]Deleting files from DB that do not exist...") as status:
         for file in existing_files:
             if not os.path.exists(file):
@@ -427,17 +429,17 @@ def delete_non_existing_files(conn, existing_files):
 
         return existing_files
 
-def add_description(conn, file_path, desc):
+def add_description(conn: sqlite3.Connection, file_path: str, desc: str) -> None:
     dbg(f"add_description(conn, {file_path}, <desc>)")
     md5_hash = get_md5(file_path)
     execute_with_retry(conn, '''INSERT INTO image_description (file_path, image_description, md5) VALUES (?, ?, ?)''', (file_path, desc, md5_hash))
 
-def add_ocr_result(conn, file_path, extracted_text):
+def add_ocr_result(conn: sqlite3.Connection, file_path: str, extracted_text: str) -> None:
     dbg(f"add_ocr_result(conn, {file_path}, <extracted_text>)")
     md5_hash = get_md5(file_path)
     execute_with_retry(conn, '''INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
 
-def search_yolo(conn):
+def search_yolo(conn: sqlite3.Connection) -> None:
     yolo_results = None
 
     with console.status("[bold green]Searching through YOLO-results...") as status:
@@ -468,7 +470,7 @@ def search_yolo(conn):
         if len(yolo_results):
             console.print(table)
 
-def search_description (conn):
+def search_description(conn: sqlite3.Connection) -> None:
     ocr_results = None
 
     with console.status("[bold green]Searching through descriptions...") as status:
@@ -495,7 +497,7 @@ def search_description (conn):
         if len(ocr_results):
             console.print(table)
 
-def search_ocr(conn):
+def search_ocr(conn: sqlite3.Connection) -> None:
     ocr_results = None
 
     with console.status("[bold green]Searching through OCR results...") as status:
@@ -522,24 +524,24 @@ def search_ocr(conn):
         if len(ocr_results):
             console.print(table)
 
-def search(conn):
+def search(conn: sqlite3.Connection) -> None:
     search_yolo(conn)
 
     search_ocr(conn)
 
     search_description(conn)
 
-def yolo_file(conn, image_path, existing_files):
+def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: list, model: yolov5.models.common.AutoShape) -> None:
     if is_file_in_yolo_db(conn, image_path, existing_files):
         console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
     else:
-        if is_image_indexed(conn, image_path, args.model):
+        if is_image_indexed(conn, image_path):
             console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
         else:
             process_image(image_path, model, conn)
             existing_files[image_path] = get_md5(image_path)
 
-def get_image_description(image_path):
+def get_image_description(image_path: str) -> str:
     image = Image.open(image_path).convert("RGB")
 
     inputs = blip_processor(images=image, return_tensors="pt")
@@ -549,7 +551,7 @@ def get_image_description(image_path):
 
     return caption
 
-def describe_img(conn, image_path):
+def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
     if args.describe:
         if is_file_in_img_desc_db(conn, image_path):
             console.print(f"[green]Image {image_path} already in image-description-database. Skipping it.[/]")
@@ -566,7 +568,7 @@ def describe_img(conn, image_path):
             except FileNotFoundError:
                 console.print(f"[red]File {image_path} not found[/]")
 
-def ocr_file(conn, image_path):
+def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
     if args.ocr:
         if is_file_in_ocr_db(conn, image_path):
             console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
@@ -594,7 +596,7 @@ def ocr_file(conn, image_path):
             except FileNotFoundError:
                 console.print(f"[red]File {image_path} not found[/]")
 
-def main():
+def main() -> None:
     dbg(f"Arguments: {args}")
 
     conn = init_database(args.dbfile)
@@ -614,7 +616,7 @@ def main():
         image_paths = []
 
         with console.status(f"[bold green]Finding images in {args.dir}...") as status:
-            image_paths = list(find_images(args.dir, existing_files))
+            image_paths = list(find_images(existing_files))
         total_images = len(image_paths)
 
         with Progress(
@@ -633,7 +635,7 @@ def main():
                 random.shuffle(image_paths)
 
             for image_path in image_paths:
-                yolo_file(conn, image_path, existing_files)
+                yolo_file(conn, image_path, existing_files, model)
                 ocr_file(conn, image_path)
                 describe_img(conn, image_path)
 
