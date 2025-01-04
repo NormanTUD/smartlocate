@@ -512,7 +512,7 @@ def main():
                             console.print(f"[green]Saved OCR for {image_path}.[/]")
                         else:
                             add_ocr_result(conn, image_path, "")
-                            console.print(f"[yellow]Image {image_path} contains no text. Skipping it.[/]") # TODO: Save it to not contain text
+                            console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]") # TODO: Save it to not contain text
 
                         progress.update(task, advance=1)
 
