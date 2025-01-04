@@ -291,6 +291,11 @@ def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> None:
 
     execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
+    cursor.execute('SELECT id FROM images WHERE file_path = ?', (file_path,))
+    image_id = cursor.fetchone()[0]
+
+    return image_id, md5_hash
+
 def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
     dbg(f"is_image_indexed(conn, {file_path})")
 
