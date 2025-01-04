@@ -12,9 +12,14 @@ If the parameter `--ocr` is enabled while indexing, all images are also OCRed an
 <img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/search.gif" alt="Indexing" width="600"/>
 </p>
 
+<p align="center">
+<img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/ocr.gif" alt="Indexing" width="600"/>
+</p>
+
 ## Features
 
 - Object detection in images using YOLO.
+- OCR is done via easyocr, when `--ocr` was set during indexing
 - Stores detected objects in a local SQLite database (`~/.ailocate_db`).
 - Fast searching for specific objects in images.
 - Supports Sixel graphics for visualizing results.
