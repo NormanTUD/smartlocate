@@ -519,6 +519,51 @@ def search(conn):
 
     search_ocr(conn)
 
+def yolo_file(conn, image_path, existing_files, progress, task):
+    if is_file_in_yolo_db(conn, image_path, existing_files):
+        console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
+        progress.update(task, advance=1)
+    else:
+        if is_image_indexed(conn, image_path, args.model):
+            console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
+            progress.update(task, advance=1)
+        else:
+            process_image(image_path, model, conn, progress, task)
+            existing_files[image_path] = get_md5(image_path)
+
+
+def ocr_file(conn, image_path, progress, task):
+    if args.ocr:
+        if is_file_in_ocr_db(conn, image_path):
+            console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
+            progress.update(task, advance=1)
+        else:
+            try:
+                file_size = os.path.getsize(image_path)
+
+                if file_size < args.max_ocr_size * 1024 * 1024:
+                    extracted_text = ocr_img(image_path)
+                    if extracted_text:
+                        texts = [item[1] for item in extracted_text]
+                        text = " ".join(texts)
+                        if text:
+                            add_ocr_result(conn, image_path, text)
+                            console.print(f"[green]Saved OCR for {image_path}[/]")
+                        else:
+                            console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+                            add_ocr_result(conn, image_path, "")
+                    else:
+                        console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+                        add_ocr_result(conn, image_path, "")
+
+                    progress.update(task, advance=1)
+                else:
+                    console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
+                    progress.update(task, advance=1)
+            except FileNotFoundError:
+                console.print(f"[red]File {image_path} not found[/]")
+                progress.update(task, advance=1)
+
 def main():
     dbg(f"Arguments: {args}")
 
@@ -561,49 +606,8 @@ def main():
                 random.shuffle(image_paths)
 
             for image_path in image_paths:
-                # Überprüfe, ob die Datei bereits in der Datenbank ist
-                if is_file_in_yolo_db(conn, image_path, existing_files):
-                    console.print(f"[green]Image {image_path} already in yolo-database. Skipping it.[/]")
-                    progress.update(task, advance=1)
-                else:
-                    if is_image_indexed(conn, image_path, args.model):
-                        console.print(f"[green]Image {image_path} already indexed. Skipping it.[/]")
-                        progress.update(task, advance=1)
-                    else:
-                        process_image(image_path, model, conn, progress, task)
-                        existing_files[image_path] = get_md5(image_path)
-
-                if args.ocr:
-                    if is_file_in_ocr_db(conn, image_path):
-                        console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
-                        progress.update(task, advance=1)
-                    else:
-                        try:
-                            file_size = os.path.getsize(image_path)
-
-                            if file_size < args.max_ocr_size * 1024 * 1024:
-                                extracted_text = ocr_img(image_path)
-                                if extracted_text:
-                                    texts = [item[1] for item in extracted_text]
-                                    text = " ".join(texts)
-                                    if text:
-                                        add_ocr_result(conn, image_path, text)
-                                        console.print(f"[green]Saved OCR for {image_path}[/]")
-                                    else:
-                                        console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
-                                        add_ocr_result(conn, image_path, "")
-                                else:
-                                    console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
-                                    add_ocr_result(conn, image_path, "")
-
-                                progress.update(task, advance=1)
-                            else:
-                                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
-                                progress.update(task, advance=1)
-                        except FileNotFoundError:
-                            console.print(f"[red]File {image_path} not found[/]")
-                            progress.update(task, advance=1)
-
+                yolo_file(conn, image_path, existing_files, progress, task)
+                ocr_file(conn, image_path, progress, task)
 
     if args.search:
         search(conn)
