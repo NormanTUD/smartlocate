@@ -375,8 +375,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 sys.exit(13)
 
 def insert_into_no_faces(conn, file_path):
-    print(file_path)
-    execute_with_retry(conn, '''INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)''', (file_path))
+    execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path, ))
 
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
@@ -559,11 +558,6 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
 
     while True:
         try:
-            print("==================")
-            print(query)
-            print("==================")
-            print(params)
-            print("==================")
             cursor.execute(query, params)
             break
         except sqlite3.OperationalError as e:
