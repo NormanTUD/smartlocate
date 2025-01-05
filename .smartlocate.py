@@ -745,6 +745,10 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
                 delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
+                delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
+                cursor.execute('''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
+                delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
+
                 delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
                 cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
                 delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
