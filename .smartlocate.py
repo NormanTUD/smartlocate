@@ -1,3 +1,4 @@
+import tempfile
 import re
 import uuid
 import os
@@ -32,6 +33,7 @@ console: Console = Console(
 
 MIN_CONFIDENCE_FOR_SAVING: float = 0.1
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
+DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/encodings.pkl")
 DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_THRESHOLD: float = 0.3
 DEFAULT_DIR: str = "/"
@@ -51,10 +53,12 @@ parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list o
 parser.add_argument("--exact", action="store_true", help="Exact search")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--describe", action="store_true", help="Enable image description")
+parser.add_argument("--face_recognition", action="store_true", help="Enable face-recognition (needs user interaction)")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
 parser.add_argument("--max_ocr_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
+parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 parser.add_argument('--exclude', action='append', default=[], help="Folders or paths that should be ignored. Can be used multiple times.")
@@ -106,10 +110,15 @@ try:
             with console.status("[bold green]Loading reader...") as load_status:
                 reader = easyocr.Reader(args.ocr_lang)
 
+        if args.ocr or args.face_recognition:
+            with console.status("[bold green]Loading face_recognition...") as load_status:
+                import face_recognition
             with console.status("[bold green]Loading cv2...") as load_status:
                 import cv2
+            with console.status("[bold green]Loading pickle...") as load_status:
+                import pickle
 
-        if args.describe or (not args.describe and not args.ocr and not args.yolo):
+        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
             with console.status("[bold green]Loading transformers...") as load_status:
                 import transformers
 
@@ -125,6 +134,58 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
+
+def extract_face_encodings(image_path):
+    image = face_recognition.load_image_file(image_path)
+    face_locations = face_recognition.face_locations(image)
+    face_encodings = face_recognition.face_encodings(image, face_locations)
+    return face_encodings
+
+def compare_faces(known_encodings, unknown_encoding, tolerance=0.6):
+    results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
+    return results
+
+def save_encodings(encodings, file_name):
+    with open(file_name, "wb") as file:
+        pickle.dump(encodings, file)
+
+def load_encodings(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, "rb") as file:
+            return pickle.load(file)
+    return {}
+
+def detect_faces_and_name_them_when_needed(image_path, known_encodings, tolerance=0.6):
+    face_encodings = extract_face_encodings(image_path)
+
+    new_ids = []
+
+    for face_encoding in face_encodings:
+        matches = compare_faces(list(known_encodings.values()), face_encoding, tolerance)
+        if True in matches:
+            matched_id = list(known_encodings.keys())[matches.index(True)]
+            new_ids.append(matched_id)
+        else:
+            if len(face_encodings) == 1:
+                display_sixel(image_path)
+                new_id = input("What is this person's name? ")
+                known_encodings[new_id] = face_encoding
+                new_ids.append(new_id)
+            else:
+                print(f"In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.")
+
+    return new_ids, known_encodings
+
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> None:
+    known_encodings = load_encodings(args.encoding_face_recognition_file)
+
+    new_ids, known_encodings = detect_faces_and_name_them_when_needed(image_path, known_encodings)
+    console.print(f"[green]{image_path}: {new_ids}[/]")
+
+    if len(new_ids):
+        add_image_persons_mapping(conn, image_path, new_ids)
+
+    save_encodings(known_encodings, args.encoding_face_recognition_file)
 
 def to_absolute_path(path):
     if os.path.isabs(path):
@@ -252,6 +313,62 @@ def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
+def add_image_persons_mapping(conn: sqlite3.Connection, file_path: str, person_names: list[str]) -> None:
+    for elem in person_names:
+        add_image_and_person_mapping(conn, file_path, elem)
+
+def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, person_name: str) -> None:
+    """
+    Fügt einen Dateipfad und eine Person in die entsprechenden Tabellen ein und verknüpft sie in der image_person_mapping-Tabelle.
+
+    :param conn: SQLite-Verbindung
+    :param file_path: Dateipfad des Bildes
+    :param person_name: Name der Person
+    """
+    cursor = conn.cursor()
+
+    while True:
+        try:
+            # 1. Image ID aus der images-Tabelle holen oder einfügen
+            cursor.execute('''SELECT id FROM images WHERE file_path = ?''', (file_path,))
+            image_id = cursor.fetchone()
+
+            if not image_id:
+                cursor.execute('''INSERT INTO images (file_path) VALUES (?)''', (file_path,))
+                conn.commit()
+                image_id = cursor.lastrowid
+            else:
+                image_id = image_id[0]
+
+            cursor.execute('''SELECT id FROM person WHERE name = ?''', (person_name,))
+            person_id = cursor.fetchone()
+
+            if not person_id:
+                cursor.execute('''INSERT INTO person (name) VALUES (?)''', (person_name,))
+                conn.commit()
+                person_id = cursor.lastrowid
+            else:
+                person_id = person_id[0]
+
+            # 3. Zuordnung in die image_person_mapping-Tabelle einfügen
+            cursor.execute('''
+                INSERT OR IGNORE INTO image_person_mapping (image_id, person_id)
+                VALUES (?, ?)
+            ''', (image_id, person_id))
+            conn.commit()
+
+            dbg(f"Mapped image '{file_path}' (ID: {image_id}) to person '{person_name}' (ID: {person_id})")
+            cursor.close()
+            return  # Erfolgreiche Zuordnung, Schleife beenden
+
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)
+            else:  # Andere Fehler, die das Hinzufügen der Zuordnung verhindern
+                console.print(f"\n[red]Error: {e}[/]")
+                sys.exit(13)
+
 def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
@@ -368,6 +485,26 @@ def init_database(db_path: str) -> sqlite3.Connection:
         status.update("[bold green]Creating index detections(label)...")
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)')
         status.update("[bold green]Created index detections(label).")
+
+        status.update("[bold green]Creating tables for person mapping...")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS person (
+                id INTEGER PRIMARY KEY,
+                name TEXT UNIQUE NOT NULL
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS image_person_mapping (
+                image_id INTEGER NOT NULL,
+                person_id INTEGER NOT NULL,
+                PRIMARY KEY (image_id, person_id),
+                FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE,
+                FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE
+            )
+        ''')
+
+        status.update("[bold green]Created tables for person mapping.")
 
         cursor.close()
         conn.commit()
@@ -877,7 +1014,7 @@ def main() -> None:
 
             for image_path in image_paths:
                 if os.path.exists(image_path):
-                    if args.describe or (not args.describe and not args.ocr and not args.yolo):
+                    if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
                         describe_img(conn, image_path)
                     if args.yolo:
                         if model is not None:
@@ -890,6 +1027,10 @@ def main() -> None:
                     console.print(f"[red]Could not find {image_path}[/]")
 
                 progress.update(task, advance=1)
+
+        if args.face_recognition:
+            for image_path in image_paths:
+                recognize_persons_in_image(conn, image_path)
 
     if args.search:
         search(conn)
