@@ -1118,7 +1118,7 @@ def main() -> None:
         if args.face_recognition:
             if supports_sixel():
                 for image_path in image_paths:
-                    if faces_already_recognized(conn, image_path): 
+                    if not faces_already_recognized(conn, image_path): 
                         recognize_persons_in_image(conn, image_path)
             else:
                 console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
