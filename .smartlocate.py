@@ -44,6 +44,7 @@ parser.add_argument("--size", type=int, default=400, help="Size to which the ima
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("--no_sixel", action="store_true", help="Hide sixel graphics")
+parser.add_argument("--yolo", action="store_true", help="Use yolo for indexing")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
@@ -72,17 +73,21 @@ try:
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     if args.index:
-        with console.status("[bold green]Loading yolov5...") as load_status:
-            import yolov5
+        if args.yolo:
+            with console.status("[bold green]Loading yolov5...") as load_status:
+                import yolov5
 
         if args.ocr:
             with console.status("[bold green]Loading easyocr...") as load_status:
                 import easyocr
+
             with console.status("[bold green]Loading reader...") as load_status:
                 reader = easyocr.Reader(args.ocr_lang)
+
             with console.status("[bold green]Loading cv2...") as load_status:
                 import cv2
-        if args.describe:
+
+        if args.describe or (not args.describe and not args.ocr and not args.yolo):
             with console.status("[bold green]Loading transformers...") as load_status:
                 import transformers
 
@@ -721,49 +726,47 @@ def get_image_description(image_path: str) -> str:
 
 
 def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
-    if args.describe:
-        if is_file_in_img_desc_db(conn, image_path):
-            console.print(f"[green]Image {image_path} already in image-description-database. Skipping it.[/]")
-        else:
-            try:
-                image_description = get_image_description(image_path)
-                if image_description:
-                    console.print(f"[green]Saved description '{image_description}' for {image_path}[/]")
-                    add_description(conn, image_path, image_description)
-                else:
-                    console.print(f"[yellow]Image {image_path} could not be described. Saving it as empty.[/]")
-                    add_description(conn, image_path, "")
+    if is_file_in_img_desc_db(conn, image_path):
+        console.print(f"[green]Image {image_path} already in image-description-database. Skipping it.[/]")
+    else:
+        try:
+            image_description = get_image_description(image_path)
+            if image_description:
+                console.print(f"[green]Saved description '{image_description}' for {image_path}[/]")
+                add_description(conn, image_path, image_description)
+            else:
+                console.print(f"[yellow]Image {image_path} could not be described. Saving it as empty.[/]")
+                add_description(conn, image_path, "")
 
-            except FileNotFoundError:
-                console.print(f"[red]File {image_path} not found[/]")
+        except FileNotFoundError:
+            console.print(f"[red]File {image_path} not found[/]")
 
 def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
-    if args.ocr:
-        if is_file_in_ocr_db(conn, image_path):
-            console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
-        else:
-            try:
-                file_size = os.path.getsize(image_path)
+    if is_file_in_ocr_db(conn, image_path):
+        console.print(f"[green]Image {image_path} already in ocr-database. Skipping it.[/]")
+    else:
+        try:
+            file_size = os.path.getsize(image_path)
 
-                if file_size < args.max_ocr_size * 1024 * 1024:
-                    extracted_text = ocr_img(image_path)
-                    if extracted_text:
-                        texts = [item[1] for item in extracted_text]
-                        text = " ".join(texts)
-                        if text:
-                            add_ocr_result(conn, image_path, text)
-                            console.print(f"[green]Saved OCR for {image_path}[/]")
-                        else:
-                            console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
-                            add_ocr_result(conn, image_path, "")
+            if file_size < args.max_ocr_size * 1024 * 1024:
+                extracted_text = ocr_img(image_path)
+                if extracted_text:
+                    texts = [item[1] for item in extracted_text]
+                    text = " ".join(texts)
+                    if text:
+                        add_ocr_result(conn, image_path, text)
+                        console.print(f"[green]Saved OCR for {image_path}[/]")
                     else:
                         console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
                         add_ocr_result(conn, image_path, "")
-
                 else:
-                    console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
-            except FileNotFoundError:
-                console.print(f"[red]File {image_path} not found[/]")
+                    console.print(f"[yellow]Image {image_path} contains no text. Saving it as empty.[/]")
+                    add_ocr_result(conn, image_path, "")
+
+            else:
+                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
+        except FileNotFoundError:
+            console.print(f"[red]File {image_path} not found[/]")
 
 def main() -> None:
     dbg(f"Arguments: {args}")
@@ -806,9 +809,12 @@ def main() -> None:
 
             for image_path in image_paths:
                 if os.path.exists(image_path):
-                    yolo_file(conn, image_path, existing_files, model)
-                    ocr_file(conn, image_path)
-                    describe_img(conn, image_path)
+                    if args.describe or (not args.describe_img and not args.ocr and not args.yolo):
+                        describe_img(conn, image_path)
+                    if args.yolo:
+                        yolo_file(conn, image_path, existing_files, model)
+                    if args.ocr:
+                        ocr_file(conn, image_path)
                 else:
                     console.print(f"[red]Could not find {image_path}[/]")
 
