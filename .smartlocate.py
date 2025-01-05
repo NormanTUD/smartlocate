@@ -375,6 +375,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 sys.exit(13)
 
 def insert_into_no_faces(conn, file_path):
+    print(file_path)
     execute_with_retry(conn, '''INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)''', (file_path))
 
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
@@ -1116,9 +1117,12 @@ def main() -> None:
                     progress.update(task, advance=1)
 
         if args.face_recognition:
-            for image_path in image_paths:
-                if faces_already_recognized(conn, image_path): 
-                    recognize_persons_in_image(conn, image_path)
+            if supports_sixel():
+                for image_path in image_paths:
+                    if faces_already_recognized(conn, image_path): 
+                        recognize_persons_in_image(conn, image_path)
+            else:
+                console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
     if args.search:
         search(conn)
