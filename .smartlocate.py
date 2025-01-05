@@ -812,7 +812,7 @@ def main() -> None:
 
             for image_path in image_paths:
                 if os.path.exists(image_path):
-                    if args.describe or (not args.describe_img and not args.ocr and not args.yolo):
+                    if args.describe or (not args.describe and not args.ocr and not args.yolo):
                         describe_img(conn, image_path)
                     if args.yolo:
                         if model is not None:
