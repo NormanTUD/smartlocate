@@ -65,7 +65,26 @@ blip_processor: Any = None
 blip_model: Any = None
 reader: Any = None
 
+def supports_sixel():
+    term = os.environ.get("TERM", "").lower()
+    if "xterm" in term or "mlterm" in term:
+        return True
+
+    try:
+        output = subprocess.run(["tput", "setab", "256"], capture_output=True, text=True)
+        if output.returncode == 0 and "sixel" in output.stdout.lower():
+            return True
+    except FileNotFoundError:
+        pass
+
+    return False
+
 console = Console()
+
+if not supports_sixel() and not args.no_sixel:
+    console.print("[red]Cannot use sixel. Will set --no_sixel to true.[/]")
+
+    args.no_sixel = True
 
 def dbg(msg: Any) -> None:
     if args.debug:
