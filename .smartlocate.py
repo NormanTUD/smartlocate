@@ -782,8 +782,11 @@ def main() -> None:
         existing_files = delete_non_existing_files(conn, existing_files)
 
     if args.index:
-        model = yolov5.load(args.model)
-        model.conf = 0
+        model = None
+
+        if args.yolo:
+            model = yolov5.load(args.model)
+            model.conf = 0
 
         image_paths = []
 
@@ -812,7 +815,10 @@ def main() -> None:
                     if args.describe or (not args.describe_img and not args.ocr and not args.yolo):
                         describe_img(conn, image_path)
                     if args.yolo:
-                        yolo_file(conn, image_path, existing_files, model)
+                        if model is not None:
+                            yolo_file(conn, image_path, existing_files, model)
+                        else:
+                            console.print(f"[red]--yolo was set, but model could not be loaded[/]")
                     if args.ocr:
                         ocr_file(conn, image_path)
                 else:
