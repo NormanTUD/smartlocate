@@ -29,13 +29,6 @@ console: Console = Console(
     force_terminal=True
 )
 
-with console.status("[bold green]Loading yolov5...") as load_status:
-    import yolov5
-with console.status("[bold green]Loading transformers...") as load_status:
-    import transformers
-with console.status("[bold green]Loading easyocr...") as load_status:
-    import easyocr
-
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.ailocate_db')
 DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_THRESHOLD: float = 0.3
@@ -63,9 +56,9 @@ parser.add_argument("--stat", nargs="?", help="Display statistics for images or 
 args = parser.parse_args()
 
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
-blip_processor: Optional[transformers.models.blip.processing_blip.BlipProcessor] = None
-blip_model: Optional[transformers.models.blip.modeling_blip.BlipForConditionalGeneration] = None
-reader: Optional[easyocr.easyocr.Reader] = None
+blip_processor: Any = None
+blip_model: Any = None
+reader: Any = None
 
 console = Console()
 
@@ -78,12 +71,20 @@ try:
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     if args.index:
+        with console.status("[bold green]Loading yolov5...") as load_status:
+            import yolov5
+
         if args.ocr:
+            with console.status("[bold green]Loading easyocr...") as load_status:
+                import easyocr
             with console.status("[bold green]Loading reader...") as load_status:
                 reader = easyocr.Reader(args.ocr_lang)
             with console.status("[bold green]Loading cv2...") as load_status:
                 import cv2
         if args.describe:
+            with console.status("[bold green]Loading transformers...") as load_status:
+                import transformers
+
             with console.status("[bold green]Loading Blip-Transformers...") as load_status:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
@@ -171,6 +172,14 @@ def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files:
     cursor.close()
 
     return res > 0
+
+def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
+    cursor = conn.cursor()
+    cursor.execute('''SELECT label FROM detections WHERE label = ? LIMIT 1''', (label,))
+    res = cursor.fetchone()  # Gibt entweder eine Zeile oder None zurück
+    cursor.close()
+
+    return res is not None  # Wenn eine Zeile zurückgegeben wurde, existiert das Label
 
 def get_md5(file_path: str) -> str:
     hash_md5 = hashlib.md5()
@@ -318,6 +327,14 @@ def init_database(db_path: str) -> sqlite3.Connection:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label_image_id ON detections(label, image_id)')
         status.update("[bold green]Created index detections(label, image_id).")
 
+        status.update("[bold green]Creating index image_description_no_case...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_image_description_no_case ON image_description(image_description COLLATE NOCASE)')
+        status.update("[bold green]Created index image_description_no_case.")
+
+        status.update("[bold green]Creating index detections(label)...")
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)')
+        status.update("[bold green]Created index detections(label).")
+
         cursor.close()
         conn.commit()
         return conn
@@ -414,7 +431,7 @@ def find_images(existing_files: dict) -> Generator:
             if Path(file).suffix.lower() in supported_formats and file not in existing_files:
                 yield os.path.join(root, file)
 
-def analyze_image(model: yolov5.models.common.AutoShape, image_path: str) -> Optional[list]:
+def analyze_image(model: Any, image_path: str) -> Optional[list]:
     dbg(f"analyze_image(model, {image_path})")
     try:
         console.print(f"[bright_yellow]Predicting {image_path}[/]")
@@ -435,7 +452,7 @@ def analyze_image(model: yolov5.models.common.AutoShape, image_path: str) -> Opt
         console.print(f"[red]Error: {e}[/]")
         return None
 
-def process_image(image_path: str, model: yolov5.models.common.AutoShape, conn: sqlite3.Connection) -> None:
+def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None:
     dbg(f"process_image({image_path}, model, conn)")
 
     image_id, md5_hash = add_image_metadata(conn, image_path)
@@ -541,6 +558,9 @@ def add_ocr_result(conn: sqlite3.Connection, file_path: str, extracted_text: str
 def search_yolo(conn: sqlite3.Connection) -> None:
     yolo_results = None
 
+    if not is_existing_detections_label(conn, args.search):
+        return
+
     with console.status("[bold green]Searching through YOLO-results...") as status:
         cursor = conn.cursor()
         cursor.execute('''SELECT images.file_path, detections.label, detections.confidence
@@ -630,7 +650,7 @@ def search(conn: sqlite3.Connection) -> None:
 
     search_description(conn)
 
-def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: yolov5.models.common.AutoShape) -> None:
+def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if model is None:
         return
 
