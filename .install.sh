@@ -268,12 +268,14 @@
 				fi
 			}
 
-			if [ -f "$INSTALL_ERRORS_FILE" ] && [ ! -s "$INSTALL_ERRORS_FILE" ]; then
-				# Prüfen, ob das Verzeichnis leer ist (inkl. versteckter Dateien)
-				if [ "$(find "$LOGS_DIR" -mindepth 1 -type f | wc -l)" -eq 1 ]; then
-					# Lösche die leere Datei und das Verzeichnis
-					rm "$INSTALL_ERRORS_FILE"
-					rmdir "$LOGS_DIR"
+			if [ -d logs ]; then
+				if [ -f "$INSTALL_ERRORS_FILE" ] && [ ! -s "$INSTALL_ERRORS_FILE" ]; then
+					# Prüfen, ob das Verzeichnis leer ist (inkl. versteckter Dateien)
+					if [ "$(find "logs" -mindepth 1 -type f | wc -l)" -eq 1 ]; then
+						# Lösche die leere Datei und das Verzeichnis
+						rm "$INSTALL_ERRORS_FILE"
+						rmdir "logs"
+					fi
 				fi
 			fi
 
