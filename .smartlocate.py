@@ -158,6 +158,8 @@ def load_encodings(file_name):
 def detect_faces_and_name_them_when_needed(image_path, known_encodings, tolerance=0.6):
     face_encodings = extract_face_encodings(image_path)
 
+    manually_entered_name = False
+
     new_ids = []
 
     c = 0
@@ -174,6 +176,8 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
                 if any(char.strip() for char in new_id):
                     known_encodings[new_id] = face_encoding
                     new_ids.append(new_id)
+
+                    manually_entered_name = True
                 else:
                     console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
             else:
@@ -181,12 +185,12 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
                     console.print(f"[yellow]In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.[/]")
         c = c + 1
 
-    return new_ids, known_encodings
+    return new_ids, known_encodings, manually_entered_name
 
-def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> None:
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str):
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
-    new_ids, known_encodings = detect_faces_and_name_them_when_needed(image_path, known_encodings)
+    new_ids, known_encodings, manually_entered_name = detect_faces_and_name_them_when_needed(image_path, known_encodings)
     console.print(f"[green]{image_path}: {new_ids}[/]")
 
     if len(new_ids):
@@ -196,7 +200,7 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> Non
 
     save_encodings(known_encodings, args.encoding_face_recognition_file)
 
-    return new_ids
+    return new_ids, manually_entered_name
 
 def to_absolute_path(path):
     if os.path.isabs(path):
@@ -1125,9 +1129,9 @@ def main() -> None:
             if supports_sixel():
                 for image_path in image_paths:
                     if not faces_already_recognized(conn, image_path): 
-                        new_ids = recognize_persons_in_image(conn, image_path)
+                        new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
 
-                        if len(new_ids):
+                        if len(new_ids) and not manually_entered_name:
                             console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
                             display_sixel(image_path)
                     else:
