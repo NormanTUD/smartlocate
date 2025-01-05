@@ -160,6 +160,8 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
 
     new_ids = []
 
+    c = 0
+
     for face_encoding in face_encodings:
         matches = compare_faces(list(known_encodings.values()), face_encoding, tolerance)
         if True in matches:
@@ -175,7 +177,9 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
                 else:
                     console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
             else:
-                console.print(f"[yellow]In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.[/]")
+                if c == 0:
+                    console.print(f"[yellow]In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.[/]")
+        c = c + 1
 
     return new_ids, known_encodings
 
