@@ -196,6 +196,8 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> Non
 
     save_encodings(known_encodings, args.encoding_face_recognition_file)
 
+    return new_ids
+
 def to_absolute_path(path):
     if os.path.isabs(path):
         return path
@@ -1123,7 +1125,11 @@ def main() -> None:
             if supports_sixel():
                 for image_path in image_paths:
                     if not faces_already_recognized(conn, image_path): 
-                        recognize_persons_in_image(conn, image_path)
+                        new_ids = recognize_persons_in_image(conn, image_path)
+
+                        if len(new_ids):
+                            console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                            display_sixel(image_path)
             else:
                 console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
