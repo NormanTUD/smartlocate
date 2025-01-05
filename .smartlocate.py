@@ -57,6 +57,7 @@ parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="
 parser.add_argument("--max_ocr_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
+parser.add_argument('--exclude', action='append', default=[], help="Folders or paths that should be ignored. Can be used multiple times.")
 args = parser.parse_args()
 
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
@@ -105,6 +106,12 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
+
+def to_absolute_path(path):
+    if os.path.isabs(path):
+        return path
+    else:
+        return os.path.abspath(path)
 
 def ocr_img(img: str) -> Optional[str]:
     try:
@@ -433,11 +440,21 @@ def add_detections(conn: sqlite3.Connection, image_id: int, model_name: str, det
     for label, confidence in detections:
         execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model_name, label, confidence))
 
+def is_ignored_path(path: str) -> bool:
+    if args.exclude:
+        for excl in args.exclude:
+            if path.startswith(to_absolute_path(excl)):
+                return True
+
+    return False
+
 def find_images(existing_files: dict) -> Generator:
     for root, _, files in os.walk(args.dir):
         for file in files:
             if Path(file).suffix.lower() in supported_formats and file not in existing_files:
-                yield os.path.join(root, file)
+                _path = os.path.join(root, file)
+                if not is_ignored_path(_path):
+                    yield _path
 
 def analyze_image(model: Any, image_path: str) -> Optional[list]:
     dbg(f"analyze_image(model, {image_path})")
@@ -583,11 +600,12 @@ def search_yolo(conn: sqlite3.Connection) -> int:
         for row in yolo_results:
             conf = row[2]
             if conf >= args.threshold:
-                print(f"{row[0]} (certainty: {conf:.2f})")
-                display_sixel(row[0])
-                print("\n")
+                if not is_ignored_path(row[0]):
+                    print(f"{row[0]} (certainty: {conf:.2f})")
+                    display_sixel(row[0])
+                    print("\n")
 
-                nr_yolo = nr_yolo + 1
+                    nr_yolo = nr_yolo + 1
     else:
         table = Table(title="Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -596,9 +614,10 @@ def search_yolo(conn: sqlite3.Connection) -> int:
         for row in yolo_results:
             conf = row[2]
             if conf >= args.threshold:
-                table.add_row(*map(str, row))
+                if not is_ignored_path(row[0]):
+                    table.add_row(*map(str, row))
 
-                nr_yolo = nr_yolo + 1
+                    nr_yolo = nr_yolo + 1
 
         if len(yolo_results):
             console.print(table)
@@ -634,9 +653,10 @@ def search_description(conn: sqlite3.Connection) -> int:
 
      if not args.no_sixel:
          for row in ocr_results:
-             print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
-             display_sixel(row[0])
-             print("\n")
+             if not is_ignored_path(row[0]):
+                 print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
+                 display_sixel(row[0])
+                 print("\n")
 
              nr_desc = nr_desc + 1
      else:
@@ -645,9 +665,10 @@ def search_description(conn: sqlite3.Connection) -> int:
          table.add_column("Extracted Text", justify="center", style="magenta")
          for row in ocr_results:
              file_path, extracted_text = row
-             table.add_row(file_path, extracted_text)
+             if not is_ignored_path(file_path):
+                 table.add_row(file_path, extracted_text)
 
-             nr_desc = nr_desc + 1
+                 nr_desc = nr_desc + 1
          if len(ocr_results):
              console.print(table)
 
@@ -677,18 +698,20 @@ def search_ocr(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in ocr_results:
-            print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
-            display_sixel(row[0])
-            print("\n")
-            nr_ocr += 1
+            if not is_ignored_path(row[0]):
+                print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
+                display_sixel(row[0])
+                print("\n")
+                nr_ocr += 1
     else:
         table = Table(title="OCR Search Results")
         table.add_column("File Path", justify="left", style="cyan")
         table.add_column("Extracted Text", justify="center", style="magenta")
         for row in ocr_results:
             file_path, extracted_text = row
-            table.add_row(file_path, extracted_text)
-            nr_ocr += 1
+            if not is_ignored_path(file_path):
+                table.add_row(file_path, extracted_text)
+                nr_ocr += 1
 
         if len(ocr_results):
             console.print(table)

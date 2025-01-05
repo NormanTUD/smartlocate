@@ -82,6 +82,7 @@ The tool will search the indexed images for the object and display the results.
 - `--model MODEL`: Specifies the YOLO model for object detection.
 - `--threshold THRESHOLD`: Sets the confidence threshold for object detection (0-1).
 - `--dbfile DBFILE`: Specifies the path to the SQLite database file.
+- `--exclude PATH`: Excludes a path from indexing/searching. Can be used multiple times.
 - `--stat [STAT]`: Displays statistics for images or a specific file.
 
 # Example Commands
