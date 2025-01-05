@@ -340,19 +340,7 @@
 					green_reset_line "${PROGRESSBAR}➤Checking if $install_this is installed$(bg_jobs_str)..."
 				fi
 
-				ppip "$install_this" "-" "$MAX_NR" &
-
-				nr_bg_jobs=$(get_nr_bg_jobs)
-
-				while [[ "$nr_bg_jobs" -gt 4 ]]; do
-					nr_bg_jobs=$(get_nr_bg_jobs)
-
-					if [[ -z $CI ]]; then
-						green_reset_line "Currently waiting for jobs to end (currently $nr_bg_jobs)"
-					fi
-
-					wait
-				done
+				ppip "$install_this" "-" "$MAX_NR"
 			done
 
 			_tput cr
