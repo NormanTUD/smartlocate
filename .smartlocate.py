@@ -556,11 +556,11 @@ def add_ocr_result(conn: sqlite3.Connection, file_path: str, extracted_text: str
     md5_hash = get_md5(file_path)
     execute_with_retry(conn, '''INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
 
-def search_yolo(conn: sqlite3.Connection) -> None:
+def search_yolo(conn: sqlite3.Connection) -> int:
     yolo_results = None
 
     if not is_existing_detections_label(conn, args.search):
-        return
+        return 0
 
     with console.status("[bold green]Searching through YOLO-results...") as status:
         cursor = conn.cursor()
@@ -570,6 +570,8 @@ def search_yolo(conn: sqlite3.Connection) -> None:
         yolo_results = cursor.fetchall()
         cursor.close()
 
+    nr_yolo = 0
+
     if not args.no_sixel:
         for row in yolo_results:
             conf = row[2]
@@ -577,6 +579,8 @@ def search_yolo(conn: sqlite3.Connection) -> None:
                 print(f"{row[0]} (certainty: {conf:.2f})")
                 display_sixel(row[0])
                 print("\n")
+
+                nr_yolo = nr_yolo + 1
     else:
         table = Table(title="Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -587,11 +591,17 @@ def search_yolo(conn: sqlite3.Connection) -> None:
             if conf >= args.threshold:
                 table.add_row(*map(str, row))
 
+                nr_yolo = nr_yolo + 1
+
         if len(yolo_results):
             console.print(table)
 
+    return nr_yolo
+
 def search_description(conn: sqlite3.Connection) -> None:
     ocr_results = None
+
+    nr_desc = 0
 
     with console.status("[bold green]Searching through descriptions...") as status:
         cursor = conn.cursor()
@@ -606,6 +616,8 @@ def search_description(conn: sqlite3.Connection) -> None:
             print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
             display_sixel(row[0])
             print("\n")
+
+            nr_desc = nr_desc + 1
     else:
         table = Table(title="OCR Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -614,11 +626,16 @@ def search_description(conn: sqlite3.Connection) -> None:
             file_path, extracted_text = row
             table.add_row(file_path, extracted_text)
 
+            nr_desc = nr_desc + 1
         if len(ocr_results):
             console.print(table)
 
-def search_ocr(conn: sqlite3.Connection) -> None:
+    return nr_desc
+
+def search_ocr(conn: sqlite3.Connection) -> int:
     ocr_results = None
+
+    nr_ocr = 0
 
     with console.status("[bold green]Searching through OCR results...") as status:
         cursor = conn.cursor()
@@ -633,6 +650,8 @@ def search_ocr(conn: sqlite3.Connection) -> None:
             print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
             display_sixel(row[0])
             print("\n")
+
+            nr_ocr = nr_ocr + 1
     else:
         table = Table(title="OCR Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -641,15 +660,28 @@ def search_ocr(conn: sqlite3.Connection) -> None:
             file_path, extracted_text = row
             table.add_row(file_path, extracted_text)
 
+            nr_ocr = nr_ocr + 1
+
         if len(ocr_results):
             console.print(table)
 
+    return nr_ocr
+
 def search(conn: sqlite3.Connection) -> None:
-    search_yolo(conn)
+    nr_yolo = search_yolo(conn)
 
-    search_ocr(conn)
+    nr_ocr = search_ocr(conn)
 
-    search_description(conn)
+    nr_desc = search_description(conn)
+
+    table = Table(title="Search overview")
+    table.add_column("Nr. Yolo Results", justify="left", style="cyan")
+    table.add_column("Nr. OCR Results", justify="left", style="cyan")
+    table.add_column("Nr. Description Results", justify="left", style="cyan")
+
+    table.add_row(str(nr_yolo), str(nr_ocr), str(nr_desc))
+
+    console.print(table)
 
 def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if model is None:
