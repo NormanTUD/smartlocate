@@ -1087,6 +1087,9 @@ def main() -> None:
                 image_paths = list(find_images(existing_files))
         total_images = len(image_paths)
 
+        if args.shuffle_index:
+            random.shuffle(image_paths)
+
         if args.describe or args.yolo or args.ocr or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
@@ -1099,9 +1102,6 @@ def main() -> None:
                 console=console,
             ) as progress:
                 task = progress.add_task("Indexing images...", total=total_images)
-
-                if args.shuffle_index:
-                    random.shuffle(image_paths)
 
                 for image_path in image_paths:
                     if os.path.exists(image_path):
