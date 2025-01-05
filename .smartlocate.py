@@ -1,3 +1,4 @@
+import re
 import uuid
 import os
 import sys
@@ -47,6 +48,7 @@ parser.add_argument("--no_sixel", action="store_true", help="Hide sixel graphics
 parser.add_argument("--yolo", action="store_true", help="Use yolo for indexing")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
+parser.add_argument("--exact", action="store_true", help="Exact search")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--describe", action="store_true", help="Enable image description")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
@@ -603,39 +605,50 @@ def search_yolo(conn: sqlite3.Connection) -> int:
 
     return nr_yolo
 
-def search_description(conn: sqlite3.Connection) -> None:
-    ocr_results = None
+def build_sql_query_description(words: list[str]) -> tuple[str, tuple[str, ...]]:
+    conditions = ["image_description LIKE ? COLLATE NOCASE" for _ in words]
+    sql_query = f"SELECT file_path, image_description FROM image_description WHERE {' AND '.join(conditions)}"
+    values = tuple(f"%{word}%" for word in words)
+    return sql_query, values
 
-    nr_desc = 0
+def clean_search_query(query: str) -> list[str]:
+    cleaned_query = re.sub(r"[^a-zA-Z\s]", "", query)
+    sp = cleaned_query.split()
+    return sp
 
-    with console.status("[bold green]Searching through descriptions...") as status:
-        cursor = conn.cursor()
-        cursor.execute('''SELECT file_path, image_description
-                          FROM image_description
-                          WHERE image_description LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
-        ocr_results = cursor.fetchall()
-        cursor.close()
+def search_description(conn: sqlite3.Connection) -> int:
+     ocr_results = None
 
-    if not args.no_sixel:
-        for row in ocr_results:
-            print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
-            display_sixel(row[0])
-            print("\n")
+     nr_desc = 0
 
-            nr_desc = nr_desc + 1
-    else:
-        table = Table(title="OCR Search Results")
-        table.add_column("File Path", justify="left", style="cyan")
-        table.add_column("Extracted Text", justify="center", style="magenta")
-        for row in ocr_results:
-            file_path, extracted_text = row
-            table.add_row(file_path, extracted_text)
+     with console.status("[bold green]Searching through descriptions...") as status:
+         cursor = conn.cursor()
+         words = clean_search_query(args.search)  # Clean and split the search string
+         sql_query, values = build_sql_query_description(words)  # Build the SQL query dynamically
+         cursor.execute(sql_query, values)
+         ocr_results = cursor.fetchall()
+         cursor.close()
 
-            nr_desc = nr_desc + 1
-        if len(ocr_results):
-            console.print(table)
+     if not args.no_sixel:
+         for row in ocr_results:
+             print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
+             display_sixel(row[0])
+             print("\n")
 
-    return nr_desc
+             nr_desc = nr_desc + 1
+     else:
+         table = Table(title="OCR Search Results")
+         table.add_column("File Path", justify="left", style="cyan")
+         table.add_column("Extracted Text", justify="center", style="magenta")
+         for row in ocr_results:
+             file_path, extracted_text = row
+             table.add_row(file_path, extracted_text)
+
+             nr_desc = nr_desc + 1
+         if len(ocr_results):
+             console.print(table)
+
+     return nr_desc
 
 def search_ocr(conn: sqlite3.Connection) -> int:
     ocr_results = None
