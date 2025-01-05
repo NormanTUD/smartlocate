@@ -184,6 +184,8 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> Non
 
     if len(new_ids):
         add_image_persons_mapping(conn, image_path, new_ids)
+    else:
+        insert_into_no_faces(conn, image_path)
 
     save_encodings(known_encodings, args.encoding_face_recognition_file)
 
@@ -369,6 +371,29 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
+def insert_into_no_faces(conn, filename):
+    execute_with_retry(conn, '''INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)''', (file_path))
+
+def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
+    cursor = conn.cursor()
+
+    # Überprüfen, ob das Bild in der no_faces-Tabelle existiert
+    cursor.execute('''SELECT 1 FROM no_faces WHERE file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True  # Bild befindet sich in der no_faces-Tabelle
+
+    # Überprüfen, ob das Bild in der image_person_mapping-Tabelle existiert
+    cursor.execute('''SELECT 1 FROM image_person_mapping
+                      JOIN images ON images.id = image_person_mapping.image_id
+                      WHERE images.file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True  # Bild befindet sich in der image_person_mapping-Tabelle
+
+    cursor.close()
+    return False  # Bild wurde noch nicht durchsucht
+
 def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
@@ -502,6 +527,13 @@ def init_database(db_path: str) -> sqlite3.Connection:
                 FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE,
                 FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE
             )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS no_faces (
+                id INTEGER PRIMARY KEY,
+                file_path TEXT UNIQUE NOT NULL
+            );
         ''')
 
         status.update("[bold green]Created tables for person mapping.")
@@ -1081,7 +1113,8 @@ def main() -> None:
 
         if args.face_recognition:
             for image_path in image_paths:
-                recognize_persons_in_image(conn, image_path)
+                if faces_already_recognized(conn, image_path): 
+                    recognize_persons_in_image(conn, image_path)
 
     if args.search:
         search(conn)
