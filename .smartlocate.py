@@ -33,7 +33,7 @@ console: Console = Console(
 
 MIN_CONFIDENCE_FOR_SAVING: float = 0.1
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
-DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/encodings.pkl")
+DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/.smartlocate_face_encodings.pkl")
 DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_THRESHOLD: float = 0.3
 DEFAULT_DIR: str = "/"
