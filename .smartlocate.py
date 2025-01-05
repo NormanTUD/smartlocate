@@ -653,16 +653,25 @@ def search_description(conn: sqlite3.Connection) -> int:
 
      return nr_desc
 
+def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
+    conditions = ["extracted_text LIKE ? COLLATE NOCASE" for _ in words]
+    sql_query = f"SELECT file_path, extracted_text FROM ocr_results WHERE {' AND '.join(conditions)}"
+    values = tuple(f"%{word}%" for word in words)
+    return sql_query, values
+
 def search_ocr(conn: sqlite3.Connection) -> int:
     ocr_results = None
-
     nr_ocr = 0
 
     with console.status("[bold green]Searching through OCR results...") as status:
         cursor = conn.cursor()
-        cursor.execute('''SELECT file_path, extracted_text
-                          FROM ocr_results
-                          WHERE extracted_text LIKE ? COLLATE NOCASE''', (f"%{args.search}%",))
+
+        # Clean and split the search string
+        words = clean_search_query(args.search)
+
+        # Build the SQL query dynamically
+        sql_query, values = build_sql_query_ocr(words)
+        cursor.execute(sql_query, values)
         ocr_results = cursor.fetchall()
         cursor.close()
 
@@ -671,8 +680,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
             print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
             display_sixel(row[0])
             print("\n")
-
-            nr_ocr = nr_ocr + 1
+            nr_ocr += 1
     else:
         table = Table(title="OCR Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -680,8 +688,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             file_path, extracted_text = row
             table.add_row(file_path, extracted_text)
-
-            nr_ocr = nr_ocr + 1
+            nr_ocr += 1
 
         if len(ocr_results):
             console.print(table)
