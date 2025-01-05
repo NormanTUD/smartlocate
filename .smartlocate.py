@@ -559,6 +559,11 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
 
     while True:
         try:
+            print("==================")
+            print(query)
+            print("==================")
+            print(params)
+            print("==================")
             cursor.execute(query, params)
             break
         except sqlite3.OperationalError as e:
