@@ -1130,6 +1130,8 @@ def main() -> None:
                         if len(new_ids):
                             console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
                             display_sixel(image_path)
+                    else:
+                        console.print(f"[green]The image {image_path} was already in the index")
             else:
                 console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
