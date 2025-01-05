@@ -374,7 +374,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
-def insert_into_no_faces(conn, filename):
+def insert_into_no_faces(conn, file_path):
     execute_with_retry(conn, '''INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)''', (file_path))
 
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
