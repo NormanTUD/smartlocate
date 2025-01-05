@@ -874,6 +874,54 @@ def search_ocr(conn: sqlite3.Connection) -> int:
 
     return nr_ocr
 
+def search_faces(conn: sqlite3.Connection) -> int:
+    person_results = None
+
+    # Überprüfen, ob der angegebene Name in der Person-Tabelle existiert
+    cursor = conn.cursor()
+    cursor.execute('''SELECT id FROM person WHERE name LIKE ?''', (f"%{args.search}%",))
+    person_results = cursor.fetchall()
+    cursor.close()
+
+    if not person_results:
+        return 0  # Keine Person gefunden
+
+    # Suchen nach Bildern, die mit der gefundenen Person verknüpft sind
+    with console.status("[bold green]Searching for images of the person...") as status:
+        cursor = conn.cursor()
+        person_ids = [str(row[0]) for row in person_results]
+        placeholders = ",".join("?" * len(person_ids))  # Platzhalter für die IDs der Personen
+        query = f'''
+            SELECT images.file_path
+            FROM images
+            JOIN image_person_mapping ON images.id = image_person_mapping.image_id
+            WHERE image_person_mapping.person_id IN ({placeholders})
+        '''
+        cursor.execute(query, person_ids)
+        person_images = cursor.fetchall()
+        cursor.close()
+
+    nr_images = 0
+
+    if not args.no_sixel:
+        for row in person_images:
+            print(row[0])
+            display_sixel(row[0])  # Falls Sixel angezeigt werden soll
+            print("\n")
+            nr_images += 1
+    else:
+        table = Table(title="Person Image Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        for row in person_images:
+            table.add_row(row[0])
+
+        if len(person_images):
+            console.print(table)
+
+        nr_images = len(person_images)
+
+    return nr_images
+
 def search(conn: sqlite3.Connection) -> None:
     nr_yolo = search_yolo(conn)
 
@@ -881,12 +929,15 @@ def search(conn: sqlite3.Connection) -> None:
 
     nr_desc = search_description(conn)
 
+    nr_faces = search_faces(conn)
+
     table = Table(title="Search overview")
     table.add_column("Nr. Yolo Results", justify="left", style="cyan")
     table.add_column("Nr. OCR Results", justify="left", style="cyan")
     table.add_column("Nr. Description Results", justify="left", style="cyan")
+    table.add_column("Nr. Recognized faces", justify="left", style="cyan")
 
-    table.add_row(str(nr_yolo), str(nr_ocr), str(nr_desc))
+    table.add_row(str(nr_yolo), str(nr_ocr), str(nr_desc), str(nr_faces))
 
     console.print(table)
 
