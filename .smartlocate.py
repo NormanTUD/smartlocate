@@ -1080,36 +1080,37 @@ def main() -> None:
                 image_paths = list(find_images(existing_files))
         total_images = len(image_paths)
 
-        with Progress(
-            TextColumn("[bold blue]{task.description}"),
-            BarColumn(),
-            "[progress.percentage]{task.percentage:>3.0f}%",
-            "[bold green]{task.completed}/{task.total} images",
-            TimeElapsedColumn(),
-            "[bold]Remaining[/]",
-            TimeRemainingColumn(),
-            console=console,
-        ) as progress:
-            task = progress.add_task("Indexing images...", total=total_images)
+        if args.describe or args.yolo or args.ocr or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
+            with Progress(
+                TextColumn("[bold blue]{task.description}"),
+                BarColumn(),
+                "[progress.percentage]{task.percentage:>3.0f}%",
+                "[bold green]{task.completed}/{task.total} images",
+                TimeElapsedColumn(),
+                "[bold]Remaining[/]",
+                TimeRemainingColumn(),
+                console=console,
+            ) as progress:
+                task = progress.add_task("Indexing images...", total=total_images)
 
-            if args.shuffle_index:
-                random.shuffle(image_paths)
+                if args.shuffle_index:
+                    random.shuffle(image_paths)
 
-            for image_path in image_paths:
-                if os.path.exists(image_path):
-                    if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
-                        describe_img(conn, image_path)
-                    if args.yolo:
-                        if model is not None:
-                            yolo_file(conn, image_path, existing_files, model)
-                        else:
-                            console.print(f"[red]--yolo was set, but model could not be loaded[/]")
-                    if args.ocr:
-                        ocr_file(conn, image_path)
-                else:
-                    console.print(f"[red]Could not find {image_path}[/]")
+                for image_path in image_paths:
+                    if os.path.exists(image_path):
+                        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
+                            describe_img(conn, image_path)
+                        if args.yolo:
+                            if model is not None:
+                                yolo_file(conn, image_path, existing_files, model)
+                            else:
+                                console.print(f"[red]--yolo was set, but model could not be loaded[/]")
+                        if args.ocr:
+                            ocr_file(conn, image_path)
+                    else:
+                        console.print(f"[red]Could not find {image_path}[/]")
 
-                progress.update(task, advance=1)
+                    progress.update(task, advance=1)
 
         if args.face_recognition:
             for image_path in image_paths:
