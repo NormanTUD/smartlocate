@@ -29,6 +29,7 @@ console: Console = Console(
     force_terminal=True
 )
 
+MIN_CONFIDENCE_FOR_SAVING: float = 0.1
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.ailocate_db')
 DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_THRESHOLD: float = 0.3
@@ -438,7 +439,7 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
 
         results = model(image_path)
         predictions = results.pred[0]
-        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= 0]
+        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= MIN_CONFIDENCE_FOR_SAVING]
         return detections
     except (OSError, RuntimeError):
         return None
