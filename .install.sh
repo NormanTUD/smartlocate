@@ -268,6 +268,15 @@
 				fi
 			}
 
+			if [ -f "$INSTALL_ERRORS_FILE" ] && [ ! -s "$INSTALL_ERRORS_FILE" ]; then
+				# Prüfen, ob das Verzeichnis leer ist (inkl. versteckter Dateien)
+				if [ "$(find "$LOGS_DIR" -mindepth 1 -type f | wc -l)" -eq 1 ]; then
+					# Lösche die leere Datei und das Verzeichnis
+					rm "$INSTALL_ERRORS_FILE"
+					rmdir "$LOGS_DIR"
+				fi
+			fi
+
 			FROZEN=$(pip --disable-pip-version-check list --format=freeze)
 
 			PROGRESSBAR=$(generate_progress_bar_setup "$NUMBER_OF_MAIN_MODULES")
