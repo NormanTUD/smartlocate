@@ -135,7 +135,7 @@
 		fi
 	fi
 
-	VENV_DIR_NAME=".ailocate_$(uname -m)_$(python3 --version | sed -e 's# #_#g')$_cluster"
+	VENV_DIR_NAME=".smartlocate_$(uname -m)_$(python3 --version | sed -e 's# #_#g')$_cluster"
 
 	ROOT_VENV_DIR=$HOME
 

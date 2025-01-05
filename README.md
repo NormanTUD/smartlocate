@@ -1,28 +1,28 @@
-# ailocate - YOLO and OCR File Indexer
+# smartlocate - YOLO and OCR File Indexer
 
-ailocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. ailocate uses an SQLite database to efficiently store and search image data.
+smartlocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. smartlocate uses an SQLite database to efficiently store and search image data.
 
 If the parameter `--ocr` is set while indexing, all images are also OCRed and the found text is searchable. You can set the language with `--ocr_lang tr` for example. Default is `["de", "en"]`.
 
 If the parameter `--describe` is set while indexing, the model `Salesforce/blip-image-captioning-large` will be used to generate descriptions of images automatically, which also then can be searched.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/index.gif" alt="Indexing" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/index.gif" alt="Indexing" width="600"/>
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/search.gif" alt="Indexing" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/search.gif" alt="Indexing" width="600"/>
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/ailocate/refs/heads/main/images/ocr.gif" alt="Indexing" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/ocr.gif" alt="Indexing" width="600"/>
 </p>
 
 ## Features
 
 - Object detection in images using YOLO.
 - OCR is done via easyocr, when `--ocr` was set during indexing. Allows you to use `%` as a wildcard.
-- Stores detected objects in a local SQLite database (`~/.ailocate_db`).
+- Stores detected objects in a local SQLite database (`~/.smartlocate_db`).
 - Fast searching for specific objects in images.
 - Supports Sixel graphics for visualizing results.
 - Easy to install and use.
@@ -32,17 +32,17 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 1. Clone the repository:
 
 ```bash
-   git clone --depth 1 https://github.com/NormanTUD/ailocate.git
+   git clone --depth 1 https://github.com/NormanTUD/smartlocate.git
 ```
 
 2. Navigate to the directory and run the following command to install the tool:
 
 ```bash
-cd ailocate
-./ailocate --index --dir ~/Pictures
+cd smartlocate
+./smartlocate --index --dir ~/Pictures
 ```
 
-ailocate will automatically install all necessary dependencies, and YOLO is already included.
+smartlocate will automatically install all necessary dependencies, and YOLO is already included.
 
 # Usage
 
@@ -51,7 +51,7 @@ ailocate will automatically install all necessary dependencies, and YOLO is alre
 To index images in a specific directory, run the following command:
 
 ```bash
-ailocate --dir /path/to/images --index
+smartlocate --dir /path/to/images --index
 ```
 
 YOLO will be used to detect objects, and the results will be stored in the database. You need to re-run the index every time new images are added or changed.
@@ -61,7 +61,7 @@ YOLO will be used to detect objects, and the results will be stored in the datab
 To search for a specific object (e.g., "cat"), run the following command:
 
 ```bash
-ailocate --sixel cat
+smartlocate --sixel cat
 ```
 
 The tool will search the indexed images for the object and display the results.
@@ -88,13 +88,13 @@ The tool will search the indexed images for the object and display the results.
 ## Indexing images in a directory:
 
 ```bash
-ailocate --dir /home/user/images --index
+smartlocate --dir /home/user/images --index
 ```
 
 ## Search for images containing the object "cat":
 
 ```bash
-ailocate --sixel cat
+smartlocate --sixel cat
 ```
 
 ## Indexing:
@@ -102,18 +102,18 @@ ailocate --sixel cat
 Indexing with YOLO, Description and OCR:
 
 ```bash
-ailocate --dir /home/user/images --index --debug --ocr --describe
+smartlocate --dir /home/user/images --index --debug --ocr --describe
 ```
 
 ## Display statistics for a specific image:
 
 ```bash
-ailocate --stat /home/user/images/cat_picture.jpg
+smartlocate --stat /home/user/images/cat_picture.jpg
 ```
 
 # Database
 
-The results of image indexing are stored in the SQLite database `~/.ailocate_db`. This database contains information about detected
+The results of image indexing are stored in the SQLite database `~/.smartlocate_db`. This database contains information about detected
 objects in the images. The index must be re-run whenever new images are added or changes are made.
 
 # Requirements
@@ -127,7 +127,7 @@ objects in the images. The index must be re-run whenever new images are added or
 Future ideas would be to expand this to other formats than images as well. Imagine you could say:
 
 ```bash
-ailocate "text about cats"
+smartlocate "text about cats"
 ```
 
 and get all `.txt`, `.md`, `.docx` and so on files in which something about cats is written.
