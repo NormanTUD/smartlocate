@@ -43,7 +43,7 @@ parser.add_argument("--index", action="store_true", help="Index images in the sp
 parser.add_argument("--size", type=int, default=400, help="Size to which the image should be resized (default: 400).")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-parser.add_argument("--sixel", action="store_true", help="Show sixel graphics")
+parser.add_argument("--no_sixel", action="store_true", help="Hide sixel graphics")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
@@ -570,7 +570,7 @@ def search_yolo(conn: sqlite3.Connection) -> None:
         yolo_results = cursor.fetchall()
         cursor.close()
 
-    if args.sixel:
+    if not args.no_sixel:
         for row in yolo_results:
             conf = row[2]
             if conf >= args.threshold:
@@ -601,7 +601,7 @@ def search_description(conn: sqlite3.Connection) -> None:
         ocr_results = cursor.fetchall()
         cursor.close()
 
-    if args.sixel:
+    if not args.no_sixel:
         for row in ocr_results:
             print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
             display_sixel(row[0])
@@ -628,7 +628,7 @@ def search_ocr(conn: sqlite3.Connection) -> None:
         ocr_results = cursor.fetchall()
         cursor.close()
 
-    if args.sixel:
+    if not args.no_sixel:
         for row in ocr_results:
             print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
             display_sixel(row[0])
