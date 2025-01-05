@@ -666,22 +666,27 @@ def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optiona
                 existing_files[image_path] = get_md5(image_path)
 
 def get_image_description(image_path: str) -> str:
-    image = Image.open(image_path).convert("RGB")
+    try:
+        image = Image.open(image_path).convert("RGB")
 
-    if blip_processor is None:
-        console.print("blip_processor was none. Cannot describe image.")
+        if blip_processor is None:
+            console.print("blip_processor was none. Cannot describe image.")
+            return ""
+
+        if blip_model is None:
+            console.print("blip_model was none. Cannot describe image.")
+            return ""
+
+        inputs = blip_processor(images=image, return_tensors="pt")
+
+        outputs = blip_model.generate(**inputs)
+        caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
+
+        return caption
+    except PIL.Image.DecompressionBombError as e:
+        console.print(f"File {image_path} failed with error {e}")
         return ""
 
-    if blip_model is None:
-        console.print("blip_model was none. Cannot describe image.")
-        return ""
-
-    inputs = blip_processor(images=image, return_tensors="pt")
-
-    outputs = blip_model.generate(**inputs)
-    caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
-
-    return caption
 
 def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
     if args.describe:
