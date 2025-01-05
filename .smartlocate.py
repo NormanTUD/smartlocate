@@ -612,6 +612,9 @@ def build_sql_query_description(words: list[str]) -> tuple[str, tuple[str, ...]]
     return sql_query, values
 
 def clean_search_query(query: str) -> list[str]:
+    if args.exact:
+        return [query]
+
     cleaned_query = re.sub(r"[^a-zA-Z\s]", "", query)
     sp = cleaned_query.split()
     return sp
