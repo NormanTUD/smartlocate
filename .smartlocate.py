@@ -468,7 +468,7 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
     except (OSError, RuntimeError):
         return None
     except ValueError as e:
-        console.print(f"[red]Error: {e}[/]")
+        console.print(f"[red]Value-Error: {e}[/]")
         return None
     except PIL.Image.DecompressionBombError as e:
         console.print(f"[red]Error: {e}, probably the image is too large[/]")
