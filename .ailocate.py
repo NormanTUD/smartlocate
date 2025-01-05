@@ -434,7 +434,7 @@ def find_images(existing_files: dict) -> Generator:
 def analyze_image(model: Any, image_path: str) -> Optional[list]:
     dbg(f"analyze_image(model, {image_path})")
     try:
-        console.print(f"[bright_yellow]Predicting {image_path}[/]")
+        console.print(f"[bright_yellow]Predicting {image_path} with YOLO[/]")
 
         results = model(image_path)
         predictions = results.pred[0]
