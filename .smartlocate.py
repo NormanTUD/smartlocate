@@ -168,11 +168,14 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
         else:
             if len(face_encodings) == 1:
                 display_sixel(image_path)
-                new_id = input("What is this person's name? ")
-                known_encodings[new_id] = face_encoding
-                new_ids.append(new_id)
+                new_id = input("What is this person's name? [Just press enter if no person is visible] ")
+                if any(char.strip() for char in new_id):
+                    known_encodings[new_id] = face_encoding
+                    new_ids.append(new_id)
+                else:
+                    console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
             else:
-                print(f"In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.")
+                console.print(f"[yellow]In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.[/]")
 
     return new_ids, known_encodings
 
