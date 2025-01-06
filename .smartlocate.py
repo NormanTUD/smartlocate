@@ -803,6 +803,18 @@ def delete_ocr_from_image_path(conn, delete_status, file_path):
     if delete_status:
         delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
+def delete_faces_from_image_path(conn, delete_status, file_path):
+    image_id = get_image_id_by_file_path(conn, file_path)
+
+    if image_id is None:
+        return
+
+    if delete_status:
+        delete_status.update(f"[bold green]Deleting from image_person_mapping for {file_path}...")
+    execute_with_retry(conn, '''DELETE FROM image_person_mapping WHERE image_id = ?''', (image_id,))
+    if delete_status:
+        delete_status.update(f"[bold green]Deleted from image_person_mapping for {file_path}.")
+
 def delete_no_faces_from_image_path(conn, delete_status, file_path):
     if delete_status:
         delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
@@ -1236,7 +1248,19 @@ def is_valid_image_file(path):
 
 def display_menu(options, prompt="Choose an option (enter the number): "):
     for idx, option in enumerate(options, start=1):
-        print(f"  {idx}. {option}")
+        prompt_color = ""
+        if "Run" in option:
+            prompt_color = "green"
+        elif "Delete" in option:
+            prompt_color = "yellow"
+        elif "quit" in option:
+            prompt_color = "red"
+
+        if prompt_color:
+            console.print(f"  [{prompt_color}]{idx}. {option}[/{prompt_color}]")
+        else:
+            print(f"  {idx}. {option}")
+    
     while True:
         try:
             choice = int(input(f"{prompt}"))
@@ -1271,10 +1295,11 @@ def show_options_for_file(conn, file_path):
         strs["delete_ocr"] = "Delete OCR for this file"
         strs["delete_yolo"] = "Delete YOLO-Detections for this file"
         strs["delete_desc"] = "Delete Descriptions for this file"
+        strs["delete_face_recognition"] = "Delete Face-recognition entries for this file"
 
         strs["run_ocr"] = "Run OCR for this file"
         strs["run_yolo"] = "Run YOLO for this file"
-        strs["run_face_recognition"] = "Run face recognition  forthis file"
+        strs["run_face_recognition"] = "Run face recognition for this file"
         strs["run_desc"] = "Run description generation for this file"
 
         while True:
@@ -1289,6 +1314,9 @@ def show_options_for_file(conn, file_path):
 
             if image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id"):
                 options.insert(0, strs["delete_yolo"])
+
+            if check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"):
+                options.insert(0, strs["delete_face_recognition"])
 
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
@@ -1320,6 +1348,9 @@ def show_options_for_file(conn, file_path):
             elif option == strs["delete_yolo"]:
                 if ask_confirmation():
                     delete_yolo_from_image_path(conn, None, file_path)
+            elif option == strs["delete_face_recognition"]:
+                if ask_confirmation():
+                    delete_faces_from_image_path(conn, None, file_path)
             elif option == strs["delete_ocr"]:
                 if ask_confirmation():
                     delete_ocr_from_image_path(conn, None, file_path)
@@ -1347,6 +1378,7 @@ def show_options_for_file(conn, file_path):
                 ocr_file(conn, file_path)
             elif option == strs["run_face_recognition"]:
                 delete_no_faces_from_image_path(conn, None, file_path)
+                delete_faces_from_image_path(conn, None, file_path)
 
                 new_ids, manually_entered_name = recognize_persons_in_image(conn, file_path)
 
