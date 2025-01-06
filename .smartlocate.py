@@ -738,6 +738,36 @@ def show_statistics(conn: sqlite3.Connection, file_path: Optional[str]) -> None:
             table.add_row(row[0], str(row[1]))
         console.print(table)
 
+def delete_detections_from_image_path(conn, status, file_path):
+    delete_status.update(f"[bold green]Deleting detections for {file_path}...")
+    cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
+    delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
+
+def delete_empty_images_from_image_path(conn, status, file_path):
+    delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
+    cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+    delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
+
+def delete_image_from_image_path(conn, status, file_path):
+    delete_status.update(f"[bold green]Deleting from images for {file_path}...")
+    cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
+    delete_status.update(f"[bold green]Deleted from images for {file_path}.")
+
+def delete_ocr_from_image_path(conn, status, file_path):
+    delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
+    cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
+    delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
+
+def delete_no_faces_from_image_path(conn, status, file_path):
+    delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
+    cursor.execute('''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
+    delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
+
+def delete_image_description_from_image_path(conn, status, file_path):
+    delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
+    cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
+    delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
+
 def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
     """Löscht alle Einträge aus der Datenbank, die mit dem angegebenen Dateinamen verknüpft sind."""
     dbg(f"delete_entries_by_filename(conn, {file_path})")
@@ -747,29 +777,17 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
             cursor = conn.cursor()
 
             with console.status("[bold green]Deleting files from DB that do not exist...") as delete_status:
-                delete_status.update(f"[bold green]Deleting detections for {file_path}...")
-                cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
-                delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
+                delete_detections_from_image_path(conn, status, file_path)
 
-                delete_status.update(f"[bold green]Deleting from images for {file_path}...")
-                cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
-                delete_status.update(f"[bold green]Deleted from images for {file_path}.")
+                delete_image_from_image_path(conn, status, file_path)
 
-                delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
-                cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
-                delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
+                delete_empty_images_from_image_path(conn, status, file_path)
 
-                delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
-                cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
-                delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
+                delete_ocr_from_image_path(conn, status, file_path)
 
-                delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
-                cursor.execute('''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
-                delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
+                delete_no_faces_from_image_path(conn, status, file_path)
 
-                delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
-                cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
-                delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
+                delete_image_description_from_image_path(conn, status, file_path)
 
                 cursor.close()
                 conn.commit()
@@ -781,6 +799,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
+                cursor.close()
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
@@ -1118,6 +1137,21 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
         except FileNotFoundError:
             console.print(f"[red]File {image_path} not found[/]")
 
+def is_valid_file_path(path):
+    try:
+        # Normiere den Pfad, um relative und absolute Pfade gleich zu behandeln
+        normalized_path = os.path.abspath(path)
+        # Überprüfe, ob der Pfad existiert und eine Datei ist
+        return os.path.isfile(normalized_path)
+    except Exception as e:
+        # Im Fehlerfall False zurückgeben
+        print(f"Fehler bei der Überprüfung des Pfads: {e}")
+
+    return False
+
+def show_options_for_file(f):
+    print(f"show_options_for_file({f})")
+
 def main() -> None:
     dbg(f"Arguments: {args}")
 
@@ -1203,7 +1237,10 @@ def main() -> None:
                     progress.update(task, advance=1)
 
     if args.search:
-        search(conn)
+        if is_valid_file_path(args.search):
+            show_options_for_file(args.search)
+        else:
+            search(conn)
 
     if args.stat:
         show_statistics(conn, args.stat if args.stat != "/" else None)
