@@ -1256,7 +1256,7 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
         elif "Delete" in option:
             prompt_color = "yellow"
         elif "quit" in option:
-            prompt_color = "red"
+            prompt_color = "magenta"
 
         if prompt_color:
             console.print(f"  [{prompt_color}]{idx}. {option}[/{prompt_color}]")
@@ -1265,11 +1265,18 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
     
     while True:
         try:
-            choice = int(input(f"{prompt}"))
-            if 1 <= choice <= len(options):
-                return options[choice - 1]
+            choice = input(f"{prompt}")
+            if choice.isdigit():
+                choice = int(choice)
+                if 1 <= choice <= len(options):
+                    return options[choice - 1]
+                else:
+                    console.print("[red]Invalid option.[/]")
             else:
-                console.print("[red]Invalid option.[/]")
+                if choice.strip() == "quit" or choice.strip() == "q":
+                    sys.exit(0)
+                else:
+                    console.print("[red]Invalid option.[/]")
         except ValueError:
             console.print("[red]Invalid option. Please enter number.[/]")
         except EOFError:
