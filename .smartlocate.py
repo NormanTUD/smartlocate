@@ -1251,6 +1251,8 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
         prompt_color = ""
         if "Run" in option:
             prompt_color = "green"
+        elif "Delete all" in option:
+            prompt_color = "red"
         elif "Delete" in option:
             prompt_color = "yellow"
         elif "quit" in option:
