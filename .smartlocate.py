@@ -62,6 +62,7 @@ parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODING
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 parser.add_argument('--exclude', action='append', default=[], help="Folders or paths that should be ignored. Can be used multiple times.")
+parser.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically)")
 args = parser.parse_args()
 
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
@@ -171,15 +172,18 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
             new_ids.append(matched_id)
         else:
             if len(face_encodings) == 1:
-                display_sixel(image_path)
-                new_id = input("What is this person's name? [Just press enter if no person is visible] ")
-                if any(char.strip() for char in new_id):
-                    known_encodings[new_id] = face_encoding
-                    new_ids.append(new_id)
+                if not args.dont_ask_new_faces:
+                    display_sixel(image_path)
+                    new_id = input("What is this person's name? [Just press enter if no person is visible] ")
+                    if any(char.strip() for char in new_id):
+                        known_encodings[new_id] = face_encoding
+                        new_ids.append(new_id)
 
-                    manually_entered_name = True
+                        manually_entered_name = True
+                    else:
+                        console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
                 else:
-                    console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
+                    console.print(f"[yellow]Ignoring detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
             else:
                 if c == 0:
                     console.print(f"[yellow]In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.[/]")

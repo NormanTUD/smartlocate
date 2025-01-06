@@ -85,6 +85,7 @@ The tool will search the indexed images for the object and display the results.
 - `--dbfile DBFILE`: Specifies the path to the SQLite database file.
 - `--exclude PATH`: Excludes a path from indexing/searching. Can be used multiple times.
 - `--stat [STAT]`: Displays statistics for images or a specific file.
+- `--dont_ask_new_faces`: Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically).
 
 # Example Commands
 
