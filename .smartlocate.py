@@ -1329,6 +1329,8 @@ def show_options_for_file(conn, file_path):
 
         strs = {}
 
+        strs["show_image_again"] = "Show image again"
+
         strs["delete_all"] = "Delete all entries for this file"
 
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
@@ -1376,6 +1378,7 @@ def show_options_for_file(conn, file_path):
             options.insert(0, strs["run_ocr"])
             options.insert(0, strs["run_yolo"])
             options.insert(0, strs["run_face_recognition"])
+            options.insert(0, strs["show_image_again"])
 
             options.append(strs["delete_all"])
             options.append("quit")
@@ -1384,6 +1387,8 @@ def show_options_for_file(conn, file_path):
 
             if option == "quit":
                 sys.exit(0)
+            elif option == strs["show_image_again"]:
+                display_sixel(file_path)
             elif option == strs["delete_all"]:
                 if ask_confirmation():
                     delete_entries_by_filename(conn, file_path)
