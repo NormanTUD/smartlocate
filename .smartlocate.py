@@ -988,21 +988,48 @@ def search_faces(conn: sqlite3.Connection) -> int:
 
 def search(conn: sqlite3.Connection) -> None:
     try:
-        nr_yolo = search_yolo(conn)
-
-        nr_ocr = search_ocr(conn)
-
-        nr_desc = search_description(conn)
-
-        nr_faces = search_faces(conn)
-
         table = Table(title="Search overview")
-        table.add_column("Nr. Yolo Results", justify="left", style="cyan")
-        table.add_column("Nr. OCR Results", justify="left", style="cyan")
-        table.add_column("Nr. Description Results", justify="left", style="cyan")
-        table.add_column("Nr. Recognized faces", justify="left", style="cyan")
 
-        table.add_row(str(nr_yolo), str(nr_ocr), str(nr_desc), str(nr_faces))
+        yolo, ocr, desc, faces = False, False, False, False
+
+        if not args.yolo and not args.ocr and not args.describe and not args.face_recognition:
+            yolo, ocr, desc, faces = True, True, True, True
+        else:
+            if args.yolo:
+                yolo = True
+
+            if args.ocr:
+                ocr = True
+
+            if args.describe:
+                desc = True
+
+            if args.face_recognition:
+                faces = True
+
+        row = []
+
+        if yolo:
+            table.add_column("Nr. Yolo Results", justify="left", style="cyan")
+            nr_yolo = search_yolo(conn)
+            row.append(str(nr_yolo))
+
+        if ocr:
+            table.add_column("Nr. OCR Results", justify="left", style="cyan")
+            nr_ocr = search_ocr(conn)
+            row.append(str(nr_ocr))
+
+        if desc:
+            table.add_column("Nr. Description Results", justify="left", style="cyan")
+            nr_desc = search_description(conn)
+            row.append(str(nr_desc))
+
+        if faces:
+            table.add_column("Nr. Recognized faces", justify="left", style="cyan")
+            nr_faces = search_faces(conn)
+            row.append(str(nr_faces))
+
+        table.add_row(*row)
 
         console.print(table)
     except sqlite3.OperationalError as e:
