@@ -181,6 +181,8 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
             matched_id = list(known_encodings.keys())[matches.index(True)]
             new_ids.append(matched_id)
         else:
+            if c == 0:
+                console.print(f"[yellow]{image_path}:[/]")
             if args.dont_ask_new_faces:
                 console.print(f"[yellow]Ignoring detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
             else:
