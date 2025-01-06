@@ -1177,8 +1177,8 @@ def main() -> None:
 
                 for image_path in image_paths:
                     if os.path.exists(image_path):
-                        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
-                            describe_img(conn, image_path)
+                        #if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
+                        #    describe_img(conn, image_path)
                         if args.yolo:
                             if model is not None:
                                 yolo_file(conn, image_path, existing_files, model)
