@@ -1255,6 +1255,8 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
             prompt_color = "red"
         elif "Delete" in option:
             prompt_color = "yellow"
+        elif "Show" in option:
+            prompt_color = "cyan"
         elif "quit" in option:
             prompt_color = "magenta"
 
@@ -1290,6 +1292,30 @@ def ask_confirmation():
         print(f"An error occurred: {e}")
         return False
 
+def get_value_by_condition(conn, table, field, search_by, where_column):
+    try:
+        # Construct the SQL query with placeholders
+        query = f"SELECT {field} FROM {table} WHERE {where_column} = ?"
+
+        # Execute the query
+        cursor = conn.cursor()
+        cursor.execute(query, (search_by,))
+        result = cursor.fetchone()
+
+        # Return the value if found, otherwise None
+        if result:
+            return result[0]
+        else:
+            return None
+    except Exception as e:
+        print(f"Error while fetching value from table '{table}': {e}")
+        return None
+
+def list_desc(conn, file_path):
+    print("==================")
+    print(get_value_by_condition(conn, "image_description", "image_description", file_path, "file_path"))
+    print("==================")
+
 def show_options_for_file(conn, file_path):
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
@@ -1311,8 +1337,11 @@ def show_options_for_file(conn, file_path):
         strs["run_face_recognition"] = "Run face recognition for this file"
         strs["run_desc"] = "Run description generation for this file"
 
+        strs["list_desc"] = "Show description for this file"
+
+
         while True:
-            options = [strs["delete_all"], "quit"]
+            options = []
 
             """
                 delete_empty_images_from_image_path(conn, status, file_path):
@@ -1332,6 +1361,7 @@ def show_options_for_file(conn, file_path):
 
             if check_entries_in_table(conn, "image_description", file_path):
                 options.insert(0, strs["delete_desc"])
+                options.append(strs["list_desc"])
 
             if check_entries_in_table(conn, "ocr_results", file_path):
                 options.insert(0, strs["delete_ocr"])
@@ -1340,6 +1370,9 @@ def show_options_for_file(conn, file_path):
             options.insert(0, strs["run_ocr"])
             options.insert(0, strs["run_yolo"])
             options.insert(0, strs["run_face_recognition"])
+
+            options.append(strs["delete_all"])
+            options.append("quit")
 
             option = display_menu(options)
 
@@ -1394,6 +1427,8 @@ def show_options_for_file(conn, file_path):
                 if len(new_ids) and not manually_entered_name:
                     console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
                     display_sixel(image_path)
+            elif option == strs["list_desc"]:
+                list_desc(conn, file_path);
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
