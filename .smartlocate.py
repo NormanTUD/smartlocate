@@ -1161,11 +1161,30 @@ def is_valid_image_file(path):
     except Exception as e:
         return False
 
+def display_menu(options, prompt="Wählen Sie eine Option: "):
+    for idx, option in enumerate(options, start=1):
+        print(f"  {idx}. {option}")
+    while True:
+        try:
+            choice = int(input(f"{prompt}"))
+            if 1 <= choice <= len(options):
+                return choice
+            else:
+                console.print("[red]Invalid option.[/]")
+        except ValueError:
+            print("[red]Invalid option. Please enter number.[/]")
+        except EOFError:
+            sys.exit(0)
+
 def show_options_for_file(f):
     if is_valid_image_file(f):
         print(f"Options for file {f}:")
 
         display_sixel(f)
+
+        options = ["Option 1", "Option 2", "Option 3", "Beenden"]
+
+        display_menu(options)
     else:
         console.print(f"[red]The file {f} is not a valid image file[/]")
 
