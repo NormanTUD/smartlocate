@@ -976,23 +976,26 @@ def search_faces(conn: sqlite3.Connection) -> int:
     return nr_images
 
 def search(conn: sqlite3.Connection) -> None:
-    nr_yolo = search_yolo(conn)
+    try:
+        nr_yolo = search_yolo(conn)
 
-    nr_ocr = search_ocr(conn)
+        nr_ocr = search_ocr(conn)
 
-    nr_desc = search_description(conn)
+        nr_desc = search_description(conn)
 
-    nr_faces = search_faces(conn)
+        nr_faces = search_faces(conn)
 
-    table = Table(title="Search overview")
-    table.add_column("Nr. Yolo Results", justify="left", style="cyan")
-    table.add_column("Nr. OCR Results", justify="left", style="cyan")
-    table.add_column("Nr. Description Results", justify="left", style="cyan")
-    table.add_column("Nr. Recognized faces", justify="left", style="cyan")
+        table = Table(title="Search overview")
+        table.add_column("Nr. Yolo Results", justify="left", style="cyan")
+        table.add_column("Nr. OCR Results", justify="left", style="cyan")
+        table.add_column("Nr. Description Results", justify="left", style="cyan")
+        table.add_column("Nr. Recognized faces", justify="left", style="cyan")
 
-    table.add_row(str(nr_yolo), str(nr_ocr), str(nr_desc), str(nr_faces))
+        table.add_row(str(nr_yolo), str(nr_ocr), str(nr_desc), str(nr_faces))
 
-    console.print(table)
+        console.print(table)
+    except sqlite3.OperationalError as e:
+        console.print(f"[red]Error while running sqlite-query: {e}[/]")
 
 def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if model is None:
