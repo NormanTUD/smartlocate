@@ -1210,6 +1210,11 @@ def show_options_for_file(conn, file_path):
 
         display_sixel(file_path)
 
+        strs = {}
+
+        strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
+
+
         while True:
             options = ["quit"]
 
@@ -1223,13 +1228,13 @@ def show_options_for_file(conn, file_path):
             """
 
             if check_entries_in_table(conn, "no_faces", file_path):
-                options.insert(0, "Delete entries from no_faces table")
+                options.insert(0, strs["delete_entry_no_faces"])
 
             option = display_menu(options)
 
             if option == "quit":
                 sys.exit(0)
-            elif "Delete entries from no_faces table":
+            elif option == strs["delete_entry_no_faces"]:
                 delete_no_faces_from_image_path(conn, None, file_path)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
