@@ -245,8 +245,6 @@ def display_sixel_part(image_path, location):
 
         display_sixel(jpg.name)
 
-
-
 def display_sixel(image_path: str) -> None:
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
 
