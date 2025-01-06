@@ -1137,8 +1137,20 @@ def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optiona
                 existing_files[image_path] = get_md5(image_path)
 
 def get_image_description(image_path: str) -> str:
+    global blip_model, blip_processor
+
     try:
         image = Image.open(image_path).convert("RGB")
+        if blip_processor is None:
+            with console.status("[bold green]Loading transformers...") as load_status:
+                import transformers
+
+            with console.status("[bold green]Loading Blip-Transformers...") as load_status:
+                from transformers import BlipProcessor, BlipForConditionalGeneration
+
+            with console.status("[bold green]Loading Blip-Models...") as load_status:
+                blip_processor = BlipProcessor.from_pretrained(blip_model_name)
+                blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
 
         if blip_processor is None:
             console.print("blip_processor was none. Cannot describe image.")
@@ -1254,23 +1266,23 @@ def show_options_for_file(conn, file_path):
         strs = {}
 
         strs["delete_all"] = "Delete all entries for this file"
+
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
         strs["delete_ocr"] = "Delete OCR for this file"
         strs["delete_yolo"] = "Delete YOLO-Detections for this file"
+        strs["delete_desc"] = "Delete Descriptions for this file"
 
         strs["run_ocr"] = "Run OCR for this file"
         strs["run_yolo"] = "Run YOLO for this file"
-        strs["run_face_recognition"] = "Run face recognition this file"
+        strs["run_face_recognition"] = "Run face recognition  forthis file"
+        strs["run_desc"] = "Run description generation for this file"
 
         while True:
             options = [strs["delete_all"], "quit"]
 
             """
-                def delete_yolo_from_image_path(conn, status, file_path):
-                def delete_empty_images_from_image_path(conn, status, file_path):
-                def delete_image_from_image_path(conn, status, file_path):
-                def delete_ocr_from_image_path(conn, status, file_path):
-                def delete_image_description_from_image_path(conn, status, file_path):
+                delete_empty_images_from_image_path(conn, status, file_path):
+                delete_image_from_image_path(conn, status, file_path):
             """
 
             image_id = get_image_id_by_file_path(conn, file_path)
@@ -1281,9 +1293,13 @@ def show_options_for_file(conn, file_path):
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
 
+            if check_entries_in_table(conn, "image_description", file_path):
+                options.insert(0, strs["delete_desc"])
+
             if check_entries_in_table(conn, "ocr_results", file_path):
                 options.insert(0, strs["delete_ocr"])
 
+            options.insert(0, strs["run_desc"])
             options.insert(0, strs["run_ocr"])
             options.insert(0, strs["run_yolo"])
             options.insert(0, strs["run_face_recognition"])
@@ -1298,12 +1314,20 @@ def show_options_for_file(conn, file_path):
             elif option == strs["delete_entry_no_faces"]:
                 if ask_confirmation():
                     delete_no_faces_from_image_path(conn, None, file_path)
+            elif option == strs["delete_desc"]:
+                if ask_confirmation():
+                    delete_image_description_from_image_path(conn, None, file_path)
             elif option == strs["delete_yolo"]:
                 if ask_confirmation():
                     delete_yolo_from_image_path(conn, None, file_path)
             elif option == strs["delete_ocr"]:
                 if ask_confirmation():
                     delete_ocr_from_image_path(conn, None, file_path)
+
+            elif option == strs["run_desc"]:
+                delete_image_description_from_image_path(conn, None, file_path)
+
+                describe_img(conn, file_path)
             elif option == strs["run_yolo"]:
                 try:
                     with console.status("[bold green]Loading yolov5...") as load_status:
