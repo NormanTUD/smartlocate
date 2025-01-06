@@ -59,7 +59,7 @@ parser.add_argument("--face_recognition", action="store_true", help="Enable face
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
-parser.add_argument("--max_ocr_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
+parser.add_argument("--max_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
@@ -1208,7 +1208,7 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
         try:
             file_size = os.path.getsize(image_path)
 
-            if file_size < args.max_ocr_size * 1024 * 1024:
+            if file_size < args.max_size * 1024 * 1024:
                 extracted_text = ocr_img(image_path)
                 if extracted_text:
                     texts = [item[1] for item in extracted_text]
@@ -1224,7 +1224,7 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
                     add_ocr_result(conn, image_path, "")
 
             else:
-                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_ocr_size}MB, is {file_size / 1024 / 1024}MB[/]")
+                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_size}MB, is {file_size / 1024 / 1024}MB[/]")
         except FileNotFoundError:
             console.print(f"[red]File {image_path} not found[/]")
 
@@ -1498,13 +1498,18 @@ def main() -> None:
                 for image_path in image_paths:
                     console.print(f"Face recognition: {c}/{len(image_paths)}")
                     if not faces_already_recognized(conn, image_path): 
-                        new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
+                        file_size = os.path.getsize(image_path)
 
-                        if len(new_ids) and not manually_entered_name:
-                            console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                            display_sixel(image_path)
+                        if file_size < args.max_size * 1024 * 1024:
+                            new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
+
+                            if len(new_ids) and not manually_entered_name:
+                                console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                                display_sixel(image_path)
+                        else:
+                            console.print(f"[green]The image {image_path} was already in the index")
                     else:
-                        console.print(f"[green]The image {image_path} was already in the index")
+                        console.print(f"[yellow]The image {image_path} is too large for face recognition. Try increasing --max_size")
                     c = c + 1
             else:
                 console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
