@@ -1139,7 +1139,7 @@ def main() -> None:
                 model = yolov5.load(args.model)
                 model.conf = 0
             except requests.exceptions.ConnectionError as e:
-                console.print(f"Error while loading yolov5 model: {e}")
+                console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
 
         image_paths = []
 
