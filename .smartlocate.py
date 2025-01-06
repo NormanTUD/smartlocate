@@ -1,3 +1,4 @@
+import requests
 import tempfile
 import re
 import uuid
@@ -69,6 +70,8 @@ blip_model_name: str = "Salesforce/blip-image-captioning-large"
 blip_processor: Any = None
 blip_model: Any = None
 reader: Any = None
+
+yolo_error_already_shown = False
 
 def supports_sixel():
     term = os.environ.get("TERM", "").lower()
@@ -1132,8 +1135,11 @@ def main() -> None:
         model = None
 
         if args.yolo:
-            model = yolov5.load(args.model)
-            model.conf = 0
+            try:
+                model = yolov5.load(args.model)
+                model.conf = 0
+            except requests.exceptions.ConnectionError as e:
+                console.print(f"Error while loading yolov5 model: {e}")
 
         image_paths = []
 
@@ -1183,7 +1189,12 @@ def main() -> None:
                             if model is not None:
                                 yolo_file(conn, image_path, existing_files, model)
                             else:
-                                console.print(f"[red]--yolo was set, but model could not be loaded[/]")
+                                global yolo_error_already_shown
+
+                                if not yolo_error_already_shown:
+                                    console.print(f"[red]--yolo was set, but model could not be loaded[/]")
+
+                                    yolo_error_already_shown = True
                         if args.ocr:
                             ocr_file(conn, image_path)
                     else:
