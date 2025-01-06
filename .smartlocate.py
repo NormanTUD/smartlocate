@@ -1333,6 +1333,8 @@ def show_options_for_file(conn, file_path):
 
         strs["show_image_again"] = "Show image again"
 
+        strs["mark_image_as_no_face"] = "Mark image as 'contains no face'"
+
         strs["delete_all"] = "Delete all entries for this file"
 
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
@@ -1367,6 +1369,8 @@ def show_options_for_file(conn, file_path):
 
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
+            else:
+                options.insert(0, strs["mark_image_as_no_face"])
 
             if check_entries_in_table(conn, "image_description", file_path):
                 options.insert(0, strs["delete_desc"])
@@ -1409,6 +1413,12 @@ def show_options_for_file(conn, file_path):
             elif option == strs["delete_ocr"]:
                 if ask_confirmation():
                     delete_ocr_from_image_path(conn, None, file_path)
+
+            elif option == strs["mark_image_as_no_face"]:
+                if ask_confirmation():
+                    delete_faces_from_image_path(conn, None, file_path)
+
+                    insert_into_no_faces(conn, file_path)
 
             elif option == strs["run_desc"]:
                 delete_image_description_from_image_path(conn, None, file_path)
