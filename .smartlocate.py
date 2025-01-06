@@ -1316,6 +1316,11 @@ def list_desc(conn, file_path):
     print(get_value_by_condition(conn, "image_description", "image_description", file_path, "file_path"))
     print("==================")
 
+def list_ocr(conn, file_path):
+    print("==================")
+    print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
+    print("==================")
+
 def show_options_for_file(conn, file_path):
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
@@ -1338,6 +1343,7 @@ def show_options_for_file(conn, file_path):
         strs["run_desc"] = "Run description generation for this file"
 
         strs["list_desc"] = "Show description for this file"
+        strs["list_ocr"] = "Show OCR for this file"
 
         while True:
             options = []
@@ -1364,6 +1370,7 @@ def show_options_for_file(conn, file_path):
 
             if check_entries_in_table(conn, "ocr_results", file_path):
                 options.insert(0, strs["delete_ocr"])
+                options.append(strs["list_ocr"])
 
             options.insert(0, strs["run_desc"])
             options.insert(0, strs["run_ocr"])
@@ -1428,6 +1435,8 @@ def show_options_for_file(conn, file_path):
                     display_sixel(image_path)
             elif option == strs["list_desc"]:
                 list_desc(conn, file_path);
+            elif option == strs["list_ocr"]:
+                list_ocr(conn, file_path);
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
