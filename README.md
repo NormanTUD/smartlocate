@@ -43,7 +43,7 @@ cd smartlocate
 ./smartlocate --index --dir ~/Pictures
 ```
 
-smartlocate will automatically install all necessary dependencies, and YOLO is already included.
+smartlocate will automatically install all necessary dependencies, and YOLO is already included. This is done on first execution, which may take some time. But this only has to be done once!
 
 # Usage
 
