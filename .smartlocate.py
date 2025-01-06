@@ -1,26 +1,33 @@
-import requests
-import tempfile
-import re
-import uuid
-import os
-import sys
-import argparse
-import sqlite3
-import random
-from pprint import pprint
-import time
-from typing import Optional, Any, Generator
+try:
+    import requests
+    import tempfile
+    import re
+    import uuid
+    import os
+    import sys
+    import argparse
+    import sqlite3
+    import random
+    from pprint import pprint
+    import time
+    from typing import Optional, Any, Generator
 
-from pathlib import Path
-from datetime import datetime
-import hashlib
-from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
-from rich.table import Table
-from rich.console import Console
-import PIL
-from PIL import Image
-from sixel import converter
-import cv2
+    from pathlib import Path
+    from datetime import datetime
+    import hashlib
+    from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
+    from rich.table import Table
+    from rich.console import Console
+    import PIL
+    from PIL import Image
+    from sixel import converter
+    import cv2
+except KeyboardInterrupt:
+    print("You pressed CTRL+c")
+    sys.exit(0)
+except ModuleNotFoundError as e:
+    print(f"The following module could not be found: {e}")
+    sys.exit(1)
 
 def dier(msg: Any) -> None:
     pprint(msg)
