@@ -744,32 +744,32 @@ def show_statistics(conn: sqlite3.Connection, file_path: Optional[str]) -> None:
 
 def delete_detections_from_image_path(conn, status, file_path):
     delete_status.update(f"[bold green]Deleting detections for {file_path}...")
-    cursor.execute('''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
+    execute_with_retry(conn, '''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
     delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
 
 def delete_empty_images_from_image_path(conn, status, file_path):
     delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
-    cursor.execute('''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
+    execute_with_retry(conn, '''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
     delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
 
 def delete_image_from_image_path(conn, status, file_path):
     delete_status.update(f"[bold green]Deleting from images for {file_path}...")
-    cursor.execute('''DELETE FROM images WHERE file_path = ?''', (file_path,))
+    execute_with_retry(conn, '''DELETE FROM images WHERE file_path = ?''', (file_path,))
     delete_status.update(f"[bold green]Deleted from images for {file_path}.")
 
 def delete_ocr_from_image_path(conn, status, file_path):
     delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
-    cursor.execute('''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
+    execute_with_retry(conn, '''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
     delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
 def delete_no_faces_from_image_path(conn, status, file_path):
     delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
-    cursor.execute('''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
+    execute_with_retry(conn, '''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
     delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
 
 def delete_image_description_from_image_path(conn, status, file_path):
     delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
-    cursor.execute('''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
+    execute_with_retry(conn, '''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
     delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
 
 def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
@@ -1161,18 +1161,18 @@ def is_valid_image_file(path):
     except Exception as e:
         return False
 
-def display_menu(options, prompt="Wählen Sie eine Option: "):
+def display_menu(options, prompt="Choose an option (enter the number): "):
     for idx, option in enumerate(options, start=1):
         print(f"  {idx}. {option}")
     while True:
         try:
             choice = int(input(f"{prompt}"))
             if 1 <= choice <= len(options):
-                return choice
+                return options[choice - 1]
             else:
                 console.print("[red]Invalid option.[/]")
         except ValueError:
-            print("[red]Invalid option. Please enter number.[/]")
+            console.print("[red]Invalid option. Please enter number.[/]")
         except EOFError:
             sys.exit(0)
 
@@ -1182,11 +1182,18 @@ def show_options_for_file(f):
 
         display_sixel(f)
 
-        options = ["Option 1", "Option 2", "Option 3", "Beenden"]
+        options = ["quit"]
 
-        display_menu(options)
+        options.insert(0, "A")
+
+        option = display_menu(options)
+
+        if option == "quit":
+            sys.exit(0)
+        else:
+            print(option)
     else:
-        console.print(f"[red]The file {f} is not a valid image file[/]")
+        console.print(f"[red]The file {f} is not a valid image file. Currently, only image files are supported.[/]")
 
 def main() -> None:
     dbg(f"Arguments: {args}")
