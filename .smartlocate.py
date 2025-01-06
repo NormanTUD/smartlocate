@@ -1118,6 +1118,23 @@ def main() -> None:
         if args.shuffle_index:
             random.shuffle(image_paths)
 
+        if args.face_recognition:
+            if supports_sixel():
+                c = 1
+                for image_path in image_paths:
+                    console.print(f"Face recognition: {c}/{len(image_paths)}")
+                    if not faces_already_recognized(conn, image_path): 
+                        new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
+
+                        if len(new_ids) and not manually_entered_name:
+                            console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                            display_sixel(image_path)
+                    else:
+                        console.print(f"[green]The image {image_path} was already in the index")
+                    c = c + 1
+            else:
+                console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+
         if args.describe or args.yolo or args.ocr or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
@@ -1146,23 +1163,6 @@ def main() -> None:
                         console.print(f"[red]Could not find {image_path}[/]")
 
                     progress.update(task, advance=1)
-
-        if args.face_recognition:
-            if supports_sixel():
-                c = 1
-                for image_path in image_paths:
-                    console.print(f"Face recognition: {c}/{len(image_paths)}")
-                    if not faces_already_recognized(conn, image_path): 
-                        new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
-
-                        if len(new_ids) and not manually_entered_name:
-                            console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                            display_sixel(image_path)
-                    else:
-                        console.print(f"[green]The image {image_path} was already in the index")
-                    c = c + 1
-            else:
-                console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
     if args.search:
         search(conn)
