@@ -1303,8 +1303,8 @@ def show_options_for_file(conn, file_path):
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
         strs["delete_ocr"] = "Delete OCR for this file"
         strs["delete_yolo"] = "Delete YOLO-Detections for this file"
-        strs["delete_desc"] = "Delete Descriptions for this file"
-        strs["delete_face_recognition"] = "Delete Face-recognition entries for this file"
+        strs["delete_desc"] = "Delete descriptions for this file"
+        strs["delete_face_recognition"] = "Delete face-recognition entries for this file"
 
         strs["run_ocr"] = "Run OCR for this file"
         strs["run_yolo"] = "Run YOLO for this file"
@@ -1329,6 +1329,8 @@ def show_options_for_file(conn, file_path):
 
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
+            else:
+                print("no no_faces entry found!")
 
             if check_entries_in_table(conn, "image_description", file_path):
                 options.insert(0, strs["delete_desc"])
