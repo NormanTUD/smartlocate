@@ -442,6 +442,26 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor.close()
     return False  # Bild wurde noch nicht durchsucht
 
+def get_image_id_by_file_path(conn, file_path):
+    try:
+        # SQL query to retrieve the image ID
+        query = '''SELECT id FROM images WHERE file_path = ?'''
+
+        # Execute the query
+        cursor = conn.cursor()
+        cursor.execute(query, (file_path,))
+        result = cursor.fetchone()
+
+        # Check if a result was found
+        if result:
+            return result[0]
+        else:
+            return None
+    except Exception as e:
+        print(f"Error while fetching image ID for file_path '{file_path}': {e}")
+        return None
+
+
 def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
@@ -755,7 +775,7 @@ def show_statistics(conn: sqlite3.Connection, file_path: Optional[str]) -> None:
             table.add_row(row[0], str(row[1]))
         console.print(table)
 
-def delete_detections_from_image_path(conn, delete_status, file_path):
+def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
         delete_status.update(f"[bold green]Deleting detections for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
@@ -806,7 +826,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
             cursor = conn.cursor()
 
             with console.status("[bold green]Deleting files from DB that do not exist...") as delete_status:
-                delete_detections_from_image_path(conn, delete_status, file_path)
+                delete_yolo_from_image_path(conn, delete_status, file_path)
 
                 delete_image_from_image_path(conn, delete_status, file_path)
 
@@ -832,12 +852,12 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def check_entries_in_table(conn, table_name, file_path):
+def check_entries_in_table(conn, table_name, file_path, where_name = "file_path"):
+    query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_name} = ?"
+
     try:
         if not table_name.isidentifier():
             raise ValueError(f"Invalid table name: {table_name}")
-
-        query = f"SELECT COUNT(*) FROM {table_name} WHERE file_path = ?"
 
         cursor = conn.cursor()
         cursor.execute(query, (file_path,))
@@ -845,7 +865,7 @@ def check_entries_in_table(conn, table_name, file_path):
 
         return count
     except Exception as e:
-        print(f"Error while checking entries in table '{table_name}': {e}")
+        print(f"Error while checking entries in table '{table_name}': {e}. Full query:\n{query}")
         return 0
 
 def delete_non_existing_files(conn: sqlite3.Connection, existing_files: Optional[dict]) -> Optional[dict]:
@@ -1236,20 +1256,27 @@ def show_options_for_file(conn, file_path):
         strs["delete_all"] = "Delete all entries for this file"
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
         strs["delete_ocr"] = "Delete OCR for this file"
+        strs["delete_yolo"] = "Delete YOLO-Detections for this file"
 
-        strs["run_ocr"] = "Run OCR this file"
+        strs["run_ocr"] = "Run OCR for this file"
+        strs["run_yolo"] = "Run YOLO for this file"
         strs["run_face_recognition"] = "Run face recognition this file"
 
         while True:
             options = [strs["delete_all"], "quit"]
 
             """
-                def delete_detections_from_image_path(conn, status, file_path):
+                def delete_yolo_from_image_path(conn, status, file_path):
                 def delete_empty_images_from_image_path(conn, status, file_path):
                 def delete_image_from_image_path(conn, status, file_path):
                 def delete_ocr_from_image_path(conn, status, file_path):
                 def delete_image_description_from_image_path(conn, status, file_path):
             """
+
+            image_id = get_image_id_by_file_path(conn, file_path)
+
+            if image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id"):
+                options.insert(0, strs["delete_yolo"])
 
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
@@ -1258,6 +1285,7 @@ def show_options_for_file(conn, file_path):
                 options.insert(0, strs["delete_ocr"])
 
             options.insert(0, strs["run_ocr"])
+            options.insert(0, strs["run_yolo"])
             options.insert(0, strs["run_face_recognition"])
 
             option = display_menu(options)
@@ -1270,9 +1298,25 @@ def show_options_for_file(conn, file_path):
             elif option == strs["delete_entry_no_faces"]:
                 if ask_confirmation():
                     delete_no_faces_from_image_path(conn, None, file_path)
+            elif option == strs["delete_yolo"]:
+                if ask_confirmation():
+                    delete_yolo_from_image_path(conn, None, file_path)
             elif option == strs["delete_ocr"]:
                 if ask_confirmation():
                     delete_ocr_from_image_path(conn, None, file_path)
+            elif option == strs["run_yolo"]:
+                try:
+                    with console.status("[bold green]Loading yolov5...") as load_status:
+                        import yolov5
+
+                    model = yolov5.load(args.model)
+                    model.conf = 0
+
+                    delete_yolo_from_image_path(conn, None, file_path)
+
+                    yolo_file(conn, file_path, None, model)
+                except requests.exceptions.ConnectionError as e:
+                    console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
             elif option == strs["run_ocr"]:
                 delete_ocr_from_image_path(conn, None, file_path)
 
