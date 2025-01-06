@@ -120,6 +120,10 @@ smartlocate --stat /home/user/images/cat_picture.jpg
 The results of image indexing are stored in the SQLite database `~/.smartlocate_db`. This database contains information about detected
 objects in the images. The index must be re-run whenever new images are added or changes are made.
 
+# Manage single images
+
+Simply run `smartlocate /path/to/an/image/file.jpg` to see an overview of the image file's data and modify it.
+
 # Requirements
 
 - Python 3.x
