@@ -249,6 +249,10 @@ def display_sixel_part(image_path, location):
         display_sixel(jpg.name)
 
 def display_sixel(image_path: str) -> None:
+    if not supports_sixel():
+        console.print(f"[red]Error: This terminal does not support sixel. Cannot display {image_path}[/]")
+        return
+
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
 
     try:
@@ -1139,18 +1143,31 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
 
 def is_valid_file_path(path):
     try:
-        # Normiere den Pfad, um relative und absolute Pfade gleich zu behandeln
         normalized_path = os.path.abspath(path)
-        # Überprüfe, ob der Pfad existiert und eine Datei ist
         return os.path.isfile(normalized_path)
     except Exception as e:
-        # Im Fehlerfall False zurückgeben
         print(f"Fehler bei der Überprüfung des Pfads: {e}")
 
     return False
 
+def is_valid_image_file(path):
+    try:
+        if not os.path.isfile(path):
+            return False
+
+        with Image.open(path) as img:
+            img.verify()
+        return True
+    except Exception as e:
+        return False
+
 def show_options_for_file(f):
-    print(f"show_options_for_file({f})")
+    if is_valid_image_file(f):
+        print(f"Options for file {f}:")
+
+        display_sixel(f)
+    else:
+        console.print(f"[red]The file {f} is not a valid image file[/]")
 
 def main() -> None:
     dbg(f"Arguments: {args}")
