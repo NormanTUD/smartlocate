@@ -140,7 +140,7 @@ def extract_face_encodings(image_path):
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
     face_encodings = face_recognition.face_encodings(image, face_locations)
-    return face_encodings
+    return face_encodings, face_locations
 
 def compare_faces(known_encodings, unknown_encoding, tolerance=0.6):
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
@@ -157,7 +157,7 @@ def load_encodings(file_name):
     return {}
 
 def detect_faces_and_name_them_when_needed(image_path, known_encodings, tolerance=0.6):
-    face_encodings = extract_face_encodings(image_path)
+    face_encodings, face_locations = extract_face_encodings(image_path)
 
     manually_entered_name = False
 
@@ -167,26 +167,25 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
 
     for face_encoding in face_encodings:
         matches = compare_faces(list(known_encodings.values()), face_encoding, tolerance)
+
+        this_face_location = face_locations[c]
+
         if True in matches:
             matched_id = list(known_encodings.keys())[matches.index(True)]
             new_ids.append(matched_id)
         else:
-            if len(face_encodings) == 1:
-                if not args.dont_ask_new_faces:
-                    display_sixel(image_path)
-                    new_id = input("What is this person's name? [Just press enter if no person is visible] ")
-                    if any(char.strip() for char in new_id):
-                        known_encodings[new_id] = face_encoding
-                        new_ids.append(new_id)
-
-                        manually_entered_name = True
-                    else:
-                        console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
-                else:
-                    console.print(f"[yellow]Ignoring detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
+            if args.dont_ask_new_faces:
+                console.print(f"[yellow]Ignoring detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
             else:
-                if c == 0:
-                    console.print(f"[yellow]In the image {image_path}, {len(face_encodings)} faces were detected. New faces can only be added if there is only one detected face per image at the moment.[/]")
+                display_sixel_part(image_path, this_face_location)
+                new_id = input("What is this person's name? [Just press enter if no person is visible] ")
+                if any(char.strip() for char in new_id):
+                    known_encodings[new_id] = face_encoding
+                    new_ids.append(new_id)
+
+                    manually_entered_name = True
+                else:
+                    console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
         c = c + 1
 
     return new_ids, known_encodings, manually_entered_name
@@ -233,6 +232,20 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> None:
     with Image.open(input_path) as img:
         img.thumbnail((max_size, max_size))
         img.save(output_path)
+
+def display_sixel_part(image_path, location):
+    top, right, bottom, left = location
+
+    with tempfile.NamedTemporaryFile(mode="wb") as jpg:
+        image = face_recognition.load_image_file(image_path)
+        face_image = image[top:bottom, left:right]
+        pil_image = Image.fromarray(face_image)
+
+        pil_image.save(jpg.name, format="JPEG")
+
+        display_sixel(jpg.name)
+
+
 
 def display_sixel(image_path: str) -> None:
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
