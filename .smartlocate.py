@@ -187,7 +187,7 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
                 console.print(f"[yellow]Ignoring detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
             else:
                 display_sixel_part(image_path, this_face_location)
-                new_id = input("What is this person's name? [Just press enter if no person is visible] ")
+                new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
                 if any(char.strip() for char in new_id):
                     known_encodings[new_id] = face_encoding
                     new_ids.append(new_id)
