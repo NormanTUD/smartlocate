@@ -20,6 +20,7 @@ from rich.console import Console
 import PIL
 from PIL import Image
 from sixel import converter
+import cv2
 
 def dier(msg: Any) -> None:
     pprint(msg)
@@ -117,8 +118,6 @@ try:
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition...") as load_status:
                 import face_recognition
-            with console.status("[bold green]Loading cv2...") as load_status:
-                import cv2
             with console.status("[bold green]Loading pickle...") as load_status:
                 import pickle
 
@@ -215,7 +214,16 @@ def to_absolute_path(path):
         return os.path.abspath(path)
 
 def ocr_img(img: str) -> Optional[str]:
+    global reader
+
     try:
+        if reader is None:
+            with console.status("[bold green]Loading easyocr...") as load_status:
+                import easyocr
+
+            with console.status("[bold green]Loading reader...") as load_status:
+                reader = easyocr.Reader(args.ocr_lang)
+
         if reader is None:
             console.print("[red]reader was not defined. Will not OCR.[/]")
             return None
@@ -1204,6 +1212,14 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
         except EOFError:
             sys.exit(0)
 
+def ask_confirmation():
+    try:
+        response = input("Are you sure? This cannot be undone! (y/n): ").strip()
+        return response in {'y', 'Y', 'j', 'J'}
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
 def show_options_for_file(conn, file_path):
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
@@ -1213,7 +1229,9 @@ def show_options_for_file(conn, file_path):
         strs = {}
 
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
+        strs["delete_ocr"] = "Delete OCR for this file"
 
+        strs["run_ocr"] = "Run OCR this file"
 
         while True:
             options = ["quit"]
@@ -1230,12 +1248,25 @@ def show_options_for_file(conn, file_path):
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
 
+            if check_entries_in_table(conn, "ocr_results", file_path):
+                options.insert(0, strs["delete_ocr"])
+
+            options.insert(0, strs["run_ocr"])
+
             option = display_menu(options)
 
             if option == "quit":
                 sys.exit(0)
             elif option == strs["delete_entry_no_faces"]:
-                delete_no_faces_from_image_path(conn, None, file_path)
+                if ask_confirmation():
+                    delete_no_faces_from_image_path(conn, None, file_path)
+            elif option == strs["delete_ocr"]:
+                if ask_confirmation():
+                    delete_ocr_from_image_path(conn, None, file_path)
+            elif option == strs["run_ocr"]:
+                delete_ocr_from_image_path(conn, None, file_path)
+
+                ocr_file(conn, file_path)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
