@@ -1339,7 +1339,6 @@ def show_options_for_file(conn, file_path):
 
         strs["list_desc"] = "Show description for this file"
 
-
         while True:
             options = []
 
