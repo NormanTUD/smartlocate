@@ -139,6 +139,9 @@ except KeyboardInterrupt:
     sys.exit(0)
 
 def extract_face_encodings(image_path):
+    with console.status("[bold green]Loading face_recognition...") as load_status:
+        import face_recognition
+
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
     face_encodings = face_recognition.face_encodings(image, face_locations)
@@ -150,11 +153,13 @@ def compare_faces(known_encodings, unknown_encoding, tolerance=0.6):
 
 def save_encodings(encodings, file_name):
     with open(file_name, "wb") as file:
+        import pickle
         pickle.dump(encodings, file)
 
 def load_encodings(file_name):
     if os.path.exists(file_name):
         with open(file_name, "rb") as file:
+            import pickle
             return pickle.load(file)
     return {}
 
@@ -785,7 +790,7 @@ def delete_no_faces_from_image_path(conn, delete_status, file_path):
     if delete_status:
         delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
 
-def delete_image_description_from_image_path(conn, status, file_path):
+def delete_image_description_from_image_path(conn, delete_status, file_path):
     if delete_status:
         delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
@@ -1228,13 +1233,15 @@ def show_options_for_file(conn, file_path):
 
         strs = {}
 
+        strs["delete_all"] = "Delete all entries for this file"
         strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
         strs["delete_ocr"] = "Delete OCR for this file"
 
         strs["run_ocr"] = "Run OCR this file"
+        strs["run_face_recognition"] = "Run face recognition this file"
 
         while True:
-            options = ["quit"]
+            options = [strs["delete_all"], "quit"]
 
             """
                 def delete_detections_from_image_path(conn, status, file_path):
@@ -1242,7 +1249,6 @@ def show_options_for_file(conn, file_path):
                 def delete_image_from_image_path(conn, status, file_path):
                 def delete_ocr_from_image_path(conn, status, file_path):
                 def delete_image_description_from_image_path(conn, status, file_path):
-                def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
             """
 
             if check_entries_in_table(conn, "no_faces", file_path):
@@ -1252,11 +1258,15 @@ def show_options_for_file(conn, file_path):
                 options.insert(0, strs["delete_ocr"])
 
             options.insert(0, strs["run_ocr"])
+            options.insert(0, strs["run_face_recognition"])
 
             option = display_menu(options)
 
             if option == "quit":
                 sys.exit(0)
+            elif option == strs["delete_all"]:
+                if ask_confirmation():
+                    delete_entries_by_filename(conn, file_path)
             elif option == strs["delete_entry_no_faces"]:
                 if ask_confirmation():
                     delete_no_faces_from_image_path(conn, None, file_path)
@@ -1267,6 +1277,14 @@ def show_options_for_file(conn, file_path):
                 delete_ocr_from_image_path(conn, None, file_path)
 
                 ocr_file(conn, file_path)
+            elif option == strs["run_face_recognition"]:
+                delete_no_faces_from_image_path(conn, None, file_path)
+
+                new_ids, manually_entered_name = recognize_persons_in_image(conn, file_path)
+
+                if len(new_ids) and not manually_entered_name:
+                    console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                    display_sixel(image_path)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
