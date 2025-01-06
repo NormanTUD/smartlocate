@@ -1329,8 +1329,6 @@ def show_options_for_file(conn, file_path):
 
             if check_entries_in_table(conn, "no_faces", file_path):
                 options.insert(0, strs["delete_entry_no_faces"])
-            else:
-                print("no no_faces entry found!")
 
             if check_entries_in_table(conn, "image_description", file_path):
                 options.insert(0, strs["delete_desc"])
