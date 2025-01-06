@@ -1135,7 +1135,7 @@ def main() -> None:
 
         if args.face_recognition:
             if supports_sixel():
-                c = 0
+                c = 1
                 for image_path in image_paths:
                     console.print(f"Face recognition: {c}/{len(image_paths)}")
                     if not faces_already_recognized(conn, image_path): 
