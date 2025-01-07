@@ -264,7 +264,7 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> None:
         img.thumbnail((max_size, max_size))
         img.save(output_path)
 
-def display_sixel_part(image_path, location):
+def display_sixel_part(image_path: str, location) -> None:
     top, right, bottom, left = location
 
     with tempfile.NamedTemporaryFile(mode="wb") as jpg:
@@ -958,35 +958,35 @@ def show_statistics(conn: sqlite3.Connection) -> None:
 
         show_face_recognition_stats(conn)
 
-def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting detections for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
 
-def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
 
-def delete_image_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_image_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from images for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM images WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from images for {file_path}.")
 
-def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
-def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     image_id = get_image_id_by_file_path(conn, file_path)
 
     if image_id is None:
@@ -998,14 +998,14 @@ def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_p
     if delete_status:
         delete_status.update(f"[bold green]Deleted from image_person_mapping for {file_path}.")
 
-def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
 
-def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
+def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
@@ -1047,7 +1047,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def check_entries_in_table(conn: sqlite3.Connection, table_name, file_path, where_name = "file_path") -> int:
+def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path: str, where_name: str = "file_path") -> int:
     query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_name} = ?"
 
     try:
@@ -1418,7 +1418,7 @@ def is_valid_file_path(path: str) -> bool:
 
     return False
 
-def is_valid_image_file(path):
+def is_valid_image_file(path: str) -> bool:
     try:
         if not os.path.isfile(path):
             return False
@@ -1452,9 +1452,9 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
         try:
             choice = input(f"{prompt}")
             if choice.isdigit():
-                choice = int(choice)
-                if 1 <= choice <= len(options):
-                    return options[choice - 1]
+                choice_int: int = int(choice_int)
+                if 1 <= choice_int <= len(options):
+                    return options[choice_int - 1]
                 else:
                     console.print("[red]Invalid option.[/]")
             else:
