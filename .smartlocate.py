@@ -1402,7 +1402,7 @@ def is_valid_image_file(path: str) -> bool:
     except Exception as e:
         return False
 
-def display_menu(options: list, prompt: str = "Choose an option (enter the number): ") -> str:
+def display_menu(options: list, prompt: str = "Choose an option (enter the number): ") -> Optional[str]:
     for idx, option in enumerate(options, start=1):
         prompt_color = ""
         if "Run" in option:
