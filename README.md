@@ -19,7 +19,7 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/dog.gif" alt="Search: Cat" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/cat.gif" alt="Search: Cat" width="600"/>
 </p>
 
 <p align="center">
