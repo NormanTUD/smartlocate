@@ -162,6 +162,10 @@ def extract_face_encodings(image_path: str) -> tuple[list, list]:
     return face_encodings, face_locations
 
 def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = 0.6) -> list:
+    if "face_recognition" not in sys.modules:
+        with console.status("[bold green]Loading face_recognition..."):
+            import face_recognition
+
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
 
     return results
