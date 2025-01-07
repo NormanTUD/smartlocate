@@ -78,7 +78,7 @@ parser.add_argument("--face_recognition", action="store_true", help="Enable face
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"Confidence YOLO threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
-parser.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Minimal Confidence YOLO required to save YOLO-detections in the database (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}")
+parser.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Minimal Confidence YOLO required to save YOLO-detections in the database (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}. Different from --yolo_threshold in that this allows you to search for lower thresholds later on, since they are saved then.")
 parser.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max-MB-Size in MB (default: {DEFAULT_MAX_SIZE})")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
