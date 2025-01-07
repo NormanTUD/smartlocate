@@ -146,13 +146,14 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
-def extract_face_encodings(image_path: str):
+def extract_face_encodings(image_path: str) -> tuple[list, list]:
     with console.status("[bold green]Loading face_recognition...") as load_status:
         import face_recognition
 
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
     face_encodings = face_recognition.face_encodings(image, face_locations)
+
     return face_encodings, face_locations
 
 def compare_faces(known_encodings, unknown_encoding, tolerance: float = 0.6):
@@ -201,14 +202,18 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                     console.print(f"[yellow]Ignoring face(s) detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
             else:
                 display_sixel_part(image_path, this_face_location)
-                new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
-                if any(char.strip() for char in new_id):
-                    known_encodings[new_id] = face_encoding
-                    new_ids.append(new_id)
+                try:
+                    new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
+                    if any(char.strip() for char in new_id):
+                        known_encodings[new_id] = face_encoding
+                        new_ids.append(new_id)
 
-                    manually_entered_name = True
-                else:
-                    console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
+                        manually_entered_name = True
+                    else:
+                        console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
+                except EOFError:
+                    console.print("[red]You pressed CTRL+d[/]")
+                    sys.exit(0)
             nr_new_faces = nr_new_faces + 1
         c = c + 1
 
