@@ -163,8 +163,15 @@ try:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
             with console.status("[bold green]Loading Blip-Models..."):
-                blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
-                blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
+                try:
+                    blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
+                except OSError as e:
+                    console.print(f"[red]Loading BlipProcessor failed with this error:[/] {e}")
+
+                try:
+                    blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
+                except OSError as e:
+                    console.print(f"[red]Loading BlipModel failed with this error:[/] {e}")
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
