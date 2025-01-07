@@ -98,7 +98,7 @@ blip_processor: Any = None
 blip_model: Any = None
 reader: Any = None
 
-yolo_error_already_shown = False
+yolo_error_already_shown: bool = False
 
 def supports_sixel() -> bool:
     term = os.environ.get("TERM", "").lower()
@@ -1663,20 +1663,20 @@ def main() -> None:
         with console.status(f"[bold green]Finding images in {args.dir}...") as status:
             if existing_files is not None:
                 image_paths = list(find_images(existing_files))
-        total_images = len(image_paths)
+        total_images: int = len(image_paths)
 
         if args.shuffle_index:
             random.shuffle(image_paths)
 
         if args.face_recognition:
             if supports_sixel():
-                face_recognition_images = []
+                face_recognition_images: list = []
 
                 for image_path in image_paths:
                     if not faces_already_recognized(conn, image_path):
                         face_recognition_images.append(image_path)
 
-                c = 1
+                c: int = 1
                 for image_path in face_recognition_images:
                     console.print(f"Face recognition: {c}/{len(face_recognition_images)}")
                     if not faces_already_recognized(conn, image_path):
