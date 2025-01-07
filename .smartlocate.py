@@ -768,7 +768,6 @@ def show_general_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM detections')
         total_detections = cursor.fetchone()[0]
 
-        console = Console()
         console.print("[bold underline cyan]General Statistics[/bold underline cyan]\n")
 
         table = Table(title="General Statistics")
@@ -780,7 +779,6 @@ def show_general_stats(conn: sqlite3.Connection) -> None:
         console.print(table)
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_yolo_stats(conn: sqlite3.Connection) -> None:
@@ -794,7 +792,6 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
 
         cursor.close()
 
-        console = Console()
         console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
 
         if yolo_stats:
@@ -808,7 +805,6 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
             console.print(yolo_table)
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> None:
@@ -817,7 +813,6 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM empty_images')
         total_empty_images = cursor.fetchone()[0]
 
-        console = Console()
         console.print("[bold underline cyan]Empty Images Statistics[/bold underline cyan]\n")
 
         table = Table(title="Empty Images Statistics")
@@ -828,7 +823,6 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
         console.print(table)
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_ocr_stats(conn: sqlite3.Connection) -> None:
@@ -837,7 +831,6 @@ def show_ocr_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM ocr_results')
         total_ocr_results = cursor.fetchone()[0]
 
-        console = Console()
         console.print("[bold underline cyan]OCR Results Statistics[/bold underline cyan]\n")
 
         table = Table(title="OCR Results Statistics")
@@ -848,7 +841,6 @@ def show_ocr_stats(conn: sqlite3.Connection) -> None:
         console.print(table)
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_image_description_stats(conn: sqlite3.Connection) -> None:
@@ -857,7 +849,6 @@ def show_image_description_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM image_description')
         total_image_descriptions = cursor.fetchone()[0]
 
-        console = Console()
         console.print("[bold underline cyan]Image Description Statistics[/bold underline cyan]\n")
 
         table = Table(title="Image Description Statistics")
@@ -868,7 +859,6 @@ def show_image_description_stats(conn: sqlite3.Connection) -> None:
         console.print(table)
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
@@ -880,7 +870,6 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM image_person_mapping')
         total_mappings = cursor.fetchone()[0]
 
-        console = Console()
         console.print("[bold underline cyan]Person Mapping Statistics[/bold underline cyan]\n")
 
         table = Table(title="Person Mapping Statistics")
@@ -892,7 +881,6 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
         console.print(table)
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
@@ -907,7 +895,6 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
         ''')
         face_recognition_stats = cursor.fetchall()
 
-        console = Console()
         console.print("[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
 
         if face_recognition_stats:
@@ -923,7 +910,6 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
             console.print("[yellow]No face recognition data found.[/yellow]")
 
     except Exception as e:
-        console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_statistics(conn: sqlite3.Connection) -> None:
