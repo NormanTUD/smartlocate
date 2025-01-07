@@ -54,6 +54,7 @@ DEFAULT_SIXEL_WIDTH: int = 400
 DEFAULT_MAX_SIZE: int = 5
 DEFAULT_DIR: str = "/"
 DEFAULT_BLIP_MODEL_NAME: str = "Salesforce/blip-image-captioning-large"
+DEFAULT_TOLERANCE_FACE_DETECTION: float = 0.6
 
 blip_processor: Any = None
 blip_model: Any = None
@@ -77,8 +78,9 @@ parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for det
 parser.add_argument("--describe", action="store_true", help="Enable image description")
 parser.add_argument("--face_recognition", action="store_true", help="Enable face-recognition (needs user interaction)")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
-parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
+parser.add_argument("--lang_ocr", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"Confidence YOLO threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
+parser.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
 parser.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Minimal Confidence YOLO required to save YOLO-detections in the database (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}. Different from --yolo_threshold in that this allows you to search for lower thresholds later on, since they are saved then.")
 parser.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max-MB-Size in MB (default: {DEFAULT_MAX_SIZE})")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
@@ -148,7 +150,7 @@ try:
                 import easyocr
 
             with console.status("[bold green]Loading reader..."):
-                reader = easyocr.Reader(args.ocr_lang)
+                reader = easyocr.Reader(args.lang_ocr)
 
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition..."):
@@ -190,7 +192,7 @@ def extract_face_encodings(image_path: str) -> tuple[list, list]:
 
     return face_encodings, face_locations
 
-def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = 0.6) -> list:
+def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = args.tolerance_face_detection) -> list:
     if "face_recognition" not in sys.modules:
         with console.status("[bold green]Loading face_recognition..."):
             import face_recognition
@@ -210,7 +212,7 @@ def load_encodings(file_name: str) -> dict:
             return pickle.load(file)
     return {}
 
-def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = 0.6) -> tuple[list[str], dict, bool]:
+def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = args.tolerance_face_detection) -> tuple[list[str], dict, bool]:
     face_encodings, face_locations = extract_face_encodings(image_path)
 
     manually_entered_name = False
@@ -287,7 +289,7 @@ def ocr_img(img: str) -> Optional[str]:
                     import easyocr
 
             with console.status("[bold green]Loading reader...") as load_status:
-                reader = easyocr.Reader(args.ocr_lang)
+                reader = easyocr.Reader(args.lang_ocr)
 
         if reader is None:
             console.print("[red]reader was not defined. Will not OCR.[/]")
