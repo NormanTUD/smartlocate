@@ -816,7 +816,6 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
-        return 0
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> None:
     """Zeigt Statistiken zu leeren Bildern."""
