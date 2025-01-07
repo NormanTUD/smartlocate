@@ -472,8 +472,7 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
         # Check if a result was found
         if result:
             return int(result[0])
-        else:
-            return None
+        return None
     except Exception as e:
         print(f"Error while fetching image ID for file_path '{file_path}': {e}")
         return None
@@ -1713,7 +1712,7 @@ def main() -> None:
                                 global yolo_error_already_shown
 
                                 if not yolo_error_already_shown:
-                                    console.print(f"[red]--yolo was set, but model could not be loaded[/]")
+                                    console.print("[red]--yolo was set, but model could not be loaded[/]")
 
                                     yolo_error_already_shown = True
                         if args.ocr:
