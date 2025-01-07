@@ -1520,9 +1520,9 @@ def main() -> None:
                                 console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
                                 display_sixel(image_path)
                         else:
-                            console.print(f"[green]The image {image_path} was already in the index")
+                            console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: ~{args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
                     else:
-                        console.print(f"[yellow]The image {image_path} is too large for face recognition. Try increasing --max_size")
+                        console.print(f"[green]The image {image_path} was already in the index")
                     c = c + 1
             else:
                 console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
