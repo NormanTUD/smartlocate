@@ -1416,7 +1416,7 @@ def is_valid_file_path(path):
         normalized_path = os.path.abspath(path)
         return os.path.isfile(normalized_path)
     except Exception as e:
-        print(f"Fehler bei der Überprüfung des Pfads: {e}")
+        print(f"Error checking the path {path}: {e}")
 
     return False
 
