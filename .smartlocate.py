@@ -50,8 +50,8 @@ DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
 DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/.smartlocate_face_encodings.pkl")
 DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_YOLO_THRESHOLD: float = 0.3
-DEFAULT_SIXEL_WIDTH = 400
-DEFAULT_MAX_SIZE = 5
+DEFAULT_SIXEL_WIDTH: int = 400
+DEFAULT_MAX_SIZE: int = 5
 DEFAULT_DIR: str = "/"
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
