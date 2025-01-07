@@ -297,10 +297,14 @@ def ocr_img(img: str) -> Optional[str]:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
-def resize_image(input_path: str, output_path: str, max_size: int) -> None:
+def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
     with Image.open(input_path) as img:
         img.thumbnail((max_size, max_size))
         img.save(output_path)
+
+        return True
+
+    return False
 
 def display_sixel_part(image_path: str, location: list) -> None:
     top, right, bottom, left = location
@@ -653,13 +657,6 @@ def init_database(db_path: str) -> sqlite3.Connection:
         conn.commit()
         return conn
 
-def calculate_md5(file_path: str) -> str:
-    hash_md5 = hashlib.md5()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
 def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> None:
     cursor = conn.cursor()
 
@@ -690,7 +687,7 @@ def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, s
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
-    md5_hash = calculate_md5(file_path)
+    md5_hash = get_md5(file_path)
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
 
