@@ -759,24 +759,56 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
         add_empty_image(conn, image_path)
 
 def show_yolo_stats(conn):
-    cursor = conn.cursor()
-    cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
-                      JOIN images ON images.id = detections.image_id
-                      WHERE detections.confidence >= ?
-                      GROUP BY detections.label''', (args.threshold,))
-    yolo_stats = cursor.fetchall()
-    cursor.close()
-    table = Table(title="YOLO Category Statistics")
-    table.add_column("Label", justify="left", style="cyan")
-    table.add_column("Count", justify="right", style="green")
+    try:
+        cursor = conn.cursor()
+        
+        # Gesamtanzahl der Bilder
+        cursor.execute('SELECT COUNT(*) FROM images')
+        total_images = cursor.fetchone()[0]
 
-    for row in yolo_stats:
-        table.add_row(row[0], str(row[1]))
+        # Gesamtanzahl der Detektionen
+        cursor.execute('SELECT COUNT(*) FROM detections')
+        total_detections = cursor.fetchone()[0]
 
-    if len(yolo_stats):
-        console.print(table)
+        # YOLO-Statistiken: Kategorien und ihre Häufigkeiten
+        cursor.execute('''SELECT detections.label, COUNT(*) 
+                          FROM detections
+                          JOIN images ON images.id = detections.image_id
+                          GROUP BY detections.label''')
+        yolo_stats = cursor.fetchall()
+        
+        cursor.close()
+        
+        # Überschrift
+        console = Console()
+        console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
 
-    return len(yolo_stats)
+        # Tabelle: Allgemeine Statistiken
+        general_stats_table = Table(title="General Statistics")
+        general_stats_table.add_column("Metric", justify="left", style="cyan")
+        general_stats_table.add_column("Value", justify="right", style="green")
+        general_stats_table.add_row("Total Images", str(total_images))
+        general_stats_table.add_row("Total Detections", str(total_detections))
+        console.print(general_stats_table)
+        
+        # Tabelle: YOLO-Kategorien und ihre Häufigkeiten
+        if yolo_stats:
+            yolo_table = Table(title="YOLO Category Statistics")
+            yolo_table.add_column("Label", justify="left", style="cyan")
+            yolo_table.add_column("Count", justify="right", style="green")
+            
+            for row in yolo_stats:
+                yolo_table.add_row(row[0], str(row[1]))
+            
+            console.print(yolo_table)
+        
+        return len(yolo_stats)
+    
+    except Exception as e:
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+        return 0
+
 
 def show_statistics(conn: sqlite3.Connection) -> None:
     nr_yolo_stats = show_yolo_stats(conn)
