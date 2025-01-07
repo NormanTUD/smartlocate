@@ -179,6 +179,8 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
 
     c = 0
 
+    nr_new_faces = 0
+
     for face_encoding in face_encodings:
         matches = compare_faces(list(known_encodings.values()), face_encoding, tolerance)
 
@@ -193,7 +195,8 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
                 display_sixel(image_path)
 
             if args.dont_ask_new_faces:
-                console.print(f"[yellow]Ignoring detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
+                if nr_new_faces == 0:
+                    console.print(f"[yellow]Ignoring face(s) detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
             else:
                 display_sixel_part(image_path, this_face_location)
                 new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
@@ -204,6 +207,7 @@ def detect_faces_and_name_them_when_needed(image_path, known_encodings, toleranc
                     manually_entered_name = True
                 else:
                     console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
+            nr_new_faces = nr_new_faces + 1
         c = c + 1
 
     return new_ids, known_encodings, manually_entered_name
