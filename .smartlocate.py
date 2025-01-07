@@ -229,7 +229,7 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str):
 
     return new_ids, manually_entered_name
 
-def to_absolute_path(path):
+def to_absolute_path(path: str) -> str:
     if os.path.isabs(path):
         return path
     else:
@@ -266,7 +266,7 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> None:
         img.thumbnail((max_size, max_size))
         img.save(output_path)
 
-def display_sixel_part(image_path: str, location) -> None:
+def display_sixel_part(image_path: str, location: list) -> None:
     top, right, bottom, left = location
 
     with tempfile.NamedTemporaryFile(mode="wb") as jpg:
