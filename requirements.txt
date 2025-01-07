@@ -5,3 +5,4 @@ sixel
 easyocr
 transformers
 face-recognition
+rich-argparse

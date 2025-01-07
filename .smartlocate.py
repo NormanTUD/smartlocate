@@ -25,6 +25,8 @@ try:
     from PIL import Image
     from sixel import converter
     import cv2
+
+    from rich_argparse import RichHelpFormatter
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
     sys.exit(0)
@@ -54,7 +56,7 @@ DEFAULT_DIR: str = "/"
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 
-parser = argparse.ArgumentParser(description="YOLO File Indexer")
+parser = argparse.ArgumentParser(description="Smart file indexer", formatter_class=RichHelpFormatter)
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
 parser.add_argument("--size", type=int, default=DEFAULT_SIXEL_WIDTH, help=f"Size to which the image should be resized for displaying it with sixel (default: {DEFAULT_SIXEL_WIDTH}).")
