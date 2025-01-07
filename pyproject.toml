@@ -1,0 +1,17 @@
+[project]
+name = "smartlocate"
+description = "Similiar to locate, but looks at the content"
+authors = [
+  {email = "norman.koch@tu-dresden.de"},
+  {name = "Norman Koch"}
+]
+version = "2025.01.07-1"
+
+readme = "README.md"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+py-modules = []
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
