@@ -90,7 +90,7 @@ def supports_sixel() -> bool:
         return True
 
     try:
-        output = subprocess.run(["tput", "setab", "256"], capture_output=True, text=True)
+        output = subprocess.run(["tput", "setab", "256"], capture_output=True, text=True, check=True)
         if output.returncode == 0 and "sixel" in output.stdout.lower():
             return True
     except FileNotFoundError:
@@ -149,7 +149,7 @@ except KeyboardInterrupt:
     sys.exit(0)
 
 def extract_face_encodings(image_path: str) -> tuple[list, list]:
-    with console.status("[bold green]Loading face_recognition...") as load_status:
+    with console.status("[bold green]Loading face_recognition..."):
         import face_recognition
 
     image = face_recognition.load_image_file(image_path)
@@ -1312,13 +1312,13 @@ def get_image_description(image_path: str) -> str:
     try:
         image = Image.open(image_path).convert("RGB")
         if blip_processor is None:
-            with console.status("[bold green]Loading transformers...") as load_status:
+            with console.status("[bold green]Loading transformers..."):
                 import transformers
 
-            with console.status("[bold green]Loading Blip-Transformers...") as load_status:
+            with console.status("[bold green]Loading Blip-Transformers..."):
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-            with console.status("[bold green]Loading Blip-Models...") as load_status:
+            with console.status("[bold green]Loading Blip-Models..."):
                 blip_processor = BlipProcessor.from_pretrained(blip_model_name)
                 blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
 
