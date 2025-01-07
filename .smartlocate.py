@@ -1476,8 +1476,7 @@ def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, sea
         # Return the value if found, otherwise None
         if result:
             return result[0]
-        else:
-            return None
+        return None
     except Exception as e:
         print(f"Error while fetching value from table '{table}': {e}")
         return None
@@ -1686,7 +1685,7 @@ def main() -> None:
                         console.print(f"[green]The image {image_path} was already in the index")
                     c = c + 1
             else:
-                console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+                console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
         if args.describe or args.yolo or args.ocr or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
             with Progress(
