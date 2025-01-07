@@ -1577,7 +1577,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["run_yolo"]:
                 try:
                     with console.status("[bold green]Loading yolov5..."):
-                        if not "yolov5" in sys.modules:
+                        if "yolov5" not in sys.modules:
                             import yolov5
 
                     model = yolov5.load(args.model)
