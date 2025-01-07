@@ -89,6 +89,10 @@ if not 0 < args.max_size:
     console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
     sys.exit(2)
 
+if not os.path.exists(args.dir):
+    console.print(f"[red]--dir refers to a directory that doesn't exist: {args.dir}[/]")
+    sys.exit(2)
+
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
 blip_processor: Any = None
 blip_model: Any = None
