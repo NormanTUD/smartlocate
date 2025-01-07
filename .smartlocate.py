@@ -1,3 +1,5 @@
+import sys
+
 try:
     import numpy
     import subprocess
@@ -6,7 +8,6 @@ try:
     import re
     import uuid
     import os
-    import sys
     import argparse
     import sqlite3
     import random
@@ -786,28 +787,27 @@ def show_general_stats(conn: sqlite3.Connection) -> None:
 def show_yolo_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
-        
-        cursor.execute('''SELECT detections.label, COUNT(*) 
+        cursor.execute('''SELECT detections.label, COUNT(*)
                           FROM detections
                           JOIN images ON images.id = detections.image_id
                           GROUP BY detections.label''')
         yolo_stats = cursor.fetchall()
-        
+
         cursor.close()
-        
+
         console = Console()
         console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
-        
+
         if yolo_stats:
             yolo_table = Table(title="YOLO Category Statistics")
             yolo_table.add_column("Label", justify="left", style="cyan")
             yolo_table.add_column("Count", justify="right", style="green")
-            
+
             for row in yolo_stats:
                 yolo_table.add_row(row[0], str(row[1]))
-            
+
             console.print(yolo_table)
-    
+
     except Exception as e:
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
@@ -1130,40 +1130,40 @@ def clean_search_query(query: str) -> list[str]:
     return sp
 
 def search_description(conn: sqlite3.Connection) -> int:
-     ocr_results = None
+    ocr_results = None
 
-     nr_desc = 0
+    nr_desc = 0
 
-     with console.status("[bold green]Searching through descriptions...") as status:
-         cursor = conn.cursor()
-         words = clean_search_query(args.search)  # Clean and split the search string
-         sql_query, values = build_sql_query_description(words)  # Build the SQL query dynamically
-         cursor.execute(sql_query, values)
-         ocr_results = cursor.fetchall()
-         cursor.close()
+    with console.status("[bold green]Searching through descriptions...") as status:
+        cursor = conn.cursor()
+        words = clean_search_query(args.search)  # Clean and split the search string
+        sql_query, values = build_sql_query_description(words)  # Build the SQL query dynamically
+        cursor.execute(sql_query, values)
+        ocr_results = cursor.fetchall()
+        cursor.close()
 
-     if not args.no_sixel:
-         for row in ocr_results:
-             if not is_ignored_path(row[0]):
-                 print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
-                 display_sixel(row[0])
-                 print("\n")
+    if not args.no_sixel:
+        for row in ocr_results:
+            if not is_ignored_path(row[0]):
+                print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
+                display_sixel(row[0])
+                print("\n")
 
-             nr_desc = nr_desc + 1
-     else:
-         table = Table(title="OCR Search Results")
-         table.add_column("File Path", justify="left", style="cyan")
-         table.add_column("Extracted Text", justify="center", style="magenta")
-         for row in ocr_results:
-             file_path, extracted_text = row
-             if not is_ignored_path(file_path):
-                 table.add_row(file_path, extracted_text)
+            nr_desc = nr_desc + 1
+    else:
+        table = Table(title="OCR Search Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        table.add_column("Extracted Text", justify="center", style="magenta")
+        for row in ocr_results:
+            file_path, extracted_text = row
+            if not is_ignored_path(file_path):
+                table.add_row(file_path, extracted_text)
 
-                 nr_desc = nr_desc + 1
-         if len(ocr_results):
-             console.print(table)
+                nr_desc = nr_desc + 1
+        if len(ocr_results):
+            console.print(table)
 
-     return nr_desc
+    return nr_desc
 
 def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     conditions = ["extracted_text LIKE ? COLLATE NOCASE" for _ in words]
@@ -1435,7 +1435,7 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
             console.print(f"  [{prompt_color}]{idx}. {option}[/{prompt_color}]")
         else:
             print(f"  {idx}. {option}")
-    
+
     while True:
         try:
             choice = input(f"{prompt}")
@@ -1616,9 +1616,9 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                     console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
                     display_sixel(file_path)
             elif option == strs["list_desc"]:
-                list_desc(conn, file_path);
+                list_desc(conn, file_path)
             elif option == strs["list_ocr"]:
-                list_ocr(conn, file_path);
+                list_ocr(conn, file_path)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
@@ -1666,13 +1666,13 @@ def main() -> None:
                 face_recognition_images = []
 
                 for image_path in image_paths:
-                    if not faces_already_recognized(conn, image_path): 
+                    if not faces_already_recognized(conn, image_path):
                         face_recognition_images.append(image_path)
 
                 c = 1
                 for image_path in face_recognition_images:
                     console.print(f"Face recognition: {c}/{len(face_recognition_images)}")
-                    if not faces_already_recognized(conn, image_path): 
+                    if not faces_already_recognized(conn, image_path):
                         file_size = os.path.getsize(image_path)
 
                         if file_size < args.max_size * 1024 * 1024:
