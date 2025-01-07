@@ -1429,8 +1429,8 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
                 choice_int: int = int(choice)
                 if 1 <= choice_int <= len(options):
                     return options[choice_int - 1]
-                else:
-                    console.print("[red]Invalid option.[/]")
+
+                console.print("[red]Invalid option.[/]")
             else:
                 if choice.strip() == "quit" or choice.strip() == "q":
                     sys.exit(0)
