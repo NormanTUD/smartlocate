@@ -7,23 +7,23 @@ If the parameter `--ocr` is set while indexing, all images are also OCRed and th
 If the parameter `--describe` is set while indexing, the model `Salesforce/blip-image-captioning-large` will be used to generate descriptions of images automatically, which also then can be searched.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/index.gif" alt="Indexing" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/index.gif" alt="Indexing" width="1046"/>
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/face_recognition.gif" alt="Face Recognition" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/face_recognition.gif" alt="Face Recognition" width="1046"/>
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/dog.gif" alt="Search: Dog" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/dog.gif" alt="Search: Dog" width="1046"/>
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/cat.gif" alt="Search: Cat" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/cat.gif" alt="Search: Cat" width="1046"/>
 </p>
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/ocr.gif" alt="OCR" width="600"/>
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/ocr.gif" alt="OCR" width="1046"/>
 </p>
 
 ## Features
