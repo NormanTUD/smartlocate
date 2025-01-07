@@ -434,7 +434,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
-def insert_into_no_faces(conn, file_path):
+def insert_into_no_faces(conn: sqlite3.Connection, file_path):
     execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path, ))
 
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
@@ -457,7 +457,7 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor.close()
     return False  # Bild wurde noch nicht durchsucht
 
-def get_image_id_by_file_path(conn, file_path):
+def get_image_id_by_file_path(conn: sqlite3.Connection, file_path):
     try:
         # SQL query to retrieve the image ID
         query = '''SELECT id FROM images WHERE file_path = ?'''
@@ -818,7 +818,7 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
         return 0
 
-def show_empty_images_stats(conn: sqlite3.Connection):
+def show_empty_images_stats(conn: sqlite3.Connection) -> None:
     """Zeigt Statistiken zu leeren Bildern."""
     try:
         cursor = conn.cursor()
@@ -839,7 +839,7 @@ def show_empty_images_stats(conn: sqlite3.Connection):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_ocr_stats(conn: sqlite3.Connection):
+def show_ocr_stats(conn: sqlite3.Connection) -> None:
     """Zeigt Statistiken zu OCR-Ergebnissen."""
     try:
         cursor = conn.cursor()
@@ -860,7 +860,7 @@ def show_ocr_stats(conn: sqlite3.Connection):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_image_description_stats(conn: sqlite3.Connection):
+def show_image_description_stats(conn: sqlite3.Connection) -> None:
     """Zeigt Statistiken zur Bildbeschreibung."""
     try:
         cursor = conn.cursor()
@@ -881,7 +881,7 @@ def show_image_description_stats(conn: sqlite3.Connection):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_person_mapping_stats(conn: sqlite3.Connection):
+def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
     """Zeigt Statistiken zu Bild-Person-Zuordnungen."""
     try:
         cursor = conn.cursor()
@@ -906,7 +906,7 @@ def show_person_mapping_stats(conn: sqlite3.Connection):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_face_recognition_stats(conn: sqlite3.Connection):
+def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
     """Zeigt Statistiken zu den erkanntesten Namen (Gesichtserkennung) an."""
     try:
         cursor = conn.cursor()
@@ -959,35 +959,35 @@ def show_statistics(conn: sqlite3.Connection) -> None:
 
         show_face_recognition_stats(conn)
 
-def delete_yolo_from_image_path(conn, delete_status, file_path):
+def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting detections for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
 
-def delete_empty_images_from_image_path(conn, delete_status, file_path):
+def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
 
-def delete_image_from_image_path(conn, delete_status, file_path):
+def delete_image_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from images for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM images WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from images for {file_path}.")
 
-def delete_ocr_from_image_path(conn, delete_status, file_path):
+def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
-def delete_faces_from_image_path(conn, delete_status, file_path):
+def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     image_id = get_image_id_by_file_path(conn, file_path)
 
     if image_id is None:
@@ -999,14 +999,14 @@ def delete_faces_from_image_path(conn, delete_status, file_path):
     if delete_status:
         delete_status.update(f"[bold green]Deleted from image_person_mapping for {file_path}.")
 
-def delete_no_faces_from_image_path(conn, delete_status, file_path):
+def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
 
-def delete_image_description_from_image_path(conn, delete_status, file_path):
+def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
@@ -1048,7 +1048,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def check_entries_in_table(conn, table_name, file_path, where_name = "file_path"):
+def check_entries_in_table(conn: sqlite3.Connection, table_name, file_path, where_name = "file_path"):
     query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_name} = ?"
 
     try:
@@ -1410,7 +1410,7 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
         except FileNotFoundError:
             console.print(f"[red]File {image_path} not found[/]")
 
-def is_valid_file_path(path):
+def is_valid_file_path(path: str) -> bool:
     try:
         normalized_path = os.path.abspath(path)
         return os.path.isfile(normalized_path)
@@ -1468,15 +1468,16 @@ def display_menu(options, prompt="Choose an option (enter the number): "):
         except EOFError:
             sys.exit(0)
 
-def ask_confirmation():
+def ask_confirmation() -> bool:
     try:
         response = input("Are you sure? This cannot be undone! (y/n): ").strip()
         return response in {'y', 'Y', 'j', 'J'}
     except Exception as e:
         print(f"An error occurred: {e}")
-        return False
 
-def get_value_by_condition(conn, table, field, search_by, where_column):
+    return False
+
+def get_value_by_condition(conn: sqlite3.Connection, table, field, search_by, where_column):
     try:
         # Construct the SQL query with placeholders
         query = f"SELECT {field} FROM {table} WHERE {where_column} = ?"
@@ -1495,17 +1496,17 @@ def get_value_by_condition(conn, table, field, search_by, where_column):
         print(f"Error while fetching value from table '{table}': {e}")
         return None
 
-def list_desc(conn, file_path) -> None:
+def list_desc(conn: sqlite3.Connection, file_path) -> None:
     print("==================")
     print(get_value_by_condition(conn, "image_description", "image_description", file_path, "file_path"))
     print("==================")
 
-def list_ocr(conn, file_path) -> None:
+def list_ocr(conn: sqlite3.Connection, file_path) -> None:
     print("==================")
     print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
     print("==================")
 
-def show_options_for_file(conn, file_path):
+def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
 
