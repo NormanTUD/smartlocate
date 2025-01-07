@@ -81,6 +81,11 @@ parser.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask
 parser.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
 args = parser.parse_args()
 
+if not 0 <= args.yolo_threshold <= 1:
+    console.print(f"[red]--yolo_threshold must be between 0 and 1, is {args.yolo_threshold}[/]")
+
+    sys.exit(1)
+
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
 blip_processor: Any = None
 blip_model: Any = None
