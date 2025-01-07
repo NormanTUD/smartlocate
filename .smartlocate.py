@@ -184,9 +184,7 @@ except KeyboardInterrupt:
     sys.exit(0)
 
 def extract_face_encodings(image_path: str) -> tuple[list, list]:
-    if "face_recognition" not in sys.modules:
-        with console.status("[bold green]Loading face_recognition..."):
-            import face_recognition
+    import face_recognition
 
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
