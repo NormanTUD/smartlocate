@@ -1678,7 +1678,9 @@ def main() -> None:
         if args.shuffle_index:
             random.shuffle(image_paths)
 
-        if args.face_recognition:
+        do_all = (not args.describe and not args.ocr and not args.yolo and not args.face_recognition)
+
+        if args.face_recognition or do_all:
             if supports_sixel():
                 face_recognition_images: list = []
 
@@ -1705,8 +1707,6 @@ def main() -> None:
                     c = c + 1
             else:
                 console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
-
-        do_all = (not args.describe and not args.ocr and not args.yolo and not args.face_recognition)
 
         if args.describe or args.yolo or args.ocr or do_all:
             with Progress(
