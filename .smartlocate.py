@@ -150,7 +150,11 @@ try:
                 import easyocr
 
             with console.status("[bold green]Loading reader..."):
-                reader = easyocr.Reader(args.lang_ocr)
+                try:
+                    reader = easyocr.Reader(args.lang_ocr)
+                except ValueError as e:
+                    console.print(f"[red]Loading OCR failed. This is probably an error with the --lang_ocr option. Error:[/] {e}")
+
 
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition..."):
