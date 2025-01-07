@@ -766,7 +766,7 @@ def show_yolo_stats(conn):
                       GROUP BY detections.label''', (args.threshold,))
     yolo_stats = cursor.fetchall()
     cursor.close()
-    table = Table(title="Category Statistics")
+    table = Table(title="YOLO Category Statistics")
     table.add_column("Label", justify="left", style="cyan")
     table.add_column("Count", justify="right", style="green")
 
