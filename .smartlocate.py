@@ -53,8 +53,8 @@ DEFAULT_YOLO_THRESHOLD: float = 0.3
 DEFAULT_SIXEL_WIDTH: int = 400
 DEFAULT_MAX_SIZE: int = 5
 DEFAULT_DIR: str = "/"
+DEFAULT_BLIP_MODEL_NAME: str = "Salesforce/blip-image-captioning-large"
 
-blip_model_name: str = "Salesforce/blip-image-captioning-large"
 blip_processor: Any = None
 blip_model: Any = None
 reader: Any = None
@@ -66,6 +66,7 @@ parser.add_argument("search", nargs="?", help="Search term for indexed results",
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
 parser.add_argument("--size", type=int, default=DEFAULT_SIXEL_WIDTH, help=f"Size to which the image should be resized for displaying it with sixel (default: {DEFAULT_SIXEL_WIDTH}).")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
+parser.add_argument("--blip_model_name", default=DEFAULT_BLIP_MODEL_NAME, help=f"Name of the blip model. Default: {DEFAULT_BLIP_MODEL_NAME}")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("--no_sixel", action="store_true", help="Hide sixel graphics")
 parser.add_argument("--yolo", action="store_true", help="Use yolo for indexing")
@@ -162,8 +163,8 @@ try:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
             with console.status("[bold green]Loading Blip-Models..."):
-                blip_processor = BlipProcessor.from_pretrained(blip_model_name)
-                blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
+                blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
+                blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
 except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
@@ -1345,8 +1346,8 @@ def get_image_description(image_path: str) -> str:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
             with console.status("[bold green]Loading Blip-Models..."):
-                blip_processor = BlipProcessor.from_pretrained(blip_model_name)
-                blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
+                blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
+                blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
 
         if blip_processor is None:
             console.print("blip_processor was none. Cannot describe image.")
