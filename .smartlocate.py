@@ -155,11 +155,9 @@ try:
                 except ValueError as e:
                     console.print(f"[red]Loading OCR failed. This is probably an error with the --lang_ocr option. Error:[/] {e}")
 
-
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition..."):
                 import face_recognition
-
 
         if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
             with console.status("[bold green]Loading transformers..."):
