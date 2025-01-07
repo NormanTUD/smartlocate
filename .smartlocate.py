@@ -240,8 +240,8 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> tup
 def to_absolute_path(path: str) -> str:
     if os.path.isabs(path):
         return path
-    else:
-        return os.path.abspath(path)
+
+    return os.path.abspath(path)
 
 def ocr_img(img: str) -> Optional[str]:
     global reader
