@@ -840,10 +840,80 @@ def show_empty_images_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+def show_ocr_stats(conn):
+    """Zeigt Statistiken zu OCR-Ergebnissen."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM ocr_results')
+        total_ocr_results = cursor.fetchone()[0]
+
+        console = Console()
+        console.print("[bold underline cyan]OCR Results Statistics[/bold underline cyan]\n")
+
+        table = Table(title="OCR Results Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+        table.add_row("Total OCR Results", str(total_ocr_results))
+
+        console.print(table)
+
+    except Exception as e:
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
+def show_image_description_stats(conn):
+    """Zeigt Statistiken zur Bildbeschreibung."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM image_description')
+        total_image_descriptions = cursor.fetchone()[0]
+
+        console = Console()
+        console.print("[bold underline cyan]Image Description Statistics[/bold underline cyan]\n")
+
+        table = Table(title="Image Description Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+        table.add_row("Total Image Descriptions", str(total_image_descriptions))
+
+        console.print(table)
+
+    except Exception as e:
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
+def show_person_mapping_stats(conn):
+    """Zeigt Statistiken zu Bild-Person-Zuordnungen."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM person')
+        total_persons = cursor.fetchone()[0]
+
+        cursor.execute('SELECT COUNT(*) FROM image_person_mapping')
+        total_mappings = cursor.fetchone()[0]
+
+        console = Console()
+        console.print("[bold underline cyan]Person Mapping Statistics[/bold underline cyan]\n")
+
+        table = Table(title="Person Mapping Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+        table.add_row("Total Persons", str(total_persons))
+        table.add_row("Total Image-Person Mappings", str(total_mappings))
+
+        console.print(table)
+
+    except Exception as e:
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
 def show_statistics(conn: sqlite3.Connection) -> None:
     general_stats = show_general_stats(conn)
     nr_yolo_stats = show_yolo_stats(conn)
+    img_desc_stats = show_image_description_stats(conn)
+    ocr_stats = show_ocr_stats(conn)
     empty_stats = show_empty_images_stats(conn)
+    person_mapping_stats = show_person_mapping_stats(conn)
 
 def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
