@@ -1048,7 +1048,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def check_entries_in_table(conn: sqlite3.Connection, table_name, file_path, where_name = "file_path"):
+def check_entries_in_table(conn: sqlite3.Connection, table_name, file_path, where_name = "file_path") -> int:
     query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_name} = ?"
 
     try:
@@ -1477,7 +1477,7 @@ def ask_confirmation() -> bool:
 
     return False
 
-def get_value_by_condition(conn: sqlite3.Connection, table, field, search_by, where_column):
+def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, search_by: str, where_column: str) -> Optional[str]:
     try:
         # Construct the SQL query with placeholders
         query = f"SELECT {field} FROM {table} WHERE {where_column} = ?"
