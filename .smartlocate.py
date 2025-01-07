@@ -49,7 +49,7 @@ MIN_CONFIDENCE_FOR_SAVING: float = 0.1
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
 DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/.smartlocate_face_encodings.pkl")
 DEFAULT_MODEL: str = "yolov5s.pt"
-DEFAULT_THRESHOLD: float = 0.3
+DEFAULT_YOLO_THRESHOLD: float = 0.3
 DEFAULT_SIXEL_WIDTH = 400
 DEFAULT_MAX_SIZE = 5
 DEFAULT_DIR: str = "/"
@@ -72,7 +72,7 @@ parser.add_argument("--describe", action="store_true", help="Enable image descri
 parser.add_argument("--face_recognition", action="store_true", help="Enable face-recognition (needs user interaction)")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
-parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
+parser.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help="Confidence YOLO threshold (0-1)")
 parser.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max-MB-Size in MB (default: {DEFAULT_MAX_SIZE})")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
@@ -1085,7 +1085,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in yolo_results:
             conf = row[2]
-            if conf >= args.threshold:
+            if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
                     print(f"{row[0]} (certainty: {conf:.2f})")
                     display_sixel(row[0])
@@ -1099,7 +1099,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
         table.add_column("Confidence", justify="right", style="green")
         for row in yolo_results:
             conf = row[2]
-            if conf >= args.threshold:
+            if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
                     table.add_row(*map(str, row))
 
