@@ -81,7 +81,7 @@ reader: Any = None
 
 yolo_error_already_shown = False
 
-def supports_sixel():
+def supports_sixel() -> bool:
     term = os.environ.get("TERM", "").lower()
     if "xterm" in term or "mlterm" in term:
         return True
@@ -1641,7 +1641,7 @@ def show_options_for_file(conn, file_path):
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
-        console.print(f"[red]The file {f} is not a valid image file. Currently, only image files are supported.[/]")
+        console.print(f"[red]The file {file_path} is not a valid image file. Currently, only image files are supported.[/]")
 
 def main() -> None:
     dbg(f"Arguments: {args}")
