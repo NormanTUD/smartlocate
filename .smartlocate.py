@@ -48,6 +48,8 @@ DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
 DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/.smartlocate_face_encodings.pkl")
 DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_THRESHOLD: float = 0.3
+DEFAULT_SIXEL_WIDTH = 400
+DEFAULT_MAX_SIZE = 5
 DEFAULT_DIR: str = "/"
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
@@ -55,7 +57,7 @@ supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 parser = argparse.ArgumentParser(description="YOLO File Indexer")
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
 parser.add_argument("--index", action="store_true", help="Index images in the specified directory")
-parser.add_argument("--size", type=int, default=400, help="Size to which the image should be resized for displaying it with sixel (default: 400).")
+parser.add_argument("--size", type=int, default=DEFAULT_SIXEL_WIDTH, help=f"Size to which the image should be resized for displaying it with sixel (default: {DEFAULT_SIXEL_WIDTH}).")
 parser.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("--no_sixel", action="store_true", help="Hide sixel graphics")
@@ -69,7 +71,7 @@ parser.add_argument("--face_recognition", action="store_true", help="Enable face
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="Confidence threshold (0-1)")
-parser.add_argument("--max_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
+parser.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max-MB-Size in MB (default: {DEFAULT_MAX_SIZE})")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument('--exclude', action='append', default=[], help="Folders or paths that should be ignored. Can be used multiple times.")
