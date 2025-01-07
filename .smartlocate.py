@@ -115,30 +115,30 @@ try:
 
     if args.index:
         if args.yolo:
-            with console.status("[bold green]Loading yolov5...") as load_status:
+            with console.status("[bold green]Loading yolov5..."):
                 import yolov5
 
         if args.ocr:
-            with console.status("[bold green]Loading easyocr...") as load_status:
+            with console.status("[bold green]Loading easyocr..."):
                 import easyocr
 
-            with console.status("[bold green]Loading reader...") as load_status:
+            with console.status("[bold green]Loading reader..."):
                 reader = easyocr.Reader(args.ocr_lang)
 
         if args.ocr or args.face_recognition:
-            with console.status("[bold green]Loading face_recognition...") as load_status:
+            with console.status("[bold green]Loading face_recognition..."):
                 import face_recognition
-            with console.status("[bold green]Loading pickle...") as load_status:
+            with console.status("[bold green]Loading pickle..."):
                 import pickle
 
         if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
-            with console.status("[bold green]Loading transformers...") as load_status:
+            with console.status("[bold green]Loading transformers..."):
                 import transformers
 
             with console.status("[bold green]Loading Blip-Transformers...") as load_status:
                 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-            with console.status("[bold green]Loading Blip-Models...") as load_status:
+            with console.status("[bold green]Loading Blip-Models..."):
                 blip_processor = BlipProcessor.from_pretrained(blip_model_name)
                 blip_model = BlipForConditionalGeneration.from_pretrained(blip_model_name)
 except ModuleNotFoundError as e:
