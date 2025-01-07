@@ -759,7 +759,7 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
     else:
         add_empty_image(conn, image_path)
 
-def show_general_stats(conn):
+def show_general_stats(conn: sqlite3.Connection):
     """Zeigt allgemeine Statistiken zur Anzahl von Bildern und Detektionen."""
     try:
         cursor = conn.cursor()
@@ -785,7 +785,7 @@ def show_general_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_yolo_stats(conn):
+def show_yolo_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
         
@@ -812,15 +812,13 @@ def show_yolo_stats(conn):
                 yolo_table.add_row(row[0], str(row[1]))
             
             console.print(yolo_table)
-        
-        return len(yolo_stats)
     
     except Exception as e:
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
         return 0
 
-def show_empty_images_stats(conn):
+def show_empty_images_stats(conn: sqlite3.Connection):
     """Zeigt Statistiken zu leeren Bildern."""
     try:
         cursor = conn.cursor()
@@ -841,7 +839,7 @@ def show_empty_images_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_ocr_stats(conn):
+def show_ocr_stats(conn: sqlite3.Connection):
     """Zeigt Statistiken zu OCR-Ergebnissen."""
     try:
         cursor = conn.cursor()
@@ -862,7 +860,7 @@ def show_ocr_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_image_description_stats(conn):
+def show_image_description_stats(conn: sqlite3.Connection):
     """Zeigt Statistiken zur Bildbeschreibung."""
     try:
         cursor = conn.cursor()
@@ -883,7 +881,7 @@ def show_image_description_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_person_mapping_stats(conn):
+def show_person_mapping_stats(conn: sqlite3.Connection):
     """Zeigt Statistiken zu Bild-Person-Zuordnungen."""
     try:
         cursor = conn.cursor()
@@ -908,7 +906,7 @@ def show_person_mapping_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
-def show_face_recognition_stats(conn):
+def show_face_recognition_stats(conn: sqlite3.Connection):
     """Zeigt Statistiken zu den erkanntesten Namen (Gesichtserkennung) an."""
     try:
         cursor = conn.cursor()
@@ -1497,12 +1495,12 @@ def get_value_by_condition(conn, table, field, search_by, where_column):
         print(f"Error while fetching value from table '{table}': {e}")
         return None
 
-def list_desc(conn, file_path):
+def list_desc(conn, file_path) -> None:
     print("==================")
     print(get_value_by_condition(conn, "image_description", "image_description", file_path, "file_path"))
     print("==================")
 
-def list_ocr(conn, file_path):
+def list_ocr(conn, file_path) -> None:
     print("==================")
     print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
     print("==================")
@@ -1633,7 +1631,7 @@ def show_options_for_file(conn, file_path):
 
                 if len(new_ids) and not manually_entered_name:
                     console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                    display_sixel(image_path)
+                    display_sixel(file_path)
             elif option == strs["list_desc"]:
                 list_desc(conn, file_path);
             elif option == strs["list_ocr"]:
