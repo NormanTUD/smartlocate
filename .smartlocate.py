@@ -113,6 +113,9 @@ try:
     import warnings
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
+    with console.status("[bold green]Loading pickle..."):
+        import pickle
+
     if args.index:
         if args.yolo:
             with console.status("[bold green]Loading yolov5..."):
@@ -128,8 +131,7 @@ try:
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition..."):
                 import face_recognition
-            with console.status("[bold green]Loading pickle..."):
-                import pickle
+
 
         if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
             with console.status("[bold green]Loading transformers..."):
@@ -166,13 +168,11 @@ def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolera
 def save_encodings(encodings: dict, file_name: str) -> None:
     if not args.dont_save_new_encoding:
         with open(file_name, "wb") as file:
-            import pickle
             pickle.dump(encodings, file)
 
 def load_encodings(file_name: str) -> dict:
     if os.path.exists(file_name):
         with open(file_name, "rb") as file:
-            import pickle
             return pickle.load(file)
     return {}
 
