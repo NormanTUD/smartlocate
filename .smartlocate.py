@@ -1,4 +1,5 @@
 try:
+    import numpy
     import subprocess
     import requests
     import tempfile
@@ -156,8 +157,9 @@ def extract_face_encodings(image_path: str) -> tuple[list, list]:
 
     return face_encodings, face_locations
 
-def compare_faces(known_encodings, unknown_encoding, tolerance: float = 0.6):
+def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = 0.6) -> list:
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
+
     return results
 
 def save_encodings(encodings: dict, file_name: str) -> None:
@@ -464,7 +466,7 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor.close()
     return False  # Bild wurde noch nicht durchsucht
 
-def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str):
+def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optional[int]:
     try:
         # SQL query to retrieve the image ID
         query = '''SELECT id FROM images WHERE file_path = ?'''
@@ -476,7 +478,7 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str):
 
         # Check if a result was found
         if result:
-            return result[0]
+            return int(result[0])
         else:
             return None
     except Exception as e:
@@ -1054,7 +1056,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
-def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path: str, where_name: str = "file_path") -> int:
+def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path: str | int, where_name: str = "file_path") -> int:
     query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_name} = ?"
 
     try:
@@ -1553,7 +1555,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             if image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id"):
                 options.insert(0, strs["delete_yolo"])
 
-            if check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"):
+            if image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"):
                 options.insert(0, strs["delete_face_recognition"])
 
             if check_entries_in_table(conn, "no_faces", file_path):
