@@ -249,7 +249,8 @@ def ocr_img(img: str) -> Optional[str]:
     try:
         if reader is None:
             with console.status("[bold green]Loading easyocr...") as load_status:
-                import easyocr
+                if "easyocr" not in sys.modules:
+                    import easyocr
 
             with console.status("[bold green]Loading reader...") as load_status:
                 reader = easyocr.Reader(args.ocr_lang)
@@ -1576,7 +1577,8 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["run_yolo"]:
                 try:
                     with console.status("[bold green]Loading yolov5..."):
-                        import yolov5
+                        if not "yolov5" in sys.modules:
+                            import yolov5
 
                     model = yolov5.load(args.model)
                     model.conf = 0
