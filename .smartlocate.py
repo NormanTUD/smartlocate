@@ -477,7 +477,6 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
         print(f"Error while fetching image ID for file_path '{file_path}': {e}")
         return None
 
-
 def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
@@ -1354,7 +1353,6 @@ def get_image_description(image_path: str) -> str:
     except PIL.Image.DecompressionBombError as e:
         console.print(f"File {image_path} failed with error {e}")
         return ""
-
 
 def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
     if is_file_in_img_desc_db(conn, image_path):
