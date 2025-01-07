@@ -219,7 +219,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
 
     return new_ids, known_encodings, manually_entered_name
 
-def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str):
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> tuple[list[str], bool]:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
     new_ids, known_encodings, manually_entered_name = detect_faces_and_name_them_when_needed(image_path, known_encodings)
