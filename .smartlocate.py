@@ -908,12 +908,23 @@ def show_person_mapping_stats(conn):
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_statistics(conn: sqlite3.Connection) -> None:
-    general_stats = show_general_stats(conn)
-    nr_yolo_stats = show_yolo_stats(conn)
-    img_desc_stats = show_image_description_stats(conn)
-    ocr_stats = show_ocr_stats(conn)
-    empty_stats = show_empty_images_stats(conn)
-    person_mapping_stats = show_person_mapping_stats(conn)
+    show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition
+
+    if show_all:
+        general_stats = show_general_stats(conn)
+        empty_stats = show_empty_images_stats(conn)
+
+    if args.yolo or show_all:
+        nr_yolo_stats = show_yolo_stats(conn)
+
+    if args.describe or show_all:
+        img_desc_stats = show_image_description_stats(conn)
+
+    if args.ocr or show_all:
+        ocr_stats = show_ocr_stats(conn)
+
+    if args.face_recognition:
+        person_mapping_stats = show_person_mapping_stats(conn)
 
 def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
