@@ -758,21 +758,28 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
     else:
         add_empty_image(conn, image_path)
 
-def show_statistics(conn: sqlite3.Connection) -> None:
+def show_yolo_stats(conn):
     cursor = conn.cursor()
     cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
                       JOIN images ON images.id = detections.image_id
                       WHERE detections.confidence >= ?
                       GROUP BY detections.label''', (args.threshold,))
-    stats = cursor.fetchall()
+    yolo_stats = cursor.fetchall()
     cursor.close()
     table = Table(title="Category Statistics")
     table.add_column("Label", justify="left", style="cyan")
     table.add_column("Count", justify="right", style="green")
 
-    for row in stats:
+    for row in yolo_stats:
         table.add_row(row[0], str(row[1]))
-    console.print(table)
+
+    if len(yolo_stats):
+        console.print(table)
+
+    return len(yolo_stats)
+
+def show_statistics(conn: sqlite3.Connection) -> None:
+    nr_yolo_stats = show_yolo_stats(conn)
 
 def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
