@@ -1675,7 +1675,9 @@ def main() -> None:
             else:
                 console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
-        if args.describe or args.yolo or args.ocr or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
+        do_all = (not args.describe and not args.ocr and not args.yolo and not args.face_recognition)
+
+        if args.describe or args.yolo or args.ocr or do_all:
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
                 BarColumn(),
@@ -1690,7 +1692,7 @@ def main() -> None:
 
                 for image_path in image_paths:
                     if os.path.exists(image_path):
-                        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
+                        if args.describe or do_all:
                             describe_img(conn, image_path)
                         if args.yolo:
                             if model is not None:
