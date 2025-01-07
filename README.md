@@ -11,6 +11,11 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 </p>
 
 <p align="center">
+<img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/face_recognition.gif" alt="Face Recognition" width="600"/>
+</p>
+
+
+<p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/search.gif" alt="Indexing" width="600"/>
 </p>
 
