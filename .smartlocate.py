@@ -1,4 +1,5 @@
 try:
+    import subprocess
     import requests
     import tempfile
     import re
