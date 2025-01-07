@@ -72,6 +72,7 @@ parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODING
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 parser.add_argument('--exclude', action='append', default=[], help="Folders or paths that should be ignored. Can be used multiple times.")
 parser.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically)")
+parser.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
 args = parser.parse_args()
 
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
@@ -158,12 +159,13 @@ def compare_faces(known_encodings, unknown_encoding, tolerance=0.6):
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
     return results
 
-def save_encodings(encodings, file_name):
-    with open(file_name, "wb") as file:
-        import pickle
-        pickle.dump(encodings, file)
+def save_encodings(encodings, file_name) -> None:
+    if not args.dont_save_new_encoding:
+        with open(file_name, "wb") as file:
+            import pickle
+            pickle.dump(encodings, file)
 
-def load_encodings(file_name):
+def load_encodings(file_name) -> dict:
     if os.path.exists(file_name):
         with open(file_name, "rb") as file:
             import pickle
