@@ -907,24 +907,58 @@ def show_person_mapping_stats(conn):
         console = Console()
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+def show_face_recognition_stats(conn):
+    """Zeigt Statistiken zu den erkanntesten Namen (Gesichtserkennung) an."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT person.name, COUNT(image_person_mapping.image_id) AS recognition_count
+            FROM person
+            JOIN image_person_mapping ON person.id = image_person_mapping.person_id
+            GROUP BY person.name
+            ORDER BY recognition_count DESC
+        ''')
+        face_recognition_stats = cursor.fetchall()
+
+        console = Console()
+        console.print("[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
+
+        if face_recognition_stats:
+            table = Table(title="Face Recognition Statistics (Sorted by Count)")
+            table.add_column("Name", style="cyan")
+            table.add_column("Recognition Count", justify="right", style="green")
+
+            for name, count in face_recognition_stats:
+                table.add_row(name, str(count))
+
+            console.print(table)
+        else:
+            console.print("[yellow]No face recognition data found.[/yellow]")
+
+    except Exception as e:
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
 def show_statistics(conn: sqlite3.Connection) -> None:
     show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition
 
     if show_all:
-        general_stats = show_general_stats(conn)
-        empty_stats = show_empty_images_stats(conn)
+        show_general_stats(conn)
+        show_empty_images_stats(conn)
 
     if args.yolo or show_all:
-        nr_yolo_stats = show_yolo_stats(conn)
+        show_yolo_stats(conn)
 
     if args.describe or show_all:
-        img_desc_stats = show_image_description_stats(conn)
+        show_image_description_stats(conn)
 
     if args.ocr or show_all:
-        ocr_stats = show_ocr_stats(conn)
+        show_ocr_stats(conn)
 
-    if args.face_recognition:
-        person_mapping_stats = show_person_mapping_stats(conn)
+    if args.face_recognition or show_all:
+        show_person_mapping_stats(conn)
+
+        show_face_recognition_stats(conn)
 
 def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
