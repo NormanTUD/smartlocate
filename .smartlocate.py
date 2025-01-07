@@ -146,7 +146,7 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
-def extract_face_encodings(image_path):
+def extract_face_encodings(image_path: str):
     with console.status("[bold green]Loading face_recognition...") as load_status:
         import face_recognition
 
@@ -159,20 +159,20 @@ def compare_faces(known_encodings, unknown_encoding, tolerance: float = 0.6):
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
     return results
 
-def save_encodings(encodings, file_name) -> None:
+def save_encodings(encodings: dict, file_name: str) -> None:
     if not args.dont_save_new_encoding:
         with open(file_name, "wb") as file:
             import pickle
             pickle.dump(encodings, file)
 
-def load_encodings(file_name) -> dict:
+def load_encodings(file_name: str) -> dict:
     if os.path.exists(file_name):
         with open(file_name, "rb") as file:
             import pickle
             return pickle.load(file)
     return {}
 
-def detect_faces_and_name_them_when_needed(image_path, known_encodings, tolerance: float = 0.6):
+def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = 0.6) -> tuple[list[str], dict, bool]:
     face_encodings, face_locations = extract_face_encodings(image_path)
 
     manually_entered_name = False
