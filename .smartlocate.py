@@ -155,7 +155,7 @@ def extract_face_encodings(image_path):
     face_encodings = face_recognition.face_encodings(image, face_locations)
     return face_encodings, face_locations
 
-def compare_faces(known_encodings, unknown_encoding, tolerance=0.6):
+def compare_faces(known_encodings, unknown_encoding, tolerance: float = 0.6):
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
     return results
 
@@ -172,7 +172,7 @@ def load_encodings(file_name) -> dict:
             return pickle.load(file)
     return {}
 
-def detect_faces_and_name_them_when_needed(image_path, known_encodings, tolerance=0.6):
+def detect_faces_and_name_them_when_needed(image_path, known_encodings, tolerance: float = 0.6):
     face_encodings, face_locations = extract_face_encodings(image_path)
 
     manually_entered_name = False
@@ -761,7 +761,7 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
     else:
         add_empty_image(conn, image_path)
 
-def show_general_stats(conn: sqlite3.Connection):
+def show_general_stats(conn: sqlite3.Connection) -> None:
     """Zeigt allgemeine Statistiken zur Anzahl von Bildern und Detektionen."""
     try:
         cursor = conn.cursor()
@@ -1431,7 +1431,7 @@ def is_valid_image_file(path: str) -> bool:
     except Exception as e:
         return False
 
-def display_menu(options, prompt="Choose an option (enter the number): "):
+def display_menu(options: list, prompt: str = "Choose an option (enter the number): ") -> str:
     for idx, option in enumerate(options, start=1):
         prompt_color = ""
         if "Run" in option:
@@ -1536,7 +1536,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
         strs["list_ocr"] = "Show OCR for this file"
 
         while True:
-            options = []
+            options: list[str] = []
 
             """
                 delete_empty_images_from_image_path(conn, status, file_path):
