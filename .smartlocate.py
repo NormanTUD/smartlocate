@@ -434,7 +434,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
-def insert_into_no_faces(conn: sqlite3.Connection, file_path):
+def insert_into_no_faces(conn: sqlite3.Connection, file_path: str):
     execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path, ))
 
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
@@ -457,7 +457,7 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor.close()
     return False  # Bild wurde noch nicht durchsucht
 
-def get_image_id_by_file_path(conn: sqlite3.Connection, file_path):
+def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str):
     try:
         # SQL query to retrieve the image ID
         query = '''SELECT id FROM images WHERE file_path = ?'''
@@ -959,35 +959,35 @@ def show_statistics(conn: sqlite3.Connection) -> None:
 
         show_face_recognition_stats(conn)
 
-def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting detections for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM detections WHERE image_id IN (SELECT id FROM images WHERE file_path = ?)''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from detections for {file_path}.")
 
-def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from empty_images for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM empty_images WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from empty_images for {file_path}.")
 
-def delete_image_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_image_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from images for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM images WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from images for {file_path}.")
 
-def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from ocr_results for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM ocr_results WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
-def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     image_id = get_image_id_by_file_path(conn, file_path)
 
     if image_id is None:
@@ -999,14 +999,14 @@ def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_p
     if delete_status:
         delete_status.update(f"[bold green]Deleted from image_person_mapping for {file_path}.")
 
-def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
 
-def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status, file_path) -> None:
+def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status, file_path: str) -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
     execute_with_retry(conn, '''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
@@ -1496,12 +1496,12 @@ def get_value_by_condition(conn: sqlite3.Connection, table, field, search_by, wh
         print(f"Error while fetching value from table '{table}': {e}")
         return None
 
-def list_desc(conn: sqlite3.Connection, file_path) -> None:
+def list_desc(conn: sqlite3.Connection, file_path: str) -> None:
     print("==================")
     print(get_value_by_condition(conn, "image_description", "image_description", file_path, "file_path"))
     print("==================")
 
-def list_ocr(conn: sqlite3.Connection, file_path) -> None:
+def list_ocr(conn: sqlite3.Connection, file_path: str) -> None:
     print("==================")
     print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
     print("==================")
