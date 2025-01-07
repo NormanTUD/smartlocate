@@ -304,7 +304,6 @@ def display_sixel(image_path: str) -> None:
             os.remove(unique_filename)
 
 def load_existing_images(conn: sqlite3.Connection) -> dict[Any, Any]:
-    """Lädt alle Dateinamen und MD5-Hashes aus der Datenbank und gibt sie als Dictionary zurück."""
     cursor = conn.cursor()
     cursor.execute('''
         SELECT file_path, md5 FROM images
@@ -392,13 +391,6 @@ def add_image_persons_mapping(conn: sqlite3.Connection, file_path: str, person_n
         add_image_and_person_mapping(conn, file_path, elem)
 
 def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, person_name: str) -> None:
-    """
-    Fügt einen Dateipfad und eine Person in die entsprechenden Tabellen ein und verknüpft sie in der image_person_mapping-Tabelle.
-
-    :param conn: SQLite-Verbindung
-    :param file_path: Dateipfad des Bildes
-    :param person_name: Name der Person
-    """
     cursor = conn.cursor()
 
     while True:
@@ -635,7 +627,6 @@ def init_database(db_path: str) -> sqlite3.Connection:
         return conn
 
 def calculate_md5(file_path: str) -> str:
-    """Calculate the MD5 checksum of a file."""
     hash_md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -769,7 +760,6 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
         add_empty_image(conn, image_path)
 
 def show_general_stats(conn: sqlite3.Connection) -> None:
-    """Zeigt allgemeine Statistiken zur Anzahl von Bildern und Detektionen."""
     try:
         cursor = conn.cursor()
 
@@ -798,7 +788,6 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
         
-        # YOLO-Statistiken: Kategorien und ihre Häufigkeiten
         cursor.execute('''SELECT detections.label, COUNT(*) 
                           FROM detections
                           JOIN images ON images.id = detections.image_id
@@ -807,11 +796,9 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
         
         cursor.close()
         
-        # Überschrift
         console = Console()
         console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
         
-        # Tabelle: YOLO-Kategorien und ihre Häufigkeiten
         if yolo_stats:
             yolo_table = Table(title="YOLO Category Statistics")
             yolo_table.add_column("Label", justify="left", style="cyan")
@@ -827,7 +814,6 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> None:
-    """Zeigt Statistiken zu leeren Bildern."""
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM empty_images')
@@ -848,7 +834,6 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_ocr_stats(conn: sqlite3.Connection) -> None:
-    """Zeigt Statistiken zu OCR-Ergebnissen."""
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM ocr_results')
@@ -869,7 +854,6 @@ def show_ocr_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_image_description_stats(conn: sqlite3.Connection) -> None:
-    """Zeigt Statistiken zur Bildbeschreibung."""
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM image_description')
@@ -890,7 +874,6 @@ def show_image_description_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
-    """Zeigt Statistiken zu Bild-Person-Zuordnungen."""
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM person')
@@ -915,7 +898,6 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
-    """Zeigt Statistiken zu den erkanntesten Namen (Gesichtserkennung) an."""
     try:
         cursor = conn.cursor()
         cursor.execute('''
@@ -1022,7 +1004,6 @@ def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_st
         delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
 
 def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
-    """Löscht alle Einträge aus der Datenbank, die mit dem angegebenen Dateinamen verknüpft sind."""
     dbg(f"delete_entries_by_filename(conn, {file_path})")
 
     while True:
@@ -1544,11 +1525,6 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
 
         while True:
             options: list[str] = []
-
-            """
-                delete_empty_images_from_image_path(conn, status, file_path):
-                delete_image_from_image_path(conn, status, file_path):
-            """
 
             image_id = get_image_id_by_file_path(conn, file_path)
 
