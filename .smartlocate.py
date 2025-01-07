@@ -45,7 +45,7 @@ console: Console = Console(
     force_terminal=True
 )
 
-MIN_CONFIDENCE_FOR_SAVING: float = 0.1
+DEFAULT_MIN_CONFIDENCE_FOR_SAVING: float = 0.1
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
 DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/.smartlocate_face_encodings.pkl")
 DEFAULT_MODEL: str = "yolov5s.pt"
@@ -53,6 +53,11 @@ DEFAULT_YOLO_THRESHOLD: float = 0.3
 DEFAULT_SIXEL_WIDTH: int = 400
 DEFAULT_MAX_SIZE: int = 5
 DEFAULT_DIR: str = "/"
+
+blip_model_name: str = "Salesforce/blip-image-captioning-large"
+blip_processor: Any = None
+blip_model: Any = None
+reader: Any = None
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 
@@ -72,7 +77,8 @@ parser.add_argument("--describe", action="store_true", help="Enable image descri
 parser.add_argument("--face_recognition", action="store_true", help="Enable face-recognition (needs user interaction)")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
 parser.add_argument("--ocr_lang", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
-parser.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help="Confidence YOLO threshold (0-1)")
+parser.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"Confidence YOLO threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
+parser.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Minimal Confidence YOLO required to save YOLO-detections in the database (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}")
 parser.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max-MB-Size in MB (default: {DEFAULT_MAX_SIZE})")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
@@ -80,6 +86,10 @@ parser.add_argument('--exclude', action='append', default=[], help="Folders or p
 parser.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically)")
 parser.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
 args = parser.parse_args()
+
+if not 0 <= args.yolo_min_confidence_for_saving <= 1:
+    console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
+    sys.exit(2)
 
 if not 0 <= args.yolo_threshold <= 1:
     console.print(f"[red]--yolo_threshold must be between 0 and 1, is {args.yolo_threshold}[/]")
@@ -92,11 +102,6 @@ if not 0 < args.max_size:
 if not os.path.exists(args.dir):
     console.print(f"[red]--dir refers to a directory that doesn't exist: {args.dir}[/]")
     sys.exit(2)
-
-blip_model_name: str = "Salesforce/blip-image-captioning-large"
-blip_processor: Any = None
-blip_model: Any = None
-reader: Any = None
 
 yolo_error_already_shown: bool = False
 
@@ -755,7 +760,7 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
 
         results = model(image_path)
         predictions = results.pred[0]
-        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= MIN_CONFIDENCE_FOR_SAVING]
+        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= args.yolo_min_confidence_for_saving]
         return detections
     except (OSError, RuntimeError):
         return None
