@@ -83,8 +83,11 @@ args = parser.parse_args()
 
 if not 0 <= args.yolo_threshold <= 1:
     console.print(f"[red]--yolo_threshold must be between 0 and 1, is {args.yolo_threshold}[/]")
+    sys.exit(2)
 
-    sys.exit(1)
+if not 0 < args.max_size:
+    console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
+    sys.exit(2)
 
 blip_model_name: str = "Salesforce/blip-image-captioning-large"
 blip_processor: Any = None
