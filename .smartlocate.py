@@ -1619,7 +1619,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                     delete_yolo_from_image_path(conn, None, file_path)
 
                     yolo_file(conn, file_path, None, model)
-                except requests.exceptions.ConnectionError as e:
+                except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
                     console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
             elif option == strs["run_ocr"]:
                 delete_ocr_from_image_path(conn, None, file_path)
@@ -1667,7 +1667,7 @@ def main() -> None:
             try:
                 model = yolov5.load(args.model)
                 model.conf = 0
-            except requests.exceptions.ConnectionError as e:
+            except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
                 console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
 
         image_paths = []
