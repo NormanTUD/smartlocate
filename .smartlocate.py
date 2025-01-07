@@ -1425,7 +1425,7 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
         try:
             choice = input(f"{prompt}")
             if choice.isdigit():
-                choice_int: int = int(choice_int)
+                choice_int: int = int(choice)
                 if 1 <= choice_int <= len(options):
                     return options[choice_int - 1]
                 else:
@@ -1575,7 +1575,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 describe_img(conn, file_path)
             elif option == strs["run_yolo"]:
                 try:
-                    with console.status("[bold green]Loading yolov5...") as load_status:
+                    with console.status("[bold green]Loading yolov5..."):
                         import yolov5
 
                     model = yolov5.load(args.model)
