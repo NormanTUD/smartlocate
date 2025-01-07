@@ -819,10 +819,31 @@ def show_yolo_stats(conn):
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
         return 0
 
+def show_empty_images_stats(conn):
+    """Zeigt Statistiken zu leeren Bildern."""
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM empty_images')
+        total_empty_images = cursor.fetchone()[0]
+
+        console = Console()
+        console.print("[bold underline cyan]Empty Images Statistics[/bold underline cyan]\n")
+
+        table = Table(title="Empty Images Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+        table.add_row("Total Empty Images", str(total_empty_images))
+
+        console.print(table)
+
+    except Exception as e:
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_statistics(conn: sqlite3.Connection) -> None:
     general_stats = show_general_stats(conn)
     nr_yolo_stats = show_yolo_stats(conn)
+    empty_stats = show_empty_images_stats(conn)
 
 def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
