@@ -317,6 +317,8 @@ def display_sixel_part(image_path: str, location: list) -> None:
     top, right, bottom, left = location
 
     with tempfile.NamedTemporaryFile(mode="wb") as jpg:
+        import face_recognition
+
         image = face_recognition.load_image_file(image_path)
         face_image = image[top:bottom, left:right]
         pil_image = Image.fromarray(face_image)
