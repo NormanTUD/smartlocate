@@ -69,7 +69,6 @@ parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD, help="
 parser.add_argument("--max_size", type=int, default=5, help="Max-MB-Size for OCR in MB (default: 5)")
 parser.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 parser.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
-parser.add_argument("--stat", nargs="?", help="Display statistics for images or a specific file")
 parser.add_argument('--exclude', action='append', default=[], help="Folders or paths that should be ignored. Can be used multiple times.")
 parser.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically)")
 args = parser.parse_args()
@@ -759,36 +758,21 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
     else:
         add_empty_image(conn, image_path)
 
-def show_statistics(conn: sqlite3.Connection, file_path: Optional[str]) -> None:
-    if file_path:
-        cursor = conn.cursor()
-        cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
-                          JOIN images ON images.id = detections.image_id
-                          WHERE images.file_path = ?
-                          AND detections.confidence >= ?
-                          GROUP BY detections.label''', (file_path, args.threshold,))
-        stats = cursor.fetchall()
-        cursor.close()
-        table = Table(title=f"Statistics for {file_path} with confidence {args.threshold}")
-        table.add_column("Label", justify="left", style="cyan")
-        table.add_column("Count", justify="right", style="green")
-        for row in stats:
-            table.add_row(row[0], str(row[1]))
-        console.print(table)
-    else:
-        cursor = conn.cursor()
-        cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
-                          JOIN images ON images.id = detections.image_id
-                          WHERE detections.confidence >= ?
-                          GROUP BY detections.label''', (args.threshold,))
-        stats = cursor.fetchall()
-        cursor.close()
-        table = Table(title="Category Statistics")
-        table.add_column("Label", justify="left", style="cyan")
-        table.add_column("Count", justify="right", style="green")
-        for row in stats:
-            table.add_row(row[0], str(row[1]))
-        console.print(table)
+def show_statistics(conn: sqlite3.Connection) -> None:
+    cursor = conn.cursor()
+    cursor.execute('''SELECT detections.label, COUNT(*) FROM detections
+                      JOIN images ON images.id = detections.image_id
+                      WHERE detections.confidence >= ?
+                      GROUP BY detections.label''', (args.threshold,))
+    stats = cursor.fetchall()
+    cursor.close()
+    table = Table(title="Category Statistics")
+    table.add_column("Label", justify="left", style="cyan")
+    table.add_column("Count", justify="right", style="green")
+
+    for row in stats:
+        table.add_row(row[0], str(row[1]))
+    console.print(table)
 
 def delete_yolo_from_image_path(conn, delete_status, file_path):
     if delete_status:
@@ -1475,6 +1459,8 @@ def show_options_for_file(conn, file_path):
 def main() -> None:
     dbg(f"Arguments: {args}")
 
+    shown_something = False
+
     conn = init_database(args.dbfile)
 
     existing_files = None
@@ -1486,6 +1472,8 @@ def main() -> None:
         existing_files = delete_non_existing_files(conn, existing_files)
 
     if args.index:
+        shown_something = True
+
         model = None
 
         if args.yolo:
@@ -1568,13 +1556,15 @@ def main() -> None:
                     progress.update(task, advance=1)
 
     if args.search:
+        shown_something = True
+
         if is_valid_file_path(args.search):
             show_options_for_file(conn, args.search)
         else:
             search(conn)
 
-    if args.stat:
-        show_statistics(conn, args.stat if args.stat != "/" else None)
+    if not shown_something:
+        show_statistics(conn)
 
 if __name__ == "__main__":
     try:

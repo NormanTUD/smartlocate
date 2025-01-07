@@ -84,7 +84,6 @@ The tool will search the indexed images for the object and display the results.
 - `--threshold THRESHOLD`: Sets the confidence threshold for object detection (0-1).
 - `--dbfile DBFILE`: Specifies the path to the SQLite database file.
 - `--exclude PATH`: Excludes a path from indexing/searching. Can be used multiple times.
-- `--stat [STAT]`: Displays statistics for images or a specific file.
 - `--dont_ask_new_faces`: Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically).
 
 # Example Commands
@@ -107,12 +106,6 @@ Indexing with YOLO, Description and OCR:
 
 ```bash
 smartlocate --dir /home/user/images --index --debug --ocr --describe
-```
-
-## Display statistics for a specific image:
-
-```bash
-smartlocate --stat /home/user/images/cat_picture.jpg
 ```
 
 # Database
