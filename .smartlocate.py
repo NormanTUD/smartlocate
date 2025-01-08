@@ -75,6 +75,7 @@ parser.add_argument("--yolo", action="store_true", help="Use yolo for indexing")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--exact", action="store_true", help="Exact search")
+parser.add_argument("--full_results", action="store_true", help="Show full results for OCR and file content search, not only the matching lines")
 parser.add_argument("--vacuum", action="store_true", help="Vacuums the sqlite3-file (reduces it's size without deleting data)")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--describe", action="store_true", help="Enable image description")
@@ -1916,12 +1917,23 @@ def format_text_with_keywords(text, keywords):
     def replace_placeholder(match):
         return f'__::__::__PLACEHOLDER__::__::__{match.group(0)}__::__::__PLACEHOLDER__::__::__'
 
-    text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
+    if args.full_results:
+        text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
 
-    for keyword in keywords:
-        text = re.sub(rf'({re.escape(keyword)})', r'[bold reverse underline2 italic green]\1[/]', text)
+        for keyword in keywords:
+            text = re.sub(rf'({re.escape(keyword)})', r'[bold reverse underline2 italic green]\1[/]', text)
 
-    text = re.sub(r'__::__::__PLACEHOLDER__::__::__(.*?)__::__::__PLACEHOLDER__::__::__', r'\1', text)
+        text = re.sub(r'__::__::__PLACEHOLDER__::__::__(.*?)__::__::__PLACEHOLDER__::__::__', r'\1', text)
+    else:
+        lines = text.split('\n')
+        formatted_lines = []
+        
+        for line in lines:
+            for keyword in keywords:
+                if keyword in line:  # Placeholder condition; modify this as needed
+                    formatted_lines.append(line)
+        
+        text = '\n'.join(formatted_lines)
 
     return text
 
