@@ -29,6 +29,7 @@ run_and_fail "python3 -m py_compile .smartlocate.py" 0
 
 run_and_fail "bash -n smartlocate" 0
 
+run_and_fail "bash smartlocate"
 
 
 exit $FINAL_EXIT_CODE

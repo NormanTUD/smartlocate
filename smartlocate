@@ -7,3 +7,5 @@ cd $SCRIPT_DIR
 source .install.sh
 
 python3 .smartlocate.py $*
+
+exit $?
