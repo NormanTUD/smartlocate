@@ -2,6 +2,7 @@
 
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
+GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(dirname $(realpath "$0"))
@@ -43,6 +44,12 @@ run_and_fail "Main-script without parameters" "bash smartlocate --dbfile $tmp_db
 
 if [[ -e $tmp_db_file ]]; then
 	rm $tmp_db_file
+fi
+
+if [[ $FINAL_EXIT_CODE -eq 0 ]]; then
+	echo -e "${GREEN}Tests successful${NC}"
+else
+	echo -e "${RED}Tests failed${NC}"
 fi
 
 exit $FINAL_EXIT_CODE
