@@ -1402,7 +1402,6 @@ def search_documents(conn: sqlite3.Connection) -> int:
 
     return nr_documents
 
-
 def search_ocr(conn: sqlite3.Connection) -> int:
     ocr_results = None
     nr_ocr = 0
