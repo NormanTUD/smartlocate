@@ -61,7 +61,7 @@ blip_model: Any = None
 reader: Any = None
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
-allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt']
+allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.pdf']
 
 parser = argparse.ArgumentParser(description="Smart file indexer", formatter_class=RichHelpFormatter)
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
@@ -710,19 +710,39 @@ def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pan
 def insert_document(conn: sqlite3.Connection, file_path: str, document: str):
     execute_with_retry(conn, '''INSERT INTO documents (file_path, content) VALUES (?, ?);''', (file_path, document, ))
 
+def pdf_to_text(pdf_path: str) -> Optional[str]:
+    import pdfplumber
+
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            text = ""
+            for page in pdf.pages:
+                text += page.extract_text()
+        return text
+    except Exception as e:
+        print(f"Fehler beim Einlesen der PDF: {e}")
+        return None
+
 def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str]:
     try:
-        import pypandoc
+        if file_path.endswith(".pdf"):
+            pdf_text = pdf_to_text(file_path)
 
-        pypandoc.download_pandoc
+            dier(pdf_text)
 
-        try:
-            output = pypandoc.convert_file(file_path, _format)
-            return output
-        except Exception as e:
-            return f"Error: {e}"
-    except ModuleNotFoundError:
-        console.print(f"[red]Module not found: pandoc[/]")
+            return pdf_text
+        else:
+            import pypandoc
+
+            pypandoc.download_pandoc
+
+            try:
+                output = pypandoc.convert_file(file_path, _format)
+                return output
+            except Exception as e:
+                return f"Error: {e}"
+    except ModuleNotFoundError as e:
+        console.print(f"[red]Module not found:[/] {e}")
 
     return None
 
