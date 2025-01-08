@@ -142,6 +142,8 @@ def supports_sixel() -> bool:
             return True
     except FileNotFoundError:
         pass
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red] Error while trying to run tput via subprocess: {e}")
 
     return False
 
