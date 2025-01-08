@@ -61,6 +61,7 @@ blip_model: Any = None
 reader: Any = None
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
 
 parser = argparse.ArgumentParser(description="Smart file indexer", formatter_class=RichHelpFormatter)
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
@@ -725,15 +726,13 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
 
     found_and_converted_some = False
 
-    allowed_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
-
     with console.status(f"[bold green]Finding documents in {args.dir}...") as status:
         for root, _, files in os.walk(directory_path):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
 
                 # Check if file has an allowed extension
-                if any(file_name.lower().endswith(ext) for ext in allowed_extensions):
+                if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
                     try:
                         status.update(f"[bold green]Found document {file_path}[/]")
                         found_something = insert_document_if_not_exists(conn, file_path)
@@ -1103,6 +1102,13 @@ def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_st
     if delete_status:
         delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
 
+def delete_document_from_document_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
+    if delete_status:
+        delete_status.update(f"[bold green]Deleting from document for {file_path}...")
+    execute_with_retry(conn, '''DELETE FROM documents WHERE file_path = ?''', (file_path,))
+    if delete_status:
+        delete_status.update(f"[bold green]Deleted from document for {file_path}.")
+
 def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
     dbg(f"delete_entries_by_filename(conn, {file_path})")
 
@@ -1122,6 +1128,8 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 delete_no_faces_from_image_path(conn, delete_status, file_path)
 
                 delete_image_description_from_image_path(conn, delete_status, file_path)
+
+                delete_document_from_document_path(conn, delete_status, file_path)
 
                 cursor.close()
                 conn.commit()
@@ -1566,6 +1574,7 @@ def ask_confirmation() -> bool:
     return False
 
 def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, search_by: str, where_column: str) -> Optional[str]:
+    query = ""
     try:
         # Construct the SQL query with placeholders
         query = f"SELECT {field} FROM {table} WHERE {where_column} = ?"
@@ -1580,8 +1589,16 @@ def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, sea
             return result[0]
         return None
     except Exception as e:
-        print(f"Error while fetching value from table '{table}': {e}")
+        if query:
+            print(f"Error while fetching value from table '{table}': {e}. Query:\n{query}\n")
+        else:
+            print(f"Error while fetching value from table '{table}': {e}")
         return None
+
+def list_document(conn: sqlite3.Connection, file_path: str) -> None:
+    print("==================")
+    print(get_value_by_condition(conn, "documents", "content", file_path, "file_path"))
+    print("==================")
 
 def list_desc(conn: sqlite3.Connection, file_path: str) -> None:
     print("==================")
@@ -1594,32 +1611,35 @@ def list_ocr(conn: sqlite3.Connection, file_path: str) -> None:
     print("==================")
 
 def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
+    strs = {}
+
+    strs["show_image_again"] = "Show image again"
+
+    strs["mark_image_as_no_face"] = "Mark image as 'contains no face'"
+
+    strs["delete_all"] = "Delete all entries for this file"
+
+    strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
+    strs["delete_ocr"] = "Delete OCR for this file"
+    strs["delete_yolo"] = "Delete YOLO-Detections for this file"
+    strs["delete_desc"] = "Delete descriptions for this file"
+    strs["delete_face_recognition"] = "Delete face-recognition entries for this file"
+    strs["delete_document"] = "Delete document entries for this file"
+
+    strs["run_ocr"] = "Run OCR for this file"
+    strs["run_yolo"] = "Run YOLO for this file"
+    strs["run_face_recognition"] = "Run face recognition for this file"
+    strs["run_desc"] = "Run description generation for this file"
+    strs["run_document"] = "Run document generation for this file"
+
+    strs["list_desc"] = "Show description for this file"
+    strs["list_ocr"] = "Show OCR for this file"
+    strs["list_document"] = "Show document content for this file"
+
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
 
         display_sixel(file_path)
-
-        strs = {}
-
-        strs["show_image_again"] = "Show image again"
-
-        strs["mark_image_as_no_face"] = "Mark image as 'contains no face'"
-
-        strs["delete_all"] = "Delete all entries for this file"
-
-        strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
-        strs["delete_ocr"] = "Delete OCR for this file"
-        strs["delete_yolo"] = "Delete YOLO-Detections for this file"
-        strs["delete_desc"] = "Delete descriptions for this file"
-        strs["delete_face_recognition"] = "Delete face-recognition entries for this file"
-
-        strs["run_ocr"] = "Run OCR for this file"
-        strs["run_yolo"] = "Run YOLO for this file"
-        strs["run_face_recognition"] = "Run face recognition for this file"
-        strs["run_desc"] = "Run description generation for this file"
-
-        strs["list_desc"] = "Show description for this file"
-        strs["list_ocr"] = "Show OCR for this file"
 
         while True:
             options: list[str] = []
@@ -1722,8 +1742,40 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 list_ocr(conn, file_path)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
+    elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
+        while True:
+            options: list[str] = []
+
+
+            if check_entries_in_table(conn, "documents", file_path):
+                options.insert(0, strs["delete_document"])
+                options.append(strs["list_document"])
+                options.append(strs["delete_all"])
+
+            options.append(strs["run_document"])
+
+            options.append("quit")
+
+            option = display_menu(options)
+
+            if option == "quit":
+                sys.exit(0)
+
+            elif option == strs["list_document"]:
+                list_document(conn, file_path)
+
+            elif option == strs["delete_document"]:
+                if ask_confirmation():
+                    delete_document_from_document_path(conn, None, file_path)
+
+            elif option == strs["run_document"]:
+                delete_document_from_document_path(conn, None, file_path)
+
+                insert_document_if_not_exists(conn, file_path)
+            else:
+                console.print(f"[red]Unhandled option {option}[/]")
     else:
-        console.print(f"[red]The file {file_path} is not a valid image file. Currently, only image files are supported.[/]")
+        console.print(f"[red]The file {file_path} is not a valid image file. Currently, Only image files are supported.[/]")
 
 def vacuum(conn):
     with console.status("[yellow]Vacuuming {args.dbfile}..."):
