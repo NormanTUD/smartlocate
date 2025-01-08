@@ -1299,7 +1299,8 @@ def search_description(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(f"[italic]File: {row[0]}[/]\nDescription:\n{row[1]}\n")
+                console.print(f"[italic]File: {row[0]}[/]\n")
+                print("Description:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
 
@@ -1350,7 +1351,8 @@ def search_documents(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(f"[italic]File: {row[0]}[/]\nText:\n{row[1]}\n")
+                console.print(f"[italic]File: {row[0]}[/]\n")
+                print(f"Text:\n{row[1]}\n")
                 print("\n")
                 nr_documents += 1
     else:
@@ -1388,7 +1390,8 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(f"[italic]File: {row[0]}[/]\nExtracted Text:\n{row[1]}\n")
+                console.print(f"[italic]File: {row[0]}[/]\n")
+                print(f"Extracted Text:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
                 nr_ocr += 1
