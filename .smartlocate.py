@@ -110,6 +110,8 @@ file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_S
 
 args = parser.parse_args()
 
+show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents
+
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
     console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
     sys.exit(2)
@@ -179,7 +181,7 @@ try:
             with console.status("[bold green]Loading face_recognition..."):
                 import face_recognition
 
-        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents):
+        if args.describe or do_all:
             with console.status("[bold green]Loading transformers..."):
                 import transformers
 
@@ -1112,25 +1114,23 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_statistics(conn: sqlite3.Connection) -> None:
-    show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents
-
-    if show_all:
+    if do_all:
         show_general_stats(conn)
         show_empty_images_stats(conn)
 
-    if args.yolo or show_all:
+    if args.yolo or do_all:
         show_yolo_stats(conn)
 
-    if args.describe or show_all:
+    if args.describe or do_all:
         show_image_description_stats(conn)
 
-    if args.ocr or show_all:
+    if args.ocr or do_all:
         show_ocr_stats(conn)
 
-    if args.documents or show_all:
+    if args.documents or do_all:
         show_documents_stats(conn)
 
-    if args.face_recognition or show_all:
+    if args.face_recognition or do_all:
         show_person_mapping_stats(conn)
 
         show_face_recognition_stats(conn)
@@ -1988,8 +1988,6 @@ def main() -> None:
         shown_something = True
 
         model = None
-
-        do_all = (not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents)
 
         if args.documents:
             traverse_document_files(conn, args.dir)
