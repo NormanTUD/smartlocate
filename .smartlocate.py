@@ -1930,7 +1930,7 @@ def format_text_with_keywords(text, keywords, full_results):
         
         for line in lines:
             for keyword in keywords:
-                if keyword in line:  # Placeholder condition; modify this as needed
+                if keyword.lower() in line.lower():  # Placeholder condition; modify this as needed
                     formatted_lines.append(line)
         
         text = '\n'.join(formatted_lines)
