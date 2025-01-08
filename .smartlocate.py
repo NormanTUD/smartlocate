@@ -883,12 +883,16 @@ def show_general_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM detections')
         total_detections = cursor.fetchone()[0]
 
+        cursor.execute('SELECT COUNT(*) FROM documents')
+        documents = cursor.fetchone()[0]
+
         console.print("[bold underline cyan]General Statistics[/bold underline cyan]\n")
 
         table = Table(title="General Statistics")
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green")
         table.add_row("Total Images", str(total_images))
+        table.add_row("Total Documents", str(documents))
         table.add_row("Total Detections", str(total_detections))
 
         console.print(table)
@@ -939,6 +943,25 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
 
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
+def show_documents_stats(conn: sqlite3.Connection) -> None:
+    try:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM documents')
+        total_ocr_results = cursor.fetchone()[0]
+
+        console.print("[bold underline cyan]Documents Statistics[/bold underline cyan]\n")
+
+        table = Table(title="Documents Results Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green")
+        table.add_row("Total Documents Results", str(total_ocr_results))
+
+        console.print(table)
+
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
 
 def show_ocr_stats(conn: sqlite3.Connection) -> None:
     try:
@@ -1042,6 +1065,9 @@ def show_statistics(conn: sqlite3.Connection) -> None:
 
     if args.ocr or show_all:
         show_ocr_stats(conn)
+
+    if args.documents or show_all:
+        show_documents_stats(conn)
 
     if args.face_recognition or show_all:
         show_person_mapping_stats(conn)
