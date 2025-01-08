@@ -1333,7 +1333,7 @@ def search_description(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                print("Description:\n{row[1]}\n")
+                print(f"Description:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
 
