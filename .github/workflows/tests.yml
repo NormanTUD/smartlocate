@@ -69,14 +69,3 @@ jobs:
       - uses: "actions/checkout@v4"
       - name: "TODO to Issue"
         uses: "alstr/todo-to-issue-action@v5"
-
-  covering-uploader:
-    needs: [main-test, todo-to-issue]
-    if: ${{ success() }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@v2
-      with:
-        parallel-finished: true
-        carryforward: "run-1,run-2,run-3"
