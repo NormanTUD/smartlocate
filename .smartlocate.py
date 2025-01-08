@@ -1990,13 +1990,13 @@ def main() -> None:
 
         model = None
 
-        if args.documents:
+        if args.documents or do_all:
             traverse_document_files(conn, args.dir)
 
-        if args.yolo:
+        if args.yolo or do_all:
             try:
                 model = yolov5.load(args.yolo_model)
-                model.conf = 0
+                model.conf = args.yolo_min_confidence_for_saving
             except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
                 console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
 
