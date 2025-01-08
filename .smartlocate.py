@@ -27,6 +27,7 @@ try:
     import cv2
 
     from rich_argparse import RichHelpFormatter
+    import rich.errors
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
     sys.exit(0)
@@ -1407,7 +1408,10 @@ def search_documents(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results))
+                try:
+                    console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results))
+                except rich.errors.MarkupError as e:
+                    console.print(f"Text:\n{row[1]}\n")
                 print("\n")
                 nr_documents += 1
     else:
