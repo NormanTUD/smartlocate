@@ -26,7 +26,7 @@ jobs:
         if [[ $RUNNER_OS == 'Linux' ]]; then
           if grep -q '^ID=ubuntu' /etc/os-release; then
             sudo apt-get update || sudo apt-get update || sudo apt-get update
-            sudo apt-get install -y xterm
+            sudo apt-get install -y xterm ncurses-bin
           else
             echo "Invalid OS for pipeline. Only works with Ubuntu"
             exit 1
