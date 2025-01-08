@@ -6,13 +6,29 @@ If the parameter `--ocr` is set while indexing, all images are also OCRed and th
 
 If the parameter `--describe` is set while indexing, the model `Salesforce/blip-image-captioning-large` will be used to generate descriptions of images automatically, which also then can be searched.
 
+# Screenshots
+
+## Indexing
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/index.gif" alt="Indexing" width="1046"/>
 </p>
 
+## Face recognition while indexing
+
+While indexing, with `--face_recognition`, faces are recognized. If the face cannot be automatically determined, it will ask you for the name of the person. For later images, this person will (most probably) be automatically detected again without any intervention.
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/face_recognition.gif" alt="Face Recognition" width="1046"/>
 </p>
+
+If you don't want to wait manually for a long time, you can run smartlocate with `--dont_ask_new_faces`. This will skip images where person are found, but cannot be determined. This way, you can run it through a whole folder over night without manual intervention, and then run it again after it's done without that option, so that you get asked for all new faces. This way, you don't get longer waiting periods before entering names again.
+
+# Searching
+
+## Images of cats and dogs
+
+These images were not manually labelled. Those labels were found by AI!
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/dog.gif" alt="Search: Dog" width="1046"/>
@@ -21,6 +37,10 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/cat.gif" alt="Search: Cat" width="1046"/>
 </p>
+
+## Searching through Documents
+
+This is a search on OCR'ed documents.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/ocr.gif" alt="OCR" width="1046"/>
