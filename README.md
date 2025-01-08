@@ -35,7 +35,7 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 - Fast searching for specific objects in images.
 - Supports Sixel graphics for visualizing results.
 - Easy to install and use.
-- Automatic face recognition (use `--face_recognition` while indexing). It will ask you (hopefully only once) per person what their name is, so it can recognize them later on automatically.
+- Automatic face recognition (use `--face_recognition` while indexing). It will ask you (hopefully only once) per person what their name is, so it can recognize them later on automatically. You only have to label a person once (or a few times, when the images are VERY different), and after being labelled once, it will auto-detect them in other images as well.
 
 ## Installation
 
