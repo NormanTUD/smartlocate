@@ -61,7 +61,7 @@ blip_model: Any = None
 reader: Any = None
 
 supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
-allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
+allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt']
 
 parser = argparse.ArgumentParser(description="Smart file indexer", formatter_class=RichHelpFormatter)
 parser.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
@@ -691,12 +691,19 @@ def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor.close()
     return False
 
-def insert_document_if_not_exists(conn, file_path) -> bool:
+def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pandoc: bool = True) -> bool:
     if document_already_exists(conn, file_path):
         return False
 
-    text = convert_file_to_text(file_path)
-    insert_document(conn, file_path, text)
+    text = ""
+
+    if _pandoc:
+        text = convert_file_to_text(file_path)
+    else:
+        text = open(file_path, "r").read()
+
+    if text:
+        insert_document(conn, file_path, text)
 
     return True
 
@@ -736,6 +743,18 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                     try:
                         status.update(f"[bold green]Found document {file_path}[/]")
                         found_something = insert_document_if_not_exists(conn, file_path)
+
+                        if found_something:
+                            console.print(f"[bold green]Indexed {file_path}[/]")
+                            found_and_converted_some = True
+                        else:
+                            console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                    except Exception as e:
+                        console.print(f"Error processing file '{file_path}': {e}")
+                elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt"):
+                    try:
+                        status.update(f"[bold green]Found document {file_path}[/]")
+                        found_something = insert_document_if_not_exists(conn, file_path, False)
 
                         if found_something:
                             console.print(f"[bold green]Indexed {file_path}[/]")
