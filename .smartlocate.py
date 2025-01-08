@@ -728,8 +728,6 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
         if file_path.endswith(".pdf"):
             pdf_text = pdf_to_text(file_path)
 
-            dier(pdf_text)
-
             return pdf_text
         else:
             import pypandoc
