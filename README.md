@@ -144,7 +144,7 @@ Simply run `smartlocate /path/to/an/image/file.jpg` to see an overview of the im
 # Requirements
 
 - Python 3.x
-- All dependencies will be automatically installed when the tool is first run.
+- All python-dependencies will be automatically installed when the tool is first run.
 
 
 # Ideas
