@@ -140,10 +140,8 @@ def supports_sixel() -> bool:
         output = subprocess.run(["tput", "setab", "256"], capture_output=True, text=True, check=True)
         if output.returncode == 0 and "sixel" in output.stdout.lower():
             return True
-    except FileNotFoundError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         pass
-    except subprocess.CalledProcessError as e:
-        console.print(f"[red] Error while trying to run tput via subprocess: {e}")
 
     return False
 
