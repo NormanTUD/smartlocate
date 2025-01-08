@@ -40,7 +40,9 @@ run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0
 
 run_and_fail "Indexing" "bash smartlocate --index --dir $(pwd) --dbfile $tmp_db_file" 0
 
-run_and_fail "Main-script without parameters" "bash smartlocate --dbfile $tmp_db_file" 0
+run_and_fail "Main-script without parameters (except for dbfile)" "bash smartlocate --dbfile $tmp_db_file" 0
+
+run_and_fail "Main-script with --help" "bash smartlocate --help" 0
 
 if [[ -e $tmp_db_file ]]; then
 	rm $tmp_db_file
