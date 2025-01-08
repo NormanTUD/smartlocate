@@ -1864,7 +1864,6 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             if check_entries_in_table(conn, "documents", file_path):
                 options.insert(0, strs["delete_document"])
                 options.append(strs["list_document"])
-                options.append(strs["delete_all"])
 
             options.append(strs["run_document"])
 
