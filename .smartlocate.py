@@ -745,6 +745,11 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
 
     return None
 
+def get_extension (path: str) -> str:
+    file_extension = path.split('.')[-1] if '.' in path else ''
+
+    return file_extension
+
 def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bool:
     if not os.path.isdir(directory_path):
         console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
@@ -760,7 +765,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                 # Check if file has an allowed extension
                 if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
                     try:
-                        status.update(f"[bold green]Found document {file_path}[/]")
+                        status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
                         found_something = insert_document_if_not_exists(conn, file_path)
 
                         if found_something:
@@ -772,7 +777,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                         console.print(f"Error processing file '{file_path}': {e}")
                 elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt"):
                     try:
-                        status.update(f"[bold green]Found document {file_path}[/]")
+                        status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
                         found_something = insert_document_if_not_exists(conn, file_path, False)
 
                         if found_something:
