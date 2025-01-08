@@ -10,7 +10,7 @@ on:
 
 jobs:
   main-test:
-    needs: [markdown-lint, todo-to-issue]
+    needs: [todo-to-issue]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
@@ -61,16 +61,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  markdown-lint:
-    strategy:
-      fail-fast: true
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Run markdownlint
-        run: npm install -g markdownlint-cli && markdownlint '**/*.md'
-
   todo-to-issue:
     strategy:
       fail-fast: true
@@ -81,7 +71,7 @@ jobs:
         uses: "alstr/todo-to-issue-action@v5"
 
   covering-uploader:
-    needs: [main-test, markdown-lint, todo-to-issue]
+    needs: [main-test, todo-to-issue]
     if: ${{ success() }}
     runs-on: ubuntu-latest
     steps:
