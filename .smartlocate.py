@@ -79,6 +79,7 @@ parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for det
 parser.add_argument("--describe", action="store_true", help="Enable image description")
 parser.add_argument("--face_recognition", action="store_true", help="Enable face-recognition (needs user interaction)")
 parser.add_argument("--ocr", action="store_true", help="Enable OCR")
+parser.add_argument("--documents", action="store_true", help="Enable document indexing")
 parser.add_argument("--lang_ocr", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 parser.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"Confidence YOLO threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
 parser.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
@@ -663,9 +664,84 @@ def init_database(db_path: str) -> sqlite3.Connection:
 
         status.update("[bold green]Created tables for person mapping.")
 
+        status.update("[bold green]Creating tables for documents...")
+        cursor.execute('''
+            CREATE VIRTUAL TABLE IF NOT EXISTS documents USING fts5(
+                file_path,
+                content,
+                tokenize = 'porter'
+            );
+        ''')
+        status.update("[bold green]Created tables for documents.")
+
         cursor.close()
         conn.commit()
         return conn
+
+def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
+    cursor = conn.cursor()
+
+    # Überprüfen, ob das Bild in der no_faces-Tabelle existiert
+    cursor.execute('''SELECT 1 FROM documents WHERE file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True
+
+    cursor.close()
+    return False
+
+def insert_document_if_not_exists(conn, file_path) -> bool:
+    if document_already_exists(conn, file_path):
+        return False
+
+    text = convert_file_to_text(file_path)
+    insert_document(conn, file_path, text)
+
+    return True
+
+def insert_document(conn: sqlite3.Connection, file_path: str, document: str):
+    execute_with_retry(conn, '''INSERT INTO documents (file_path, content) VALUES (?, ?);''', (file_path, document, ))
+
+def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str]:
+    try:
+        import pypandoc
+
+        pypandoc.download_pandoc
+
+        try:
+            output = pypandoc.convert_file(file_path, _format)
+            return output
+        except Exception as e:
+            return f"Error: {e}"
+    except ModuleNotFoundError:
+        console.print(f"[red]Module not found: pandoc[/]")
+
+    return None
+
+def traverse_document_files(directory_path: str) -> bool:
+    if not os.path.isdir(directory_path):
+        console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
+        return False
+
+    found_and_converted_some = False
+
+    allowed_extensions: list = ['.doc', '.txt', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
+
+    for root, _, files in os.walk(directory_path):
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+
+            # Check if file has an allowed extension
+            if any(file_name.lower().endswith(ext) for ext in allowed_extensions):
+                try:
+                    found_something = insert_document_if_not_exists(file_path)
+
+                    if found_something:
+                        found_and_converted_some = True
+                except Exception as e:
+                    print(f"Error processing file '{file_path}': {e}")
+
+    return found_and_converted_some
 
 def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> None:
     cursor = conn.cursor()
