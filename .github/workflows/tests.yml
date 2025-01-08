@@ -26,7 +26,7 @@ jobs:
         if [[ $RUNNER_OS == 'Linux' ]]; then
           if grep -q '^ID=ubuntu' /etc/os-release; then
             sudo apt-get update || sudo apt-get update || sudo apt-get update
-            #sudo apt-get install -y xterm whiptail python3-dev php-cli unzip curl 2to3 python3-lib2to3 python3-toolz php-mbstring
+            sudo apt-get install -y xterm
           else
             echo "Invalid OS for pipeline. Only works with Ubuntu"
             exit 1
