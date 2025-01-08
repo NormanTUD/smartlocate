@@ -76,7 +76,9 @@ To index images in a specific directory, run the following command:
 smartlocate --dir /path/to/images --index
 ```
 
-YOLO will be used to detect objects, and the results will be stored in the database. You need to re-run the index every time new images are added or changed.
+YOLO and an image description AI will be used to detect objects in images, and pandoc is used for indexing all kinds of documents, and the results will be stored in the database.
+
+You need to re-run the index every time new images are added or changed.
 
 ## Searching for Objects
 
