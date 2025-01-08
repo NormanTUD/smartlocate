@@ -10,6 +10,8 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 
 ## Indexing
 
+This shows the indexing process, with `--face_recognition` enabled. This means it asks for a name the first time a face is shown, but later on, it detects it automatically and can associate the face with a name, making it easily searchable.
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/index.gif" alt="Indexing" width="1046"/>
 </p>
@@ -175,7 +177,7 @@ Future ideas would be to expand this to other formats than images as well. Imagi
 smartlocate "text about cats"
 ```
 
-and get all `.txt`, `.md`, `.docx` and so on files in which something about cats is written. Currently, document indexing is only done via a full-text search.
+and get all `.txt`, `.md`, `.docx`, `.tex` and so on files in which something about cats is written. Currently, document indexing is only done via a full-text search.
 
 Same for videos and audio files. If someone wants to do it, feel free to contribute!
 
