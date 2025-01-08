@@ -8,3 +8,4 @@ face-recognition
 rich-argparse
 pypandoc
 pdfplumber
+coverage

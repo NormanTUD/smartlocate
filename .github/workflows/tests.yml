@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  main-test:
+    needs: [markdown-lint, todo-to-issue]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        if [[ $RUNNER_OS == 'Linux' ]]; then
+          if grep -q '^ID=ubuntu' /etc/os-release; then
+            sudo apt-get update || sudo apt-get update || sudo apt-get update
+            #sudo apt-get install -y xterm whiptail python3-dev php-cli unzip curl 2to3 python3-lib2to3 python3-toolz php-mbstring
+          else
+            echo "Invalid OS for pipeline. Only works with Ubuntu"
+            exit 1
+          fi
+        else
+            echo "Invalid OS detected"
+            exit 2
+        fi
+
+    - name: main test script
+      run: |
+        bash tests/main_tests
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        flag-name: run-${{ join(matrix.*, '-') }}
+        parallel: true
+    - uses: release-drafter/release-drafter@v5
+      with:
+          config-name: release-drafter.yml
+      #   disable-autolabeler: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create a new version
+      if: ${{ success() }}
+      run: |
+        echo "Creating new version"
+        git tag v1.0.${{ github.run_number }} || true
+        git push origin --tags || true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  markdown-lint:
+    strategy:
+      fail-fast: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run markdownlint
+        run: npm install -g markdownlint-cli && markdownlint '**/*.md'
+
+  todo-to-issue:
+    strategy:
+      fail-fast: true
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+      - name: "TODO to Issue"
+        uses: "alstr/todo-to-issue-action@v5"
+
+  covering-uploader:
+    needs: [main-test, markdown-lint, todo-to-issue]
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@v2
+      with:
+        parallel-finished: true
+        carryforward: "run-1,run-2,run-3"
