@@ -30,7 +30,7 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 
 - Object detection in images using YOLO.
 - OCR is done via easyocr, when `--ocr` was set during indexing. Allows you to use `%` as a wildcard.
-- Documents are converted with pandoc. Allowed document types are: `['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md', '.txt']`. Use `--documents` while indexing for finding documents.
+- Documents are converted with pandoc. Allowed document types are: `['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md', '.txt', '.pdf']`. Use `--documents` while indexing for finding documents.
 - Stores detected objects in a local SQLite database (`~/.smartlocate_db`).
 - Fast searching for specific objects in images.
 - Supports Sixel graphics for visualizing results.
