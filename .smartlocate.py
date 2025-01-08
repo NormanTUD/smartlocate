@@ -975,9 +975,9 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
 
         cursor.close()
 
-        console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
-
         if yolo_stats:
+            console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
+
             yolo_table = Table(title="YOLO Category Statistics")
             yolo_table.add_column("Label", justify="left", style="cyan")
             yolo_table.add_column("Count", justify="right", style="green")
