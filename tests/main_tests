@@ -13,7 +13,7 @@ cd ..
 
 FINAL_EXIT_CODE=0
 
-tmp_db_file="/tmp/db_file"
+tmp_db_file="$HOME/db_file"
 
 function run_and_fail {
 	name=$1
