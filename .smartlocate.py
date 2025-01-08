@@ -794,7 +794,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                         status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
                         console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
-                elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt"):
+                elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt") or file_name.lower().endswith(".tex"):
                     try:
                         status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
                         found_something = insert_document_if_not_exists(conn, file_path, False)
