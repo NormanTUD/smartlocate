@@ -38,6 +38,18 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 
 ## Installation
 
+### Get latest official release
+
+This will get the latest officially released version from <a href="https://pypi.org/project/smartlocate">pypi</a>.
+
+```
+python3 -mvenv ~/smartlocate/
+source ~/smartlocate/bin/activate
+pip3 install smartlocate
+```
+
+### Run latest version
+
 1. Clone the repository:
 
 ```bash
