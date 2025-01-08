@@ -45,6 +45,7 @@ run_and_fail "Main-script without parameters (except for dbfile)" "bash smartloc
 run_and_fail "Main-script with --help" "bash smartlocate --help" 0
 
 run_and_fail "Search for cat" "bash smartlocate cat" 0
+
 run_and_fail "Search for cat" "bash smartlocate Mittelbach" 0
 
 if [[ -e $tmp_db_file ]]; then
