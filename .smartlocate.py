@@ -725,7 +725,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
 
     found_and_converted_some = False
 
-    allowed_extensions: list = ['.doc', '.txt', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
+    allowed_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
 
     with console.status(f"[bold green]Finding documents in {args.dir}...") as status:
         for root, _, files in os.walk(directory_path):
