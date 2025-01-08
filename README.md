@@ -149,7 +149,7 @@ smartlocate cat
 Indexing with YOLO, Description and OCR:
 
 ```bash
-smartlocate --dir /home/user/images --index --debug --ocr --describe
+smartlocate --dir /home/user/images --index
 ```
 
 # Database
