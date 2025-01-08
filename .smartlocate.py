@@ -1889,7 +1889,7 @@ def format_text_with_keywords(text, keywords):
     text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
 
     for keyword in keywords:
-        text = re.sub(rf'({re.escape(keyword)})', r'[italic green]\1[/]', text)
+        text = re.sub(rf'({re.escape(keyword)})', r'[bold reverse italic green]\1[/]', text)
 
     text = re.sub(r'__::__::__PLACEHOLDER__::__::__(.*?)__::__::__PLACEHOLDER__::__::__', r'\1', text)
 
