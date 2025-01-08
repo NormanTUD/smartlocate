@@ -60,7 +60,7 @@ blip_processor: Any = None
 blip_model: Any = None
 reader: Any = None
 
-supported_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+supported_image_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
 allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.pdf']
 
 parser = argparse.ArgumentParser(description="Smart file indexer", formatter_class=RichHelpFormatter)
@@ -896,7 +896,7 @@ def is_ignored_path(path: str) -> bool:
 def find_images(existing_files: dict) -> Generator:
     for root, _, files in os.walk(args.dir):
         for file in files:
-            if Path(file).suffix.lower() in supported_formats and file not in existing_files:
+            if Path(file).suffix.lower() in supported_image_formats and file not in existing_files:
                 _path = os.path.join(root, file)
                 if not is_ignored_path(_path):
                     yield _path
