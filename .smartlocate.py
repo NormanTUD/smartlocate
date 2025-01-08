@@ -86,9 +86,9 @@ debug_related.add_argument("--debug", action="store_true", help="Enable debug mo
 debug_related.add_argument("--vacuum", action="store_true", help="Vacuum the SQLite database file (reduces size without deleting data)")
 
 model_related = parser.add_argument_group("Model & Detection")
-model_related.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 model_related.add_argument("--blip_model_name", default=DEFAULT_BLIP_MODEL_NAME, help=f"Name of the blip model. Default: {DEFAULT_BLIP_MODEL_NAME}")
 model_related.add_argument("--yolo", action="store_true", help="Use YOLO for indexing")
+model_related.add_argument("--yolo_model", default=DEFAULT_MODEL, help="Model to use for detection")
 model_related.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"YOLO confidence threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
 model_related.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Min YOLO confidence to save detections (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}")
 
@@ -862,7 +862,7 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
                                WHERE images.file_path = ?
                                AND detections.model = ?
                                AND images.last_modified_at = ?''',
-                           (file_path, args.model, last_modified_at))
+                           (file_path, args.yolo_model, last_modified_at))
 
             res = cursor.fetchone()[0]
             cursor.close()
@@ -929,7 +929,7 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
 
     detections = analyze_image(model, image_path)
     if detections:
-        add_detections(conn, image_id, args.model, detections)
+        add_detections(conn, image_id, args.yolo_model, detections)
     else:
         add_empty_image(conn, image_path)
 
@@ -1869,7 +1869,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                         if "yolov5" not in sys.modules:
                             import yolov5
 
-                    model = yolov5.load(args.model)
+                    model = yolov5.load(args.yolo_model)
                     model.conf = 0
 
                     delete_yolo_from_image_path(conn, None, file_path)
@@ -1994,7 +1994,7 @@ def main() -> None:
 
         if args.yolo:
             try:
-                model = yolov5.load(args.model)
+                model = yolov5.load(args.yolo_model)
                 model.conf = 0
             except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
                 console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
