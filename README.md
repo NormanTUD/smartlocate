@@ -1,6 +1,6 @@
 # smartlocate - Intelligent File Indexer
 
-smartlocate is a tool for Linux that uses YOLO (You Only Look Once) to detect objects in images and creates a database of detected objects. This database is stored locally and allows you to search for specific objects in images. smartlocate uses an SQLite database to efficiently store and search image data.
+smartlocate is a tool for Linux that uses YOLO and many other AI tools to detect objects in images, describe images and creates a database of detected objects, image descriptions, text contents and so on, and makes them searchable. This database is stored locally and allows you to search for specific objects in images. smartlocate uses an SQLite database to efficiently store and search data.
 
 If the parameter `--ocr` is set while indexing, all images are also OCRed and the found text is searchable. You can set the language with `--lang_ocr tr` for example. Default is `["de", "en"]`.
 
