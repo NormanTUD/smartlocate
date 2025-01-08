@@ -32,8 +32,6 @@ function run_and_fail {
 	fi
 }
 
-export RUN_WITH_COVERAGE=1
-
 run_and_fail "Bash-Syntax-Check" "bash -n smartlocate" 0
 
 run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0

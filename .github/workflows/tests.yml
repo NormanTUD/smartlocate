@@ -39,12 +39,6 @@ jobs:
     - name: main test script
       run: |
         bash tests/main_tests
-    - name: Upload coverage to Coveralls
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        flag-name: run-${{ join(matrix.*, '-') }}
-        parallel: true
     - uses: release-drafter/release-drafter@v5
       with:
           config-name: release-drafter.yml

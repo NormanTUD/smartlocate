@@ -6,10 +6,6 @@ cd $SCRIPT_DIR
 
 source .install.sh
 
-if [[ -z $RUN_WITH_COVERAGE ]]; then
-	python3 .smartlocate.py $*
-else
-	coverage run .smartlocate.py $*
-fi
+python3 .smartlocate.py $*
 
 exit $?
