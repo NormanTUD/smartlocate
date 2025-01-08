@@ -1,0 +1,30 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+SCRIPT_DIR=$(dirname $(realpath "$0"))
+
+cd $SCRIPT_DIR
+
+cd ..
+
+FINAL_EXIT_CODE=0
+
+function run_and_fail {
+	code=$1
+	wanted_exit_code=$2
+
+	eval "$code"
+
+	exit_code=$?
+
+	if [[ $exit_code -ne $wanted_exit_code ]]; then
+		echo -e "${RED}Failed: $code got $exit_code, wanted exit-code $wanted_exit_code${NC}"
+		FINAL_EXIT_CODE=1
+	fi
+}
+
+run_and_fail "python3 -m py_compile .smartlocate.py" 0
+
+run_and_fail "bash -n smartlocate" 0
