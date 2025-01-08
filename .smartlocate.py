@@ -161,7 +161,7 @@ try:
             with console.status("[bold green]Loading face_recognition..."):
                 import face_recognition
 
-        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition):
+        if args.describe or (not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents):
             with console.status("[bold green]Loading transformers..."):
                 import transformers
 
@@ -682,7 +682,7 @@ def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor = conn.cursor()
 
     # Überprüfen, ob das Bild in der no_faces-Tabelle existiert
-    cursor.execute('''SELECT 1 FROM documents WHERE file_path = ?''', (image_path,))
+    cursor.execute('''SELECT 1 FROM documents WHERE file_path = ?''', (file_path,))
     if cursor.fetchone():
         cursor.close()
         return True
@@ -718,7 +718,7 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
 
     return None
 
-def traverse_document_files(directory_path: str) -> bool:
+def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bool:
     if not os.path.isdir(directory_path):
         console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
         return False
@@ -727,19 +727,24 @@ def traverse_document_files(directory_path: str) -> bool:
 
     allowed_extensions: list = ['.doc', '.txt', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.md']
 
-    for root, _, files in os.walk(directory_path):
-        for file_name in files:
-            file_path = os.path.join(root, file_name)
+    with console.status(f"[bold green]Finding documents in {args.dir}...") as status:
+        for root, _, files in os.walk(directory_path):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
 
-            # Check if file has an allowed extension
-            if any(file_name.lower().endswith(ext) for ext in allowed_extensions):
-                try:
-                    found_something = insert_document_if_not_exists(file_path)
+                # Check if file has an allowed extension
+                if any(file_name.lower().endswith(ext) for ext in allowed_extensions):
+                    try:
+                        status.update(f"[bold green]Found document {file_path}[/]")
+                        found_something = insert_document_if_not_exists(conn, file_path)
 
-                    if found_something:
-                        found_and_converted_some = True
-                except Exception as e:
-                    print(f"Error processing file '{file_path}': {e}")
+                        if found_something:
+                            console.print(f"[bold green]Indexed {file_path}[/]")
+                            found_and_converted_some = True
+                        else:
+                            console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                    except Exception as e:
+                        console.print(f"Error processing file '{file_path}': {e}")
 
     return found_and_converted_some
 
@@ -1024,7 +1029,7 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_statistics(conn: sqlite3.Connection) -> None:
-    show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition
+    show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents
 
     if show_all:
         show_general_stats(conn)
@@ -1749,6 +1754,11 @@ def main() -> None:
 
         model = None
 
+        do_all = (not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents)
+
+        if args.documents:
+            traverse_document_files(conn, args.dir)
+
         if args.yolo:
             try:
                 model = yolov5.load(args.model)
@@ -1765,8 +1775,6 @@ def main() -> None:
 
         if args.shuffle_index:
             random.shuffle(image_paths)
-
-        do_all = (not args.describe and not args.ocr and not args.yolo and not args.face_recognition)
 
         if args.face_recognition or do_all:
             if supports_sixel():
