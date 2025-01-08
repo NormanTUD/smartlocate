@@ -6,9 +6,9 @@ If the parameter `--ocr` is set while indexing, all images are also OCRed and th
 
 If the parameter `--describe` is set while indexing, the model `Salesforce/blip-image-captioning-large` will be used to generate descriptions of images automatically, which also then can be searched.
 
-# Screenshots
+## Screenshots
 
-## Indexing
+### Indexing
 
 This shows the indexing process, with `--face_recognition` enabled. This means it asks for a name the first time a face is shown, but later on, it detects it automatically and can associate the face with a name, making it easily searchable.
 
@@ -16,7 +16,7 @@ This shows the indexing process, with `--face_recognition` enabled. This means i
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/index.gif" alt="Indexing" width="1046"/>
 </p>
 
-## Face recognition while indexing
+### Face recognition while indexing
 
 While indexing, with `--face_recognition`, faces are recognized. If the face cannot be automatically determined, it will ask you for the name of the person. For later images, this person will (most probably) be automatically detected again without any intervention.
 
@@ -26,9 +26,9 @@ While indexing, with `--face_recognition`, faces are recognized. If the face can
 
 If you don't want to wait manually for a long time, you can run smartlocate with `--dont_ask_new_faces`. This will skip images where person are found, but cannot be determined. This way, you can run it through a whole folder over night without manual intervention, and then run it again after it's done without that option, so that you get asked for all new faces. This way, you don't get longer waiting periods before entering names again.
 
-# Searching
+## Searching
 
-## Images of cats and dogs
+### Images of cats and dogs
 
 These images were not manually labelled. Those labels were found by AI!
 
@@ -40,7 +40,7 @@ These images were not manually labelled. Those labels were found by AI!
 <img src="https://raw.githubusercontent.com/NormanTUD/smartlocate/refs/heads/main/images/cat.gif" alt="Search: Cat" width="1046"/>
 </p>
 
-## Searching through Documents
+### Searching through Documents
 
 This is a search on OCR'ed documents.
 
@@ -88,9 +88,9 @@ cd smartlocate
 
 smartlocate will automatically install all necessary dependencies, and YOLO is already included. This is done on first execution, which may take some time. But this only has to be done once!
 
-# Usage
+## Usage
 
-## Indexing Images
+### Indexing Images
 
 To index images in a specific directory, run the following command:
 
@@ -102,7 +102,7 @@ YOLO and an image description AI will be used to detect objects in images, and p
 
 You need to re-run the index every time new images are added or changed.
 
-## Searching for Objects
+### Searching for Objects
 
 To search for a specific object (e.g., "cat"), run the following command:
 
@@ -112,7 +112,7 @@ smartlocate cat
 
 The tool will search the indexed images for the object and display the results.
 
-## Additional Options
+## Options
 
 - `--index`: Indexes images in the specified directory.
 - `--size SIZE`: Specifies the size to which images should be resized when indexing. Default is 400.
@@ -132,21 +132,21 @@ The tool will search the indexed images for the object and display the results.
 - `--exclude PATH`: Excludes a path from indexing/searching. Can be used multiple times.
 - `--dont_ask_new_faces`: Don't ask for new faces (useful for automatically tagging all photos that can be tagged automatically).
 
-# Example Commands
+## Example Commands
 
-## Indexing images in a directory:
+### Indexing images in a directory:
 
 ```bash
 smartlocate --dir /home/user/images --index
 ```
 
-## Search for images containing the object "cat":
+### Search for images containing the object "cat":
 
 ```bash
 smartlocate cat
 ```
 
-## Indexing:
+### Indexing:
 
 Indexing with YOLO, Description and OCR:
 
@@ -154,22 +154,21 @@ Indexing with YOLO, Description and OCR:
 smartlocate --dir /home/user/images --index
 ```
 
-# Database
+## Database
 
 The results of image indexing are stored in the SQLite database `~/.smartlocate_db`. This database contains information about detected
 objects in the images. The index must be re-run whenever new images are added or changes are made.
 
-# Manage single images
+## Manage single images
 
 Simply run `smartlocate /path/to/an/image/file.jpg` to see an overview of the image file's data and modify it.
 
-# Requirements
+## Requirements
 
 - Python 3.x
 - All python-dependencies will be automatically installed when the tool is first run.
 
-
-# Ideas
+## Ideas
 
 Future ideas would be to expand this to other formats than images as well. Imagine you could say:
 
@@ -181,6 +180,6 @@ and get all `.txt`, `.md`, `.docx`, `.tex` and so on files in which something ab
 
 Same for videos and audio files. If someone wants to do it, feel free to contribute!
 
-# License
+## License
 
 Licensed under GPL2.
