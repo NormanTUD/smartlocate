@@ -12,6 +12,8 @@ cd ..
 
 FINAL_EXIT_CODE=0
 
+tmp_db_file="/tmp/db_file"
+
 function run_and_fail {
 	name=$1
 	code=$2
@@ -33,9 +35,10 @@ run_and_fail "Bash-Syntax-Check" "bash -n smartlocate" 0
 
 run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0
 
-run_and_fail "Main-script without parameters" "bash smartlocate" 0
+run_and_fail "Indexing" "bash smartlocate --index --dir $(pwd) --dbfile $tmp_db_file" 0
 
-run_and_fail "Indexing" "bash smartlocate --index --dir $(pwd)" 0
+run_and_fail "Main-script without parameters" "bash smartlocate --dbfile $tmp_db_file" 0
 
+rm $tmp_db_file
 
 exit $FINAL_EXIT_CODE
