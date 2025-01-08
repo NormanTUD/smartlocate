@@ -155,7 +155,7 @@ Future ideas would be to expand this to other formats than images as well. Imagi
 smartlocate "text about cats"
 ```
 
-and get all `.txt`, `.md`, `.docx` and so on files in which something about cats is written.
+and get all `.txt`, `.md`, `.docx` and so on files in which something about cats is written. Currently, document indexing is only done via a full-text search.
 
 Same for videos and audio files. If someone wants to do it, feel free to contribute!
 
