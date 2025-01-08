@@ -773,8 +773,9 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                             found_and_converted_some = True
                         else:
                             console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                        status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
-                        console.print(f"Error processing file '{file_path}': {e}")
+                        console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
                 elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt"):
                     try:
                         status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
@@ -785,8 +786,9 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                             found_and_converted_some = True
                         else:
                             console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                        status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
-                        console.print(f"Error processing file '{file_path}': {e}")
+                        console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
 
     return found_and_converted_some
 
