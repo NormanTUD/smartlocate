@@ -111,7 +111,7 @@ file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_S
 
 args = parser.parse_args()
 
-show_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents
+do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents
 
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
     console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
