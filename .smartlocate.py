@@ -73,7 +73,7 @@ index_related.add_argument("--describe", action="store_true", help="Enable image
 index_related.add_argument("--documents", action="store_true", help="Enable document indexing")
 
 search_related = parser.add_argument_group("Search Related")
-search_related.add_argument("search", nargs="?", help="Search term for indexed results", default=None)
+search_related.add_argument("search", nargs="+", help="Search term for indexed results", default=None)
 search_related.add_argument("--exact", action="store_true", help="Exact search")
 search_related.add_argument("--full_results", action="store_true", help="Show full results for OCR and file content search, not only the matching lines")
 
@@ -108,6 +108,9 @@ file_handling_related.add_argument("--exclude", action='append', default=[], hel
 file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max size in MB (default: {DEFAULT_MAX_SIZE})")
 
 args = parser.parse_args()
+
+if args.search:
+    args.search = " ".join(args.search)
 
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
     console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
@@ -404,6 +407,7 @@ def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files:
 
 def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
     cursor = conn.cursor()
+
     cursor.execute('''SELECT label FROM detections WHERE label = ? LIMIT 1''', (label,))
     res = cursor.fetchone()  # Gibt entweder eine Zeile oder None zurück
     cursor.close()
