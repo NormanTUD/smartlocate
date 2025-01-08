@@ -1,6 +1,7 @@
 #!/bin/bash
 
 RED='\033[0;31m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(dirname $(realpath "$0"))
@@ -12,8 +13,11 @@ cd ..
 FINAL_EXIT_CODE=0
 
 function run_and_fail {
-	code=$1
-	wanted_exit_code=$2
+	name=$1
+	code=$2
+	wanted_exit_code=$3
+
+	echo -e "${YELLOW}Running $name${NC}"
 
 	eval "$code"
 
@@ -25,11 +29,13 @@ function run_and_fail {
 	fi
 }
 
-run_and_fail "python3 -m py_compile .smartlocate.py" 0
+run_and_fail "Bash-Syntax-Check" "bash -n smartlocate" 0
 
-run_and_fail "bash -n smartlocate" 0
+run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0
 
-run_and_fail "bash smartlocate"
+run_and_fail "Main-script without parameters" "bash smartlocate" 0
+
+run_and_fail "Indexing" "bash smartlocate --index --dir $(pwd)" 0
 
 
 exit $FINAL_EXIT_CODE
