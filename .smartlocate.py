@@ -1645,9 +1645,9 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
         console.print(f"[red]The file {file_path} is not a valid image file. Currently, only image files are supported.[/]")
 
 def vacuum(conn):
-    console.print(f"[yellow]Vacuuming {args.dbfile}")
-    conn.execute("VACUUM")
-    console.print(f"[yellow]Vacuuming {args.dbfile} done!")
+    with console.status("[yellow]Vacuuming {args.dbfile}..."):
+        conn.execute("VACUUM")
+        console.print(f"[yellow]Vacuuming {args.dbfile} done!")
 
 def main() -> None:
     dbg(f"Arguments: {args}")
