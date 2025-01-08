@@ -74,6 +74,7 @@ parser.add_argument("--yolo", action="store_true", help="Use yolo for indexing")
 parser.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 parser.add_argument("--shuffle_index", action="store_true", help="Shuffle list of files before indexing")
 parser.add_argument("--exact", action="store_true", help="Exact search")
+parser.add_argument("--vacuum", action="store_true", help="Vacuums the sqlite3-file (reduces it's size without deleting data)")
 parser.add_argument("--model", default=DEFAULT_MODEL, help="Model to use for detection")
 parser.add_argument("--describe", action="store_true", help="Enable image description")
 parser.add_argument("--face_recognition", action="store_true", help="Enable face-recognition (needs user interaction)")
@@ -1643,6 +1644,11 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     else:
         console.print(f"[red]The file {file_path} is not a valid image file. Currently, only image files are supported.[/]")
 
+def vacuum(conn):
+    console.print(f"[yellow]Vacuuming {args.dbfile}")
+    conn.execute("VACUUM")
+    console.print(f"[yellow]Vacuuming {args.dbfile} done!")
+
 def main() -> None:
     dbg(f"Arguments: {args}")
 
@@ -1651,6 +1657,10 @@ def main() -> None:
     conn = init_database(args.dbfile)
 
     existing_files = None
+
+    if args.vacuum:
+        vacuum(conn)
+        shown_something = True
 
     if args.index or args.delete_non_existing_files:
         existing_files = load_existing_images(conn)
@@ -1754,6 +1764,8 @@ def main() -> None:
 
     if not shown_something:
         show_statistics(conn)
+
+    conn.close()
 
 if __name__ == "__main__":
     try:
