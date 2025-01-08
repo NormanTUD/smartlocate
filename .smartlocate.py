@@ -1385,7 +1385,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words))
+                console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results))
                 print("\n")
                 nr_documents += 1
     else:
@@ -1423,7 +1423,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                console.print(format_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words))
+                console.print(format_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words, args.full_results))
                 display_sixel(row[0])
                 print("\n")
                 nr_ocr += 1
@@ -1913,11 +1913,11 @@ def vacuum(conn):
         conn.execute("VACUUM")
         console.print(f"[yellow]Vacuuming {args.dbfile} done!")
 
-def format_text_with_keywords(text, keywords):
+def format_text_with_keywords(text, keywords, full_results):
     def replace_placeholder(match):
         return f'__::__::__PLACEHOLDER__::__::__{match.group(0)}__::__::__PLACEHOLDER__::__::__'
 
-    if args.full_results:
+    if full_results:
         text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
 
         for keyword in keywords:
@@ -1934,6 +1934,8 @@ def format_text_with_keywords(text, keywords):
                     formatted_lines.append(line)
         
         text = '\n'.join(formatted_lines)
+
+        text = format_text_with_keywords(text, keywords, True)
 
     return text
 
