@@ -1254,7 +1254,7 @@ def search_description(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                print(f"File: {row[0]}\nDescription:\n{row[1]}\n")
+                console.print(f"[italic]File: {row[0]}[/]\nDescription:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
 
@@ -1274,11 +1274,55 @@ def search_description(conn: sqlite3.Connection) -> int:
 
     return nr_desc
 
+def build_sql_query_documents(words: list[str]) -> tuple[str, tuple[str, ...]]:
+    conditions = ["content LIKE ? COLLATE NOCASE" for _ in words]
+    sql_query = f"SELECT file_path, content FROM documents WHERE {' AND '.join(conditions)}"
+    values = tuple(f"%{word}%" for word in words)
+    return sql_query, values
+
 def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     conditions = ["extracted_text LIKE ? COLLATE NOCASE" for _ in words]
     sql_query = f"SELECT file_path, extracted_text FROM ocr_results WHERE {' AND '.join(conditions)}"
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
+
+def search_documents(conn: sqlite3.Connection) -> int:
+    ocr_results = None
+    nr_documents = 0
+
+    with console.status("[bold green]Searching through documents...") as status:
+        cursor = conn.cursor()
+
+        # Clean and split the search string
+        words = clean_search_query(args.search)
+
+        # Build the SQL query dynamically
+        sql_query, values = build_sql_query_documents(words)
+        cursor.execute(sql_query, values)
+        ocr_results = cursor.fetchall()
+        cursor.close()
+
+    if not args.no_sixel:
+        for row in ocr_results:
+            if not is_ignored_path(row[0]):
+                console.print(f"[italic]File: {row[0]}[/]\nText:\n{row[1]}\n")
+                print("\n")
+                nr_documents += 1
+    else:
+        table = Table(title="Documents Search Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        table.add_column("Text", justify="center", style="magenta")
+        for row in ocr_results:
+            file_path, extracted_text = row
+            if not is_ignored_path(file_path):
+                table.add_row(file_path, extracted_text)
+                nr_documents += 1
+
+        if len(ocr_results):
+            console.print(table)
+
+    return nr_documents
+
 
 def search_ocr(conn: sqlite3.Connection) -> int:
     ocr_results = None
@@ -1299,7 +1343,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                print(f"File: {row[0]}\nExtracted Text:\n{row[1]}\n")
+                console.print(f"[italic]File: {row[0]}[/]\nExtracted Text:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
                 nr_ocr += 1
@@ -1370,10 +1414,10 @@ def search(conn: sqlite3.Connection) -> None:
     try:
         table = Table(title="Search overview")
 
-        yolo, ocr, desc, faces = False, False, False, False
+        yolo, ocr, desc, faces, documents = False, False, False, False, False
 
-        if not args.yolo and not args.ocr and not args.describe and not args.face_recognition:
-            yolo, ocr, desc, faces = True, True, True, True
+        if not args.yolo and not args.ocr and not args.describe and not args.face_recognition and not args.documents:
+            yolo, ocr, desc, faces, documents = True, True, True, True, True
         else:
             if args.yolo:
                 yolo = True
@@ -1386,6 +1430,9 @@ def search(conn: sqlite3.Connection) -> None:
 
             if args.face_recognition:
                 faces = True
+
+            if args.documents:
+                documents = True
 
         row = []
 
@@ -1408,6 +1455,11 @@ def search(conn: sqlite3.Connection) -> None:
             table.add_column("Nr. Recognized faces", justify="left", style="cyan")
             nr_faces = search_faces(conn)
             row.append(str(nr_faces))
+
+        if documents:
+            table.add_column("Nr. Documents", justify="left", style="cyan")
+            nr_documents = search_documents(conn)
+            row.append(str(nr_documents))
 
         table.add_row(*row)
 
