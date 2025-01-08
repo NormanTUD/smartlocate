@@ -1352,7 +1352,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                print(f"Text:\n{row[1]}\n")
+                print(format_text_with_keywords(f"Text:\n{row[1]}\n", words))
                 print("\n")
                 nr_documents += 1
     else:
@@ -1391,7 +1391,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                print(f"Extracted Text:\n{row[1]}\n")
+                print(format_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words))
                 display_sixel(row[0])
                 print("\n")
                 nr_ocr += 1
@@ -1881,6 +1881,19 @@ def vacuum(conn):
     with console.status("[yellow]Vacuuming {args.dbfile}..."):
         conn.execute("VACUUM")
         console.print(f"[yellow]Vacuuming {args.dbfile} done!")
+
+def format_text_with_keywords(text, keywords):
+    def replace_placeholder(match):
+        return f'__::__::__PLACEHOLDER__::__::__{match.group(0)}__::__::__PLACEHOLDER__::__::__'
+
+    text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
+
+    for keyword in keywords:
+        text = re.sub(rf'({re.escape(keyword)})', r'[italic green]\1[/]', text)
+
+    text = re.sub(r'__::__::__PLACEHOLDER__::__::__(.*?)__::__::__PLACEHOLDER__::__::__', r'\1', text)
+
+    return text
 
 def main() -> None:
     dbg(f"Arguments: {args}")
