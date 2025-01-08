@@ -1995,6 +1995,7 @@ def main() -> None:
 
         if args.yolo or do_all:
             try:
+                import yolov5
                 model = yolov5.load(args.yolo_model)
                 model.conf = args.yolo_min_confidence_for_saving
             except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
