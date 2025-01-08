@@ -1206,7 +1206,21 @@ def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path:
         print(f"Error while checking entries in table '{table_name}': {e}. Full query:\n{query}")
         return 0
 
-def delete_non_existing_files(conn: sqlite3.Connection, existing_files: Optional[dict]) -> Optional[dict]:
+def get_existing_documents(conn: sqlite3.Connection) -> dict[Any, Any]:
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT file_path FROM documents
+    ''')
+    rows = cursor.fetchall()
+    cursor.close()
+    return {row[0] for row in rows}
+
+def delete_non_existing_documents(conn: sqlite3.Connection) -> None:
+    for file in get_existing_documents(conn):
+        if not os.path.exists(file):
+            delete_entries_by_filename(conn, file)
+
+def delete_non_existing_image_files(conn: sqlite3.Connection, existing_files: Optional[dict]) -> Optional[dict]:
     if existing_files:
         for file in existing_files:
             if not os.path.exists(file):
@@ -1912,7 +1926,9 @@ def main() -> None:
         existing_files = load_existing_images(conn)
 
     if args.delete_non_existing_files:
-        existing_files = delete_non_existing_files(conn, existing_files)
+        existing_files = delete_non_existing_image_files(conn, existing_files)
+
+        delete_non_existing_documents(conn)
 
     if args.index:
         shown_something = True
