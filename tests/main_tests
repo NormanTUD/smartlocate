@@ -41,6 +41,8 @@ run_and_fail "Indexing" "bash smartlocate --index --dir $(pwd) --dbfile $tmp_db_
 
 run_and_fail "Main-script without parameters" "bash smartlocate --dbfile $tmp_db_file" 0
 
-rm $tmp_db_file
+if [[ -e $tmp_db_file ]]; then
+	rm $tmp_db_file
+fi
 
 exit $FINAL_EXIT_CODE
