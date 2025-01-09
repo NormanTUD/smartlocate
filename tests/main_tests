@@ -50,6 +50,8 @@ run_and_fail "Search for cat" "bash smartlocate --dbfile $tmp_db_file cat" 0
 
 run_and_fail "Search for cat" "bash smartlocate --dbfile $tmp_db_file Mittelbach" 0
 
+run_and_fail "Search for qr-code wikipedia" "bash smartlocate --dbfile $tmp_db_file wikipedia" 0
+
 run_and_fail "Vacuuming" "bash smartlocate --dbfile $tmp_db_file --vacuum" 0
 
 if [[ -e $tmp_db_file ]]; then
