@@ -334,7 +334,6 @@
 
 		PROGRESSBAR=$(generate_progress_bar_setup "$MAX_NR")
 
-		if [[ "$MAX_NR" -ne "$NUMBER_OF_INSTALLED_MODULES" ]]; then
 			for key in "${!install_those[@]}"; do
 				install_this=${install_those[$key]}
 				PROGRESSBAR=$(generate_progress_bar_setup "$MAX_NR")
@@ -347,7 +346,6 @@
 
 			_tput cr
 			_tput el
-		fi
 
 		wait
 

@@ -9,3 +9,4 @@ rich-argparse
 pypandoc
 pdfplumber
 coverage
+pyzbar
