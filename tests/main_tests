@@ -36,6 +36,18 @@ function run_and_fail {
 	fi
 }
 
+find_missing_f_code="cat .smartlocate.py | grep 'print'  | grep '\[' | grep -v 'f\"'"
+
+nr_of_missing_f_strings=$(eval "$find_missing_f_code" | wc -l)
+
+if [[ $nr_of_missing_f_strings -ne 0 ]]; then
+	echo -e "${RED}Tests failed: There are $nr_of_missing_f_strings missing f's in print statements with []-brackets. Run '$find_missing_f_code' to see.${NC}"
+	
+	FINAL_EXIT_CODE=1
+fi
+
+exit $FINAL_EXIT_CODE
+
 run_and_fail "Bash-Syntax-Check" "bash -n smartlocate" 0
 
 run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0
