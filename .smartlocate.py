@@ -1174,50 +1174,33 @@ def delete_image_from_image_path(conn: sqlite3.Connection, delete_status: Any, f
 def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "ocr_results", file_path)
 
-def delete_qr_codes_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
-    image_id = get_image_id_by_file_path(conn, file_path)
-
-    if image_id is None:
-        return
-
-    if delete_status:
-        delete_status.update(f"[bold green]Deleting from qr-codes for {file_path}...")
-    execute_with_retry(conn, '''DELETE FROM qrcodes WHERE image_id = ?''', (image_id,))
-    if delete_status:
-        delete_status.update(f"[bold green]Deleted from qr-codes for {file_path}.")
-
-def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
-    image_id = get_image_id_by_file_path(conn, file_path)
-
-    if image_id is None:
-        return
-
-    if delete_status:
-        delete_status.update(f"[bold green]Deleting from image_person_mapping for {file_path}...")
-    execute_with_retry(conn, '''DELETE FROM image_person_mapping WHERE image_id = ?''', (image_id,))
-    if delete_status:
-        delete_status.update(f"[bold green]Deleted from image_person_mapping for {file_path}.")
-
 def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
-    if delete_status:
-        delete_status.update(f"[bold green]Deleting from no_faces for {file_path}...")
-    execute_with_retry(conn, '''DELETE FROM no_faces WHERE file_path = ?''', (file_path,))
-    if delete_status:
-        delete_status.update(f"[bold green]Deleted from no_faces for {file_path}.")
+    delete_from_table(conn, delete_status, "no_faces", file_path)
 
 def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
-    if delete_status:
-        delete_status.update(f"[bold green]Deleting from image_description for {file_path}...")
-    execute_with_retry(conn, '''DELETE FROM image_description WHERE file_path = ?''', (file_path,))
-    if delete_status:
-        delete_status.update(f"[bold green]Deleted from image_description for {file_path}.")
+    delete_from_table(conn, delete_status, "image_description", file_path)
 
 def delete_document_from_document_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
+    delete_from_table(conn, delete_status, "documents", file_path)
+
+def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str, foreign_key_column: str = "image_id") -> None:
+    image_id = get_image_id_by_file_path(conn, file_path)
+
+    if image_id is None:
+        return
+
     if delete_status:
-        delete_status.update(f"[bold green]Deleting from document for {file_path}...")
-    execute_with_retry(conn, '''DELETE FROM documents WHERE file_path = ?''', (file_path,))
+        delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
+    query = f'''DELETE FROM {table_name} WHERE {foreign_key_column} = ?'''
+    execute_with_retry(conn, query, (image_id,))
     if delete_status:
-        delete_status.update(f"[bold green]Deleted from document for {file_path}.")
+        delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
+
+def delete_qr_codes_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
+    delete_by_image_id(conn, delete_status, "qrcodes", file_path)
+
+def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
+    delete_by_image_id(conn, delete_status, "image_person_mapping", file_path)
 
 def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
     dbg(f"delete_entries_by_filename(conn, {file_path})")
