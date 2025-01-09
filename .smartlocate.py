@@ -998,12 +998,49 @@ def show_general_stats(conn: sqlite3.Connection) -> int:
     return show_stats(conn, queries, "General Statistics", metrics)
 
 def show_yolo_stats(conn: sqlite3.Connection) -> int:
-    query = '''SELECT detections.label, COUNT(*)
-               FROM detections
-               JOIN images ON images.id = detections.image_id
-               GROUP BY detections.label'''
-    metrics = [("Label", "detections")]
-    return show_stats(conn, [query], "YOLO Detection Statistics", metrics)
+    query = '''
+        SELECT detections.label, COUNT(*)
+        FROM detections
+        JOIN images ON images.id = detections.image_id
+        GROUP BY detections.label
+    '''
+    metrics = [("Label", "Count")]
+
+    try:
+        # Hier rufen wir eine angepasste version der show_stats Funktion auf
+        return show_yolo_custom_stats(conn, [query], "YOLO Detection Statistics", metrics)
+    except Exception as e:
+        console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
+        return 0
+
+def show_yolo_custom_stats(conn: sqlite3.Connection, queries, title, metrics) -> int:
+    try:
+        cursor = conn.cursor()
+        results = []
+
+        # Führe alle Abfragen aus
+        for query in queries:
+            cursor.execute(query)
+            results.append(cursor.fetchall())
+
+        # Tabelle anzeigen
+        console.print(f"[bold underline cyan]{title}[/bold underline cyan]\n")
+        table = Table(title=title)
+        for metric in metrics:
+            table.add_column(metric[0], style="cyan")
+            table.add_column("Value", style="green")
+
+        # Füge die Zeilen zur Tabelle hinzu
+        for result in results:
+            for row in result:
+                table.add_row(row[0], str(row[1]))
+
+        console.print(table)
+
+        return 0
+    except Exception as e:
+        console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
+        return 0
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> int:
     query = '''SELECT COUNT(*) FROM empty_images'''
@@ -1050,8 +1087,43 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
         GROUP BY person.name
         ORDER BY recognition_count DESC
     '''
-    metrics = [("Name", "person"), ("Recognition Count", "recognition_count")]
-    return show_stats(conn, [query], "Face Recognition Statistics", metrics)
+    metrics = [("Name", "person")]
+
+    try:
+        # Hier rufen wir eine angepasste version der show_stats Funktion auf
+        return show_face_recognition_custom_stats(conn, [query], "Face Recognition Statistics", metrics)
+    except Exception as e:
+        console.print(f"[bold red]Error for Face Recognition Statistics:[/bold red] {str(e)}")
+        return 0
+
+def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries, title, metrics) -> int:
+    try:
+        cursor = conn.cursor()
+        results = []
+
+        # Führe alle Abfragen aus
+        for query in queries:
+            cursor.execute(query)
+            results.append(cursor.fetchall())
+
+        # Tabelle anzeigen
+        console.print(f"[bold underline cyan]{title}[/bold underline cyan]\n")
+        table = Table(title=title)
+        for metric in metrics:
+            table.add_column(metric[0], style="cyan")
+            table.add_column("Value", style="green")
+
+        # Füge die Zeilen zur Tabelle hinzu
+        for result in results:
+            for row in result:
+                table.add_row(row[0], str(row[1]))
+
+        console.print(table)
+
+        return 0
+    except Exception as e:
+        console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
+        return 0
 
 def show_statistics(conn: sqlite3.Connection) -> None:
     whole = 0
