@@ -975,6 +975,8 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
                           GROUP BY detections.label''')
         yolo_stats = cursor.fetchall()
 
+        _sum = 0
+
         cursor.close()
 
         if yolo_stats:
@@ -986,10 +988,11 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
 
             for row in yolo_stats:
                 yolo_table.add_row(row[0], str(row[1]))
+                _sum += row[1]
 
             console.print(yolo_table)
 
-        return yolo_stats
+        return _sum
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1110,6 +1113,8 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
         ''')
         face_recognition_stats = cursor.fetchall()
 
+        _sum = 0
+
         if face_recognition_stats:
             console.print("[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
 
@@ -1120,9 +1125,11 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
             for name, count in face_recognition_stats:
                 table.add_row(name, str(count))
 
+                _sum += count
+
             console.print(table)
 
-        return face_recognition_stats
+        return _sum
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1148,7 +1155,6 @@ def show_statistics(conn: sqlite3.Connection) -> None:
         whole += show_person_mapping_stats(conn)
 
         whole += show_face_recognition_stats(conn)
-
 
     if whole == 0:
         console.print(f"No data indexed yet.")
