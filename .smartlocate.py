@@ -1680,7 +1680,6 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
             FROM images
             JOIN qrcodes ON images.id = qrcodes.image_id
             WHERE content like ?
-            GROUP BY images.file_path
         '''
         cursor.execute(query, (f"%{args.search}%",))
         qr_code_imgs = cursor.fetchall()
