@@ -214,7 +214,7 @@ def get_qr_codes_from_image(file_path):
         try:
             img = Image.open(file_path)
         except Exception as e:
-            raise ValueError(f"Bild konnte nicht geladen werden: {e}")
+            raise ValueError(f'Bild konnte nicht geladen werden: {e}') from e
 
         decoded_objects = decode(img)
 
@@ -373,7 +373,7 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> tup
         save_encodings(known_encodings, args.encoding_face_recognition_file)
 
         return new_ids, manually_entered_name
-    
+
     return None
 
 def to_absolute_path(path: str) -> str:
@@ -1102,6 +1102,8 @@ def show_general_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+    return 0
+
 def show_yolo_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
@@ -1132,6 +1134,8 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+    return 0
+
 def show_empty_images_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
@@ -1152,6 +1156,8 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+    return 0
+
 def show_documents_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
@@ -1168,9 +1174,11 @@ def show_documents_stats(conn: sqlite3.Connection) -> None:
 
             console.print(table)
 
-        return total_documents_stats 
+        return total_documents_stats
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
+    return 0
 
 
 def show_ocr_stats(conn: sqlite3.Connection) -> None:
@@ -1193,6 +1201,8 @@ def show_ocr_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+    return 0
+
 def show_image_description_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
@@ -1212,6 +1222,8 @@ def show_image_description_stats(conn: sqlite3.Connection) -> None:
         return total_image_descriptions
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
+    return 0
 
 def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
     try:
@@ -1260,6 +1272,8 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+    return 0
+
 def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
@@ -1292,6 +1306,8 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+    return 0
+
 def show_statistics(conn: sqlite3.Connection) -> None:
     whole = 0
     if do_all:
@@ -1319,7 +1335,7 @@ def show_statistics(conn: sqlite3.Connection) -> None:
         whole += show_qrcodes_stats(conn)
 
     if whole == 0:
-        console.print(f"No data indexed yet.")
+        console.print("No data indexed yet.")
 
 def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
@@ -1675,7 +1691,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 
     with console.status("[bold green]Searching for qr-codes...") as status:
         cursor = conn.cursor()
-        query = f'''
+        query = '''
             SELECT images.file_path, content
             FROM images
             JOIN qrcodes ON images.id = qrcodes.image_id
@@ -1824,7 +1840,7 @@ def search(conn: sqlite3.Connection) -> None:
                 table.add_column("Nr. Documents", justify="left", style="cyan")
 
         if len(row) == 0:
-            console.print(f"[yellow]No results found[/]")
+            console.print("[yellow]No results found[/]")
         else:
             table.add_row(*row)
 
@@ -2223,12 +2239,12 @@ def format_text_with_keywords(text, keywords, full_results):
     else:
         lines = text.split('\n')
         formatted_lines = []
-        
+
         for line in lines:
             for keyword in keywords:
                 if keyword.lower() in line.lower():  # Placeholder condition; modify this as needed
                     formatted_lines.append(line)
-        
+
         text = '\n'.join(formatted_lines)
 
         text = format_text_with_keywords(text, keywords, True)
