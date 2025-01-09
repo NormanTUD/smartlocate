@@ -950,17 +950,19 @@ def show_general_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM documents')
         documents = cursor.fetchone()[0]
 
-        console.print("[bold underline cyan]General Statistics[/bold underline cyan]\n")
+        if documents or total_detections or total_images:
+            console.print("[bold underline cyan]General Statistics[/bold underline cyan]\n")
 
-        table = Table(title="General Statistics")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Total Images", str(total_images))
-        table.add_row("Total Documents", str(documents))
-        table.add_row("Total Detections", str(total_detections))
+            table = Table(title="General Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total Images", str(total_images))
+            table.add_row("Total Documents", str(documents))
+            table.add_row("Total Detections", str(total_detections))
 
-        console.print(table)
+            console.print(table)
 
+        return documents + total_detections + total_images
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -987,6 +989,7 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
 
             console.print(yolo_table)
 
+        return yolo_stats
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -996,15 +999,17 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM empty_images')
         total_empty_images = cursor.fetchone()[0]
 
-        console.print("[bold underline cyan]Empty Images Statistics[/bold underline cyan]\n")
+        if total_empty_images:
+            console.print("[bold underline cyan]Empty Images Statistics[/bold underline cyan]\n")
 
-        table = Table(title="Empty Images Statistics")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Total Empty Images", str(total_empty_images))
+            table = Table(title="Empty Images Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total Empty Images", str(total_empty_images))
 
-        console.print(table)
+            console.print(table)
 
+        return total_empty_images
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1012,17 +1017,19 @@ def show_documents_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM documents')
-        total_ocr_results = cursor.fetchone()[0]
+        total_documents_stats= cursor.fetchone()[0]
 
-        console.print("[bold underline cyan]Documents Statistics[/bold underline cyan]\n")
+        if total_documents_stats:
+            console.print("[bold underline cyan]Documents Statistics[/bold underline cyan]\n")
 
-        table = Table(title="Documents Results Statistics")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Total Documents Results", str(total_ocr_results))
+            table = Table(title="Documents Results Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total Documents Results", str(total_documents_stats))
 
-        console.print(table)
+            console.print(table)
 
+        return total_documents_stats 
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1033,15 +1040,17 @@ def show_ocr_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM ocr_results')
         total_ocr_results = cursor.fetchone()[0]
 
-        console.print("[bold underline cyan]OCR Results Statistics[/bold underline cyan]\n")
+        if total_ocr_results:
+            console.print("[bold underline cyan]OCR Results Statistics[/bold underline cyan]\n")
 
-        table = Table(title="OCR Results Statistics")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Total OCR Results", str(total_ocr_results))
+            table = Table(title="OCR Results Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total OCR Results", str(total_ocr_results))
 
-        console.print(table)
+            console.print(table)
 
+        return total_ocr_results
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1051,15 +1060,17 @@ def show_image_description_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM image_description')
         total_image_descriptions = cursor.fetchone()[0]
 
-        console.print("[bold underline cyan]Image Description Statistics[/bold underline cyan]\n")
+        if total_image_descriptions:
+            console.print("[bold underline cyan]Image Description Statistics[/bold underline cyan]\n")
 
-        table = Table(title="Image Description Statistics")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Total Image Descriptions", str(total_image_descriptions))
+            table = Table(title="Image Description Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total Image Descriptions", str(total_image_descriptions))
 
-        console.print(table)
+            console.print(table)
 
+        return total_image_descriptions
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1072,16 +1083,18 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
         cursor.execute('SELECT COUNT(*) FROM image_person_mapping')
         total_mappings = cursor.fetchone()[0]
 
-        console.print("[bold underline cyan]Person Mapping Statistics[/bold underline cyan]\n")
+        if total_mappings:
+            console.print("[bold underline cyan]Person Mapping Statistics[/bold underline cyan]\n")
 
-        table = Table(title="Person Mapping Statistics")
-        table.add_column("Metric", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Total Persons", str(total_persons))
-        table.add_row("Total Image-Person Mappings", str(total_mappings))
+            table = Table(title="Person Mapping Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total Persons", str(total_persons))
+            table.add_row("Total Image-Person Mappings", str(total_mappings))
 
-        console.print(table)
+            console.print(table)
 
+        return total_persons
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
@@ -1097,9 +1110,9 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
         ''')
         face_recognition_stats = cursor.fetchall()
 
-        console.print("[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
-
         if face_recognition_stats:
+            console.print("[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
+
             table = Table(title="Face Recognition Statistics (Sorted by Count)")
             table.add_column("Name", style="cyan")
             table.add_column("Recognition Count", justify="right", style="green")
@@ -1108,33 +1121,37 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
                 table.add_row(name, str(count))
 
             console.print(table)
-        else:
-            console.print("[yellow]No face recognition data found.[/yellow]")
 
+        return face_recognition_stats
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
 def show_statistics(conn: sqlite3.Connection) -> None:
+    whole = 0
     if do_all:
-        show_general_stats(conn)
-        show_empty_images_stats(conn)
+        whole += show_general_stats(conn)
+        whole += sshow_empty_images_stats(conn)
 
     if args.yolo or do_all:
-        show_yolo_stats(conn)
+        whole += sshow_yolo_stats(conn)
 
     if args.describe or do_all:
-        show_image_description_stats(conn)
+        whole += sshow_image_description_stats(conn)
 
     if args.ocr or do_all:
-        show_ocr_stats(conn)
+        whole += sshow_ocr_stats(conn)
 
     if args.documents or do_all:
-        show_documents_stats(conn)
+        whole += sshow_documents_stats(conn)
 
     if args.face_recognition or do_all:
-        show_person_mapping_stats(conn)
+        whole += sshow_person_mapping_stats(conn)
 
-        show_face_recognition_stats(conn)
+        whole += sshow_face_recognition_stats(conn)
+
+
+    if whole == 0:
+        console.print(f"No data indexed yet.")
 
 def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     if delete_status:
