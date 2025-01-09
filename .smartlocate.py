@@ -848,7 +848,7 @@ def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pan
     if document_already_exists(conn, file_path):
         return False
 
-    text = ""
+    text: Optional[str] = ""
 
     if _pandoc:
         text = convert_file_to_text(file_path)
