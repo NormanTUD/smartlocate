@@ -647,7 +647,7 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
         print(f"Error while fetching image ID for file_path '{file_path}': {e}")
         return None
 
-def execute_queries(conn: sqlite3.Connection, queries: list, status) -> None:
+def execute_queries(conn: sqlite3.Connection, queries: list[str], status: Any) -> None:
     cursor = conn.cursor()
     for query in queries:
         # Extrahiere den Tabellennamen oder Indexnamen aus der Query
@@ -999,7 +999,7 @@ def show_general_stats(conn: sqlite3.Connection) -> int:
     ]
     return show_stats(conn, queries, "General Statistics", metrics)
 
-def show_yolo_custom_stats(conn: sqlite3.Connection, queries, title, metrics) -> int:
+def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: str, metrics: list) -> int:
     try:
         cursor = conn.cursor()
         results = []
@@ -1081,7 +1081,7 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
     ]
     return show_stats(conn, queries, "Person Mapping Statistics", metrics)
 
-def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries, title, metrics) -> int:
+def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[str], title: str, metrics: list) -> int:
     try:
         cursor = conn.cursor()
         results = []
@@ -1810,7 +1810,7 @@ def list_ocr(conn: sqlite3.Connection, file_path: str) -> None:
     print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
     print("==================")
 
-def add_option(options: list[str], condition: bool, option: str, insert_at_start: bool = False):
+def add_option(options: list[str], condition: bool, option: str, insert_at_start: bool = False) -> None:
     if condition:
         if insert_at_start:
             options.insert(0, option)
