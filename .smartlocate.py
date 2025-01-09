@@ -853,7 +853,7 @@ def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pan
     if _pandoc:
         text = convert_file_to_text(file_path)
     else:
-        text = open(file_path, "r").read()
+        text = open(file_path, encoding="utf-8", mode="r").read()
 
     if text:
         insert_document(conn, file_path, text)
@@ -882,16 +882,16 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
             pdf_text = pdf_to_text(file_path)
 
             return pdf_text
-        else:
-            import pypandoc
 
-            pypandoc.download_pandoc
+        import pypandoc
 
-            try:
-                output = pypandoc.convert_file(file_path, _format)
-                return output
-            except Exception as e:
-                return f"Error: {e}"
+        pypandoc.download_pandoc()
+
+        try:
+            output = pypandoc.convert_file(file_path, _format)
+            return output
+        except Exception as e:
+            return f"Error: {e}"
     except ModuleNotFoundError as e:
         console.print(f"[red]Module not found:[/] {e}")
 
