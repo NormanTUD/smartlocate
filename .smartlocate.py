@@ -2220,7 +2220,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
 
 def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
-    with console.status("[yellow]Vacuuming {args.dbfile}..."):
+    with console.status(f"[yellow]Vacuuming {args.dbfile}..."):
         conn.execute("VACUUM")
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
