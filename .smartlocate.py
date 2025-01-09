@@ -1285,12 +1285,12 @@ def delete_non_existing_image_files(conn: sqlite3.Connection, existing_files: Op
 def add_description(conn: sqlite3.Connection, file_path: str, desc: str) -> None:
     dbg(f"add_description(conn, {file_path}, <desc>)")
     md5_hash = get_md5(file_path)
-    execute_with_retry(conn, '''INSERT INTO image_description (file_path, image_description, md5) VALUES (?, ?, ?)''', (file_path, desc, md5_hash))
+    execute_with_retry(conn, 'INSERT INTO image_description (file_path, image_description, md5) VALUES (?, ?, ?)', (file_path, desc, md5_hash))
 
 def add_ocr_result(conn: sqlite3.Connection, file_path: str, extracted_text: str) -> None:
     dbg(f"add_ocr_result(conn, {file_path}, <extracted_text>)")
     md5_hash = get_md5(file_path)
-    execute_with_retry(conn, '''INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)''', (file_path, extracted_text, md5_hash))
+    execute_with_retry(conn, 'INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)', (file_path, extracted_text, md5_hash))
 
 def search_yolo(conn: sqlite3.Connection) -> int:
     yolo_results = None
