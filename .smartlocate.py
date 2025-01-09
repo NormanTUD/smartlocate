@@ -2207,8 +2207,8 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["list_document"]:
                 list_document(conn, file_path)
 
-            elif option == strs["list_qrcode"]:
-                list_qrcodes(conn, file_path)
+            #elif option == strs["list_qrcode"]:
+            #    list_qrcodes(conn, file_path)
 
             elif option == strs["delete_document"]:
                 if ask_confirmation():
