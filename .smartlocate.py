@@ -227,7 +227,7 @@ def get_qr_codes_from_image(file_path):
 
         return []
     except Exception as e:
-        print(f"[red]Error while reading QR-Codes: {e}[/]")
+        console.print(f"[red]Error while reading QR-Codes: {e}[/]")
         return []
 
 def add_qrcodes_from_image(conn, file_path):
@@ -873,7 +873,7 @@ def pdf_to_text(pdf_path: str) -> Optional[str]:
                 text += page.extract_text()
         return text
     except Exception as e:
-        print(f"Error while reading the PDF: {e}")
+        console.print(f"[red]Error while reading the PDF: {e}[/]")
         return None
 
 def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str]:
