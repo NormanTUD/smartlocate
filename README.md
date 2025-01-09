@@ -8,7 +8,7 @@ If the parameter `--describe` is set while indexing, the model `Salesforce/blip-
 
 ## Quickstart
 
-````bash
+```bash
 # Install the tool
 python3 -mvenv ~/smartlocate/
 source ~/smartlocate/bin/activate
