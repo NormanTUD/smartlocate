@@ -2229,7 +2229,7 @@ def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
 def format_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
-    def replace_placeholder(match) -> str:
+    def replace_placeholder(match: re.Match[str]) -> str:
         return f'[bold reverse underline2 italic green]{match.group(0)}[/]'
 
     if full_results:
