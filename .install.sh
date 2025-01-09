@@ -334,18 +334,18 @@
 
 		PROGRESSBAR=$(generate_progress_bar_setup "$MAX_NR")
 
-			for key in "${!install_those[@]}"; do
-				install_this=${install_those[$key]}
-				PROGRESSBAR=$(generate_progress_bar_setup "$MAX_NR")
-				if [[ -z $CI ]]; then
-					green_reset_line "${PROGRESSBAR}➤Checking if $install_this is installed$(bg_jobs_str)..."
-				fi
+		for key in "${!install_those[@]}"; do
+			install_this=${install_those[$key]}
+			PROGRESSBAR=$(generate_progress_bar_setup "$MAX_NR")
+			if [[ -z $CI ]]; then
+				green_reset_line "${PROGRESSBAR}➤Checking if $install_this is installed$(bg_jobs_str)..."
+			fi
 
-				ppip "$install_this" "-" "$MAX_NR"
-			done
+			ppip "$install_this" "-" "$MAX_NR"
+		done
 
-			_tput cr
-			_tput el
+		_tput cr
+		_tput el
 
 		wait
 
