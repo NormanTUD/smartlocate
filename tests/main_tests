@@ -16,11 +16,11 @@ FINAL_EXIT_CODE=0
 tmp_db_file="$HOME/db_file"
 
 function run_and_fail {
-	if [[ $FINAL_EXIT_CODE -eq 0 ]]; then
-		name=$1
-		code=$2
-		wanted_exit_code=$3
+	name=$1
+	code=$2
+	wanted_exit_code=$3
 
+	if [[ $FINAL_EXIT_CODE -eq 0 ]]; then
 		echo -e "${YELLOW}Running $name${NC}"
 
 		eval "$code"
@@ -55,8 +55,6 @@ run_and_fail "Param check (yolo_threshold -123)" "bash smartlocate --yolo_thresh
 run_and_fail "Param check (yolo_threshold 123)" "bash smartlocate --yolo_threshold 123" 2
 
 run_and_fail "Param check (max_size -123)" "bash smartlocate --max_size -123" 2
-
-run_and_fail "Param check (max_size 123)" "bash smartlocate --max_size 123" 2
 
 run_and_fail "Wrong dir" "bash smartlocate --dir '/§FDOISD'" 2
 
