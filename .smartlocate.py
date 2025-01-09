@@ -650,19 +650,23 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
 def execute_queries(conn: sqlite3.Connection, queries: list[str], status: Any) -> None:
     cursor = conn.cursor()
     for query in queries:
-        # Extrahiere den Tabellennamen oder Indexnamen aus der Query
+        status_message = "Executing query..."
+
         if query.startswith("CREATE TABLE"):
-            table_name = re.search(r"CREATE TABLE IF NOT EXISTS (\S+)", query).group(1)
-            status_message = f"Creating table {table_name}..."
+            re_res = re.search(r"CREATE TABLE IF NOT EXISTS (\S+)", query)
+            if re_res:
+                table_name = re_res.group(1)
+                status_message = f"Creating table {table_name}..."
         elif query.startswith("CREATE INDEX"):
-            index_name = re.search(r"CREATE INDEX IF NOT EXISTS (\S+)", query).group(1)
-            status_message = f"Creating index {index_name}..."
+            re_res = re.search(r"CREATE INDEX IF NOT EXISTS (\S+)", query)
+            if re_res:
+                index_name = re_res.group(1)
+                status_message = f"Creating index {index_name}..."
         elif query.startswith("CREATE VIRTUAL TABLE"):
-            table_name = re.search(r"CREATE VIRTUAL TABLE IF NOT EXISTS (\S+)", query).group(1)
-            status_message = f"Creating virtual table {table_name}..."
-        else:
-            # Standardstatus, falls keine passende Query gefunden wird
-            status_message = "Executing query..."
+            re_res = re.search(r"CREATE VIRTUAL TABLE IF NOT EXISTS (\S+)", query)
+            if re_res:
+                table_name = re_res.group(1)
+                status_message = f"Creating virtual table {table_name}..."
 
         status_msg = f"[bold green]{status_message}"
 
