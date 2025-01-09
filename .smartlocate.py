@@ -2154,11 +2154,10 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
         console.print(f"[red]The file {file_path} is not a valid image file. Currently, Only image files are supported.[/]")
 
 def vacuum(conn):
-    console.print(f"File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}")
+    console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
     with console.status("[yellow]Vacuuming {args.dbfile}..."):
         conn.execute("VACUUM")
-        console.print(f"[yellow]Vacuuming {args.dbfile} done!")
-    console.print(f"File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}")
+    console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
 def format_text_with_keywords(text, keywords, full_results):
     def replace_placeholder(match):
