@@ -214,7 +214,7 @@ def get_qr_codes_from_image(file_path: str) -> list[str]:
         try:
             img = Image.open(file_path)
         except Exception as e:
-            raise ValueError(f'Bild konnte nicht geladen werden: {e}') from e
+            raise ValueError(f'Image could not be loaded: {e}') from e
 
         decoded_objects = decode(img)
 
@@ -386,7 +386,7 @@ def to_absolute_path(path: str) -> str:
 def get_file_size_in_mb(file_path: str) -> str:
     try:
         if not os.path.isfile(file_path):
-            raise FileNotFoundError(f"Die angegebene Datei existiert nicht: {file_path}")
+            raise FileNotFoundError(f"The provided file does not exist: {file_path}")
 
         file_size_bytes = os.path.getsize(file_path)
 
@@ -507,7 +507,7 @@ def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
     res = cursor.fetchone()  # Gibt entweder eine Zeile oder None zurück
     cursor.close()
 
-    return res is not None  # Wenn eine Zeile zurückgegeben wurde, existiert das Label
+    return res is not None
 
 def get_md5(file_path: str) -> str:
     hash_md5 = hashlib.md5()
@@ -621,13 +621,11 @@ def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
 
-    # Überprüfen, ob das Bild in der no_faces-Tabelle existiert
     cursor.execute('''SELECT 1 FROM no_faces WHERE file_path = ?''', (image_path,))
     if cursor.fetchone():
         cursor.close()
         return True  # Bild befindet sich in der no_faces-Tabelle
 
-    # Überprüfen, ob das Bild in der image_person_mapping-Tabelle existiert
     cursor.execute('''SELECT 1 FROM image_person_mapping
                       JOIN images ON images.id = image_person_mapping.image_id
                       WHERE images.file_path = ?''', (image_path,))
@@ -835,7 +833,6 @@ def init_database(db_path: str) -> sqlite3.Connection:
 def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor = conn.cursor()
 
-    # Überprüfen, ob das Bild in der no_faces-Tabelle existiert
     cursor.execute('''SELECT 1 FROM documents WHERE file_path = ?''', (file_path,))
     if cursor.fetchone():
         cursor.close()
@@ -1729,7 +1726,6 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 def search_faces(conn: sqlite3.Connection) -> int:
     person_results = None
 
-    # Überprüfen, ob der angegebene Name in der Person-Tabelle existiert
     cursor = conn.cursor()
     cursor.execute('''SELECT id FROM person WHERE name LIKE ?''', (f"%{args.search}%",))
     person_results = cursor.fetchall()
