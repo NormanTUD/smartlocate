@@ -209,7 +209,7 @@ except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
-def get_qr_codes_from_image(file_path):
+def get_qr_codes_from_image(file_path: str) -> list[str]:
     try:
         try:
             img = Image.open(file_path)
@@ -230,7 +230,7 @@ def get_qr_codes_from_image(file_path):
         console.print(f"[red]Error while reading QR-Codes: {e}[/]")
         return []
 
-def add_qrcodes_from_image(conn, file_path):
+def add_qrcodes_from_image(conn: sqlite3.Connection, file_path: str) -> None:
     if qr_code_already_existing(conn, file_path):
         console.print(f"[yellow]File {file_path} has already been searched for Qr-Codes[/]")
         return
@@ -383,7 +383,7 @@ def to_absolute_path(path: str) -> str:
     return os.path.abspath(path)
 
 
-def get_file_size_in_mb(file_path):
+def get_file_size_in_mb(file_path: str) -> str:
     try:
         if not os.path.isfile(file_path):
             raise FileNotFoundError(f"Die angegebene Datei existiert nicht: {file_path}")
@@ -860,7 +860,7 @@ def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pan
 
     return True
 
-def insert_document(conn: sqlite3.Connection, file_path: str, document: str):
+def insert_document(conn: sqlite3.Connection, file_path: str, document: str) -> None:
     execute_with_retry(conn, '''INSERT INTO documents (file_path, content) VALUES (?, ?);''', (file_path, document, ))
 
 def pdf_to_text(pdf_path: str) -> Optional[str]:
@@ -1104,7 +1104,7 @@ def show_general_stats(conn: sqlite3.Connection) -> int:
 
     return 0
 
-def show_yolo_stats(conn: sqlite3.Connection) -> None:
+def show_yolo_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('''SELECT detections.label, COUNT(*)
@@ -1136,7 +1136,7 @@ def show_yolo_stats(conn: sqlite3.Connection) -> None:
 
     return 0
 
-def show_empty_images_stats(conn: sqlite3.Connection) -> None:
+def show_empty_images_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM empty_images')
@@ -1158,7 +1158,7 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> None:
 
     return 0
 
-def show_documents_stats(conn: sqlite3.Connection) -> None:
+def show_documents_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM documents')
@@ -1181,7 +1181,7 @@ def show_documents_stats(conn: sqlite3.Connection) -> None:
     return 0
 
 
-def show_ocr_stats(conn: sqlite3.Connection) -> None:
+def show_ocr_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM ocr_results')
@@ -1274,7 +1274,7 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
 
     return 0
 
-def show_face_recognition_stats(conn: sqlite3.Connection) -> None:
+def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('''
@@ -2138,7 +2138,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                     delete_ocr_from_image_path(conn, None, file_path)
             elif option == strs["delete_qr_codes"]: # TODO: Doesnt work yet for some reason
                 if ask_confirmation():
-                    delete_qr_codes_from_image_path(conn, delete_status, file_path)
+                    delete_qr_codes_from_image_path(conn, None, file_path)
 
             elif option == strs["mark_image_as_no_face"]:
                 if ask_confirmation():
@@ -2221,14 +2221,14 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     else:
         console.print(f"[red]The file {file_path} is not a valid image file. Currently, Only image files are supported.[/]")
 
-def vacuum(conn):
+def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
     with console.status("[yellow]Vacuuming {args.dbfile}..."):
         conn.execute("VACUUM")
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
-def format_text_with_keywords(text, keywords, full_results):
-    def replace_placeholder(match):
+def format_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
+    def replace_placeholder(match) -> str:
         return f'[bold reverse underline2 italic green]{match.group(0)}[/]'
 
     if full_results:
