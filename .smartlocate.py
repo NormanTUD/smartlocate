@@ -1073,7 +1073,7 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
     else:
         add_empty_image(conn, image_path)
 
-def show_general_stats(conn: sqlite3.Connection) -> None:
+def show_general_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
 
@@ -1203,7 +1203,7 @@ def show_ocr_stats(conn: sqlite3.Connection) -> None:
 
     return 0
 
-def show_image_description_stats(conn: sqlite3.Connection) -> None:
+def show_image_description_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM image_description')
@@ -1248,7 +1248,7 @@ def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
 
     return 0
 
-def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
+def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM person')
