@@ -1826,13 +1826,13 @@ def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[
 
     # Bildspezifische Optionen
     add_option(options, is_valid_image_file(file_path), strs["show_image_again"], True)
-    add_option(options, image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id"), strs["delete_yolo"], True)
-    add_option(options, image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"), strs["delete_face_recognition"], True)
-    add_option(options, check_entries_in_table(conn, "no_faces", file_path), strs["delete_entry_no_faces"], True)
-    add_option(options, not check_entries_in_table(conn, "no_faces", file_path), strs["mark_image_as_no_face"], False)
-    add_option(options, check_entries_in_table(conn, "image_description", file_path), strs["delete_desc"], True)
-    add_option(options, check_entries_in_table(conn, "ocr_results", file_path), strs["delete_ocr"], True)
-    add_option(options, image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id"), strs["delete_qr_codes"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id") > 0, strs["delete_yolo"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id") > 0, strs["delete_face_recognition"], True)
+    add_option(options, check_entries_in_table(conn, "no_faces", file_path) > 0, strs["delete_entry_no_faces"], True)
+    add_option(options, not check_entries_in_table(conn, "no_faces", file_path) > 0, strs["mark_image_as_no_face"], False)
+    add_option(options, check_entries_in_table(conn, "image_description", file_path) > 0, strs["delete_desc"], True)
+    add_option(options, check_entries_in_table(conn, "ocr_results", file_path) > 0, strs["delete_ocr"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id") > 0, strs["delete_qr_codes"], True)
 
     # Gemeinsame Optionen
     options.insert(0, strs["run_desc"])
@@ -1840,15 +1840,15 @@ def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[
     options.insert(0, strs["run_yolo"])
     options.insert(0, strs["run_face_recognition"])
 
-    add_option(options, check_entries_in_table(conn, "image_description", file_path), strs["list_desc"], False)
-    add_option(options, check_entries_in_table(conn, "ocr_results", file_path), strs["list_ocr"], False)
-    add_option(options, check_entries_in_table(conn, "documents", file_path), strs["list_document"], False)
+    add_option(options, check_entries_in_table(conn, "image_description", file_path) > 0, strs["list_desc"], False)
+    add_option(options, check_entries_in_table(conn, "ocr_results", file_path) > 0, strs["list_ocr"], False)
+    add_option(options, check_entries_in_table(conn, "documents", file_path) > 0, strs["list_document"], False)
 
     options.append(strs["delete_all"])
     options.append("quit")
 
 def handle_document_options(conn: sqlite3.Connection, file_path: str, options: list[str], strs: dict) -> None:
-    add_option(options, check_entries_in_table(conn, "documents", file_path), strs["delete_document"], True)
+    add_option(options, check_entries_in_table(conn, "documents", file_path) > 0, strs["delete_document"], True)
     options.append(strs["run_document"])
     options.append("quit")
 
