@@ -1130,7 +1130,7 @@ def show_statistics(conn: sqlite3.Connection) -> None:
     whole = 0
     if do_all:
         whole += show_general_stats(conn)
-        whole += sshow_empty_images_stats(conn)
+        whole += show_empty_images_stats(conn)
 
     if args.yolo or do_all:
         whole += sshow_yolo_stats(conn)
