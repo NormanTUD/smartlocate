@@ -30,7 +30,7 @@ try:
     import rich.errors
     from pathlib import Path
 
-    from pyzbar.pyzbar import decode
+    from pyzxing import BarCodeReader
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
     sys.exit(0)
@@ -211,19 +211,27 @@ except KeyboardInterrupt:
 
 def get_qr_codes_from_image(file_path):
     try:
-        qr_codes = decode(Image.open(file_path))
-
-        data = []
-
-        for d in qr_codes:
-            data.append(d.data.decode("utf-8"))
-
-        return data
-    except PIL.UnidentifiedImageError as e:
-        console.print(f"[red]Error while searching for Qr-Codes: {e}")
-
-    return []
+        # Lade das Bild mit OpenCV
+        img = cv2.imread(file_path)
+        if img is None:
+            raise ValueError("Bild konnte nicht geladen werden.")
         
+        # QR-Code-Reader initialisieren
+        reader = BarCodeReader()
+        decoded_data = reader.decode(file_path)
+        
+        # Daten auslesen
+        if 'barcodes' in decoded_data:
+            barcodes = [barcode['raw'] for barcode in decoded_data['barcodes']]
+
+            console.print(f"[green]Found {len(barcodes)} barcodes in {file_path}[/]")
+
+            return barcodes
+        
+        return []
+    except Exception as e:
+        print(f"Fehler beim Lesen der QR-Codes: {e}")
+        return []
 
 def add_qrcodes_from_image(conn, file_path):
     if qr_code_already_existing(conn, file_path):
