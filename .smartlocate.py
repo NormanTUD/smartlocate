@@ -1676,7 +1676,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
     with console.status("[bold green]Searching for qr-codes...") as status:
         cursor = conn.cursor()
         query = f'''
-            SELECT images.file_path
+            SELECT images.file_path, content
             FROM images
             JOIN qrcodes ON images.id = qrcodes.image_id
             WHERE content like ?
@@ -1691,6 +1691,9 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in qr_code_imgs:
             print(row[0])
+            print("\nQr-Code content:")
+            print(row[1])
+            print("\n")
             display_sixel(row[0])  # Falls Sixel angezeigt werden soll
             print("\n")
             nr_qrcodes += 1
