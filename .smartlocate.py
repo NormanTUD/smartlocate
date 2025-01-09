@@ -1690,7 +1690,6 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in qr_code_imgs:
             console.print(f"[bold underline cyan]{row[0]}[/bold underline cyan]\n")
-            print(row[0])
             print("\nQr-Code content:")
             print(row[1])
             print("\n")
