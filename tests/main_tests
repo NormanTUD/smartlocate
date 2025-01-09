@@ -46,6 +46,22 @@ if [[ $nr_of_missing_f_strings -ne 0 ]]; then
 	FINAL_EXIT_CODE=1
 fi
 
+run_and_fail "Param check (yolo_min_confidence_for_saving -123)" "bash smartlocate bash smartlocate --yolo_min_confidence_for_saving -123" 2
+
+run_and_fail "Param check (yolo_min_confidence_for_saving 123)" "bash smartlocate bash smartlocate --yolo_min_confidence_for_saving 123" 2
+
+run_and_fail "Param check (yolo_threshold -123)" "bash smartlocate bash smartlocate --yolo_threshold -123" 2
+
+run_and_fail "Param check (yolo_threshold 123)" "bash smartlocate bash smartlocate --yolo_threshold 123" 2
+
+run_and_fail "Param check (max_size -123)" "bash smartlocate bash smartlocate --max_size -123" 2
+
+run_and_fail "Param check (max_size 123)" "bash smartlocate bash smartlocate --max_size 123" 2
+
+run_and_fail "Wrong dir" "bash smartlocate --dir '/§FDOISD'" 2
+
+run_and_fail "Without wrapper" "python3 .smartlocate.py" 1
+
 run_and_fail "Bash-Syntax-Check" "bash -n smartlocate" 0
 
 run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0
@@ -63,21 +79,6 @@ run_and_fail "Search for dog" "bash smartlocate --dbfile $tmp_db_file cat" 0
 run_and_fail "Search for Mittelbach" "bash smartlocate --dbfile $tmp_db_file Mittelbach" 0
 
 run_and_fail "Search for qr-code wikipedia" "bash smartlocate --dbfile $tmp_db_file wikipedia" 0
-
-run_and_fail "Param check (yolo_min_confidence_for_saving -123)" "bash smartlocate bash smartlocate --yolo_min_confidence_for_saving -123" 2
-
-run_and_fail "Param check (yolo_min_confidence_for_saving 123)" "bash smartlocate bash smartlocate --yolo_min_confidence_for_saving 123" 2
-
-run_and_fail "Param check (yolo_threshold -123)" "bash smartlocate bash smartlocate --yolo_threshold -123" 2
-
-run_and_fail "Param check (yolo_threshold 123)" "bash smartlocate bash smartlocate --yolo_threshold 123" 2
-
-run_and_fail "Param check (max_size -123)" "bash smartlocate bash smartlocate --max_size -123" 2
-
-run_and_fail "Param check (max_size 123)" "bash smartlocate bash smartlocate --max_size 123" 2
-
-run_and_fail "Wrong dir" "bash smartlocate --dir '/§FDOISD'" 2
-
 
 run_and_fail "Vacuuming" "bash smartlocate --dbfile $tmp_db_file --vacuum" 0
 
