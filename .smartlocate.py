@@ -356,7 +356,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
 
     return None
 
-def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> tuple[list[str], bool]:
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> Optional[tuple[list[str], bool]]:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
     recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings)
@@ -2172,11 +2172,14 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 delete_no_faces_from_image_path(conn, None, file_path)
                 delete_faces_from_image_path(conn, None, file_path)
 
-                new_ids, manually_entered_name = recognize_persons_in_image(conn, file_path)
+                face_res = recognize_persons_in_image(conn, file_path)
 
-                if len(new_ids) and not manually_entered_name:
-                    console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                    display_sixel(file_path)
+                if face_res:
+                    new_ids, manually_entered_name = face_res
+
+                    if len(new_ids) and not manually_entered_name:
+                        console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                        display_sixel(file_path)
             elif option == strs["list_desc"]:
                 list_desc(conn, file_path)
             elif option == strs["list_ocr"]:
