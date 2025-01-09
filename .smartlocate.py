@@ -29,6 +29,8 @@ try:
     from rich_argparse import RichHelpFormatter
     import rich.errors
     from pathlib import Path
+
+    from pyzbar.pyzbar import decode
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
     sys.exit(0)
@@ -96,6 +98,7 @@ model_related.add_argument("--yolo_min_confidence_for_saving", type=float, defau
 
 ocr_related = parser.add_argument_group("OCR & Face Recognition")
 ocr_related.add_argument("--ocr", action="store_true", help="Enable OCR")
+ocr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
 ocr_related.add_argument("--lang_ocr", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
 ocr_related.add_argument("--face_recognition", action="store_true", help="Enable face recognition (needs user interaction)")
 ocr_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
@@ -111,7 +114,7 @@ file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_S
 
 args = parser.parse_args()
 
-do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents
+do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
 
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
     console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
@@ -205,6 +208,63 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
+
+def get_qr_codes_from_image(file_path):
+    qr_codes = decode(Image.open(file_path))
+
+    data = []
+
+    for d in qr_codes:
+        data.append(d.data.decode("utf-8"))
+
+    return data
+
+def add_qrcodes_from_image(conn, file_path):
+    if qr_code_already_existing(conn, file_path):
+        console.print(f"[yellow]File {file_path} has already been searched for Qr-Codes[/]")
+        return
+
+    console.print(f"[green]Searching for Qr-Codes in {file_path}[/]")
+    qr_codes = get_qr_codes_from_image(file_path)
+
+    if len(qr_codes):
+        for q in qr_codes:
+            add_qrcode_to_image(conn, file_path, q)
+    else:
+        insert_into_no_qrcodes(conn, file_path)
+
+def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) -> None:
+    cursor = conn.cursor()
+
+    while True:
+        try:
+            cursor.execute('''SELECT id FROM images WHERE file_path = ?''', (file_path,))
+            image_id = cursor.fetchone()
+
+            if not image_id:
+                cursor.execute('''INSERT INTO images (file_path) VALUES (?)''', (file_path,))
+                conn.commit()
+                image_id = cursor.lastrowid
+                conn.commit()
+            else:
+                image_id = image_id[0]
+
+            cursor.execute('''
+                INSERT OR IGNORE INTO qrcodes (image_id, content)
+                VALUES (?, ?)
+            ''', (image_id, content))
+            conn.commit()
+
+            cursor.close()
+            return
+
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)
+            else:
+                console.print(f"\n[red]Error: {e}[/]")
+                sys.exit(13)
 
 def extract_face_encodings(image_path: str) -> tuple[list, list]:
     import face_recognition
@@ -500,8 +560,29 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
+def insert_into_no_qrcodes(conn: sqlite3.Connection, file_path: str) -> None:
+    execute_with_retry(conn, 'INSERT OR IGNORE INTO no_qrcodes (file_path) VALUES (?)', (file_path, ))
+
 def insert_into_no_faces(conn: sqlite3.Connection, file_path: str) -> None:
     execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path, ))
+
+def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT 1 FROM no_qrcodes WHERE file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True
+
+    cursor.execute('''SELECT 1 FROM qrcodes
+                      JOIN images ON images.id = qrcodes.image_id
+                      WHERE images.file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True
+
+    cursor.close()
+    return False
 
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
@@ -694,6 +775,24 @@ def init_database(db_path: str) -> sqlite3.Connection:
             );
         ''')
         status.update("[bold green]Created tables for documents.")
+
+        status.update("[bold green]Creating tables for qr-codes...")
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS no_qrcodes(
+                id INTEGER PRIMARY KEY,
+                file_path TEXT UNIQUE NOT NULL
+            );
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS qrcodes (
+                image_id INTEGER NOT NULL,
+                content,
+                FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
+            )
+        ''')
+        status.update("[bold green]Created tables for qr-codes.")
 
         cursor.close()
         conn.commit()
@@ -1492,6 +1591,44 @@ def search_ocr(conn: sqlite3.Connection) -> int:
 
     return nr_ocr
 
+def search_qrcodes(conn: sqlite3.Connection) -> int:
+    qr_code_imgs = []
+
+    with console.status("[bold green]Searching for qr-codes...") as status:
+        cursor = conn.cursor()
+        query = f'''
+            SELECT images.file_path
+            FROM images
+            JOIN qrcodes ON images.id = qrcodes.image_id
+            WHERE content like ?
+            GROUP BY images.file_path
+        '''
+        cursor.execute(query, (f"%{args.search}%",))
+        qr_code_imgs = cursor.fetchall()
+        cursor.close()
+
+    nr_qrcodes = 0
+
+    if not args.no_sixel:
+        for row in qr_code_imgs:
+            print(row[0])
+            display_sixel(row[0])  # Falls Sixel angezeigt werden soll
+            print("\n")
+            nr_qrcodes += 1
+    else:
+        table = Table(title="Qr-Codes Results")
+        table.add_column("File Path", justify="left", style="cyan")
+        for row in qr_code_imgs:
+            table.add_row(row[0])
+
+        if len(qr_code_imgs):
+            console.print(table)
+
+        nr_qrcodes = len(qr_code_imgs)
+
+    return nr_qrcodes
+
+
 def search_faces(conn: sqlite3.Connection) -> int:
     person_results = None
 
@@ -1544,10 +1681,10 @@ def search(conn: sqlite3.Connection) -> None:
     try:
         table = Table(title="Search overview")
 
-        yolo, ocr, desc, faces, documents = False, False, False, False, False
+        yolo, ocr, desc, faces, documents, qrcodes = False, False, False, False, False, False
 
-        if not args.yolo and not args.ocr and not args.describe and not args.face_recognition and not args.documents:
-            yolo, ocr, desc, faces, documents = True, True, True, True, True
+        if not args.yolo and not args.ocr and not args.describe and not args.face_recognition and not args.documents and not args.qrcodes:
+            yolo, ocr, desc, faces, documents, qrcodes = True, True, True, True, True, True
         else:
             if args.yolo:
                 yolo = True
@@ -1564,36 +1701,53 @@ def search(conn: sqlite3.Connection) -> None:
             if args.documents:
                 documents = True
 
+            if args.qrcodes:
+                qrcodes = True
+
         row = []
 
         if yolo:
-            table.add_column("Nr. Yolo Results", justify="left", style="cyan")
             nr_yolo = search_yolo(conn)
-            row.append(str(nr_yolo))
+            if nr_yolo:
+                row.append(str(nr_yolo))
+                table.add_column("Nr. Yolo Results", justify="left", style="cyan")
 
         if ocr:
-            table.add_column("Nr. OCR Results", justify="left", style="cyan")
             nr_ocr = search_ocr(conn)
-            row.append(str(nr_ocr))
+            if nr_ocr:
+                row.append(str(nr_ocr))
+                table.add_column("Nr. OCR Results", justify="left", style="cyan")
 
         if desc:
-            table.add_column("Nr. Description Results", justify="left", style="cyan")
             nr_desc = search_description(conn)
-            row.append(str(nr_desc))
+            if nr_desc:
+                row.append(str(nr_desc))
+                table.add_column("Nr. Description Results", justify="left", style="cyan")
+
+        if qrcodes:
+            nr_qrcodes = search_qrcodes(conn)
+            if nr_qrcodes:
+                row.append(str(nr_qrcodes))
+                table.add_column("Nr. Qr-Codes", justify="left", style="cyan")
 
         if faces:
-            table.add_column("Nr. Recognized faces", justify="left", style="cyan")
             nr_faces = search_faces(conn)
-            row.append(str(nr_faces))
+            if nr_faces:
+                row.append(str(nr_faces))
+                table.add_column("Nr. Recognized faces", justify="left", style="cyan")
 
         if documents:
-            table.add_column("Nr. Documents", justify="left", style="cyan")
             nr_documents = search_documents(conn)
-            row.append(str(nr_documents))
+            if nr_documents:
+                row.append(str(nr_documents))
+                table.add_column("Nr. Documents", justify="left", style="cyan")
 
-        table.add_row(*row)
+        if len(row) == 0:
+            console.print(f"[yellow]No results found[/]")
+        else:
+            table.add_row(*row)
 
-        console.print(table)
+            console.print(table)
     except sqlite3.OperationalError as e:
         console.print(f"[red]Error while running sqlite-query: {e}[/]")
 
@@ -2041,28 +2195,27 @@ def main() -> None:
                 for image_path in image_paths:
                     if not faces_already_recognized(conn, image_path):
                         face_recognition_images.append(image_path)
+                    else:
+                        console.print(f"[green]The image {image_path} was already in the index")
 
                 c: int = 1
                 for image_path in face_recognition_images:
                     console.print(f"Face recognition: {c}/{len(face_recognition_images)}")
-                    if not faces_already_recognized(conn, image_path):
-                        file_size = os.path.getsize(image_path)
+                    file_size = os.path.getsize(image_path)
 
-                        if file_size < args.max_size * 1024 * 1024:
-                            new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
+                    if file_size < args.max_size * 1024 * 1024:
+                        new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
 
-                            if len(new_ids) and not manually_entered_name:
-                                console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                                display_sixel(image_path)
-                        else:
-                            console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
+                        if len(new_ids) and not manually_entered_name:
+                            console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                            display_sixel(image_path)
                     else:
-                        console.print(f"[green]The image {image_path} was already in the index")
+                        console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
                     c = c + 1
             else:
                 console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
-        if args.describe or args.yolo or args.ocr or do_all:
+        if args.describe or args.yolo or args.ocr or args.qrcodes or do_all:
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
                 BarColumn(),
@@ -2079,7 +2232,7 @@ def main() -> None:
                     if os.path.exists(image_path):
                         if args.describe or do_all:
                             describe_img(conn, image_path)
-                        if args.yolo:
+                        if args.yolo or do_all:
                             if model is not None:
                                 yolo_file(conn, image_path, existing_files, model)
                             else:
@@ -2089,8 +2242,11 @@ def main() -> None:
                                     console.print("[red]--yolo was set, but model could not be loaded[/]")
 
                                     yolo_error_already_shown = True
-                        if args.ocr:
+                        if args.ocr or do_all:
                             ocr_file(conn, image_path)
+
+                        if args.qrcodes or do_all:
+                            add_qrcodes_from_image(conn, image_path)
                     else:
                         console.print(f"[red]Could not find {image_path}[/]")
 
