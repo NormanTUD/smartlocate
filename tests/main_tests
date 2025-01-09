@@ -48,7 +48,9 @@ run_and_fail "Main-script with --help" "bash smartlocate --help" 0
 
 run_and_fail "Search for cat" "bash smartlocate --dbfile $tmp_db_file cat" 0
 
-run_and_fail "Search for cat" "bash smartlocate --dbfile $tmp_db_file Mittelbach" 0
+run_and_fail "Search for dog" "bash smartlocate --dbfile $tmp_db_file cat" 0
+
+run_and_fail "Search for Mittelbach" "bash smartlocate --dbfile $tmp_db_file Mittelbach" 0
 
 run_and_fail "Search for qr-code wikipedia" "bash smartlocate --dbfile $tmp_db_file wikipedia" 0
 
