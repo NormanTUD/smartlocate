@@ -1826,13 +1826,13 @@ def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[
 
     # Bildspezifische Optionen
     add_option(options, is_valid_image_file(file_path), strs["show_image_again"], True)
-    add_option(options, image_id and check_entries_in_table(conn, "detections", image_id, "image_id"), strs["delete_yolo"], True)
-    add_option(options, image_id and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"), strs["delete_face_recognition"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id"), strs["delete_yolo"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"), strs["delete_face_recognition"], True)
     add_option(options, check_entries_in_table(conn, "no_faces", file_path), strs["delete_entry_no_faces"], True)
     add_option(options, not check_entries_in_table(conn, "no_faces", file_path), strs["mark_image_as_no_face"], False)
     add_option(options, check_entries_in_table(conn, "image_description", file_path), strs["delete_desc"], True)
     add_option(options, check_entries_in_table(conn, "ocr_results", file_path), strs["delete_ocr"], True)
-    add_option(options, image_id and check_entries_in_table(conn, "qrcodes", image_id, "image_id"), strs["delete_qr_codes"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id"), strs["delete_qr_codes"], True)
 
     # Gemeinsame Optionen
     options.insert(0, strs["run_desc"])
