@@ -2055,7 +2055,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["delete_ocr"]:
                 if ask_confirmation():
                     delete_ocr_from_image_path(conn, None, file_path)
-            elif option == strs["delete_qr_codes"]:
+            elif option == strs["delete_qr_codes"]: # TODO: Doesnt work yet for some reason
                 if ask_confirmation():
                     delete_qr_codes_from_image_path(conn, delete_status, file_path)
 
