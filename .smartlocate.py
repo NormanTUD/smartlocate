@@ -1864,15 +1864,12 @@ def get_image_description(image_path: str) -> str:
     try:
         image = Image.open(image_path).convert("RGB")
         if blip_processor is None:
-            with console.status("[bold green]Loading transformers..."):
-                import transformers
+            import transformers
 
-            with console.status("[bold green]Loading Blip-Transformers..."):
-                from transformers import BlipProcessor, BlipForConditionalGeneration
+            from transformers import BlipProcessor, BlipForConditionalGeneration
 
-            with console.status("[bold green]Loading Blip-Models..."):
-                blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
-                blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
+            blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
+            blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
 
         if blip_processor is None:
             console.print("blip_processor was none. Cannot describe image.")
