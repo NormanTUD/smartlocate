@@ -8,6 +8,5 @@ face-recognition
 rich-argparse
 pypandoc
 pdfplumber
-coverage
 imageio
-pyzxing
+pyzbar

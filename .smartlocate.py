@@ -30,7 +30,7 @@ try:
     import rich.errors
     from pathlib import Path
 
-    from pyzxing import BarCodeReader
+    from pyzbar.pyzbar import decode
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
     sys.exit(0)
@@ -211,23 +211,20 @@ except KeyboardInterrupt:
 
 def get_qr_codes_from_image(file_path):
     try:
-        # Lade das Bild mit OpenCV
-        img = cv2.imread(file_path)
-        if img is None:
-            raise ValueError("Bild konnte nicht geladen werden.")
-        
-        # QR-Code-Reader initialisieren
-        reader = BarCodeReader()
-        decoded_data = reader.decode(file_path)
-        
-        # Daten auslesen
-        if 'barcodes' in decoded_data:
-            barcodes = [barcode['raw'] for barcode in decoded_data['barcodes']]
+        try:
+            img = Image.open(file_path)
+        except Exception as e:
+            raise ValueError(f"Bild konnte nicht geladen werden: {e}")
+
+        decoded_objects = decode(img)
+
+        if decoded_objects:
+            barcodes = [obj.data.decode('utf-8') for obj in decoded_objects]
 
             console.print(f"[green]Found {len(barcodes)} barcodes in {file_path}[/]")
 
             return barcodes
-        
+
         return []
     except Exception as e:
         print(f"Fehler beim Lesen der QR-Codes: {e}")
@@ -245,6 +242,7 @@ def add_qrcodes_from_image(conn, file_path):
         for q in qr_codes:
             add_qrcode_to_image(conn, file_path, q)
     else:
+        console.print(f"[yellow]No Qr-Codes found in {file_path}[/]")
         insert_into_no_qrcodes(conn, file_path)
 
 def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) -> None:
