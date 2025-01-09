@@ -648,180 +648,71 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
         print(f"Error while fetching image ID for file_path '{file_path}': {e}")
         return None
 
+def execute_queries(conn: sqlite3.Connection, queries: list, status) -> None:
+    cursor = conn.cursor()
+    for query in queries:
+        # Extrahiere den Tabellennamen oder Indexnamen aus der Query
+        if query.startswith("CREATE TABLE"):
+            table_name = re.search(r"CREATE TABLE IF NOT EXISTS (\S+)", query).group(1)
+            status_message = f"Creating table {table_name}..."
+        elif query.startswith("CREATE INDEX"):
+            index_name = re.search(r"CREATE INDEX IF NOT EXISTS (\S+)", query).group(1)
+            status_message = f"Creating index {index_name}..."
+        elif query.startswith("CREATE VIRTUAL TABLE"):
+            table_name = re.search(r"CREATE VIRTUAL TABLE IF NOT EXISTS (\S+)", query).group(1)
+            status_message = f"Creating virtual table {table_name}..."
+        else:
+            # Standardstatus, falls keine passende Query gefunden wird
+            status_message = "Executing query..."
+
+        status.update(f"[bold green]{status_message}")
+        dbg(f"Executing query: {query}")
+        cursor.execute(query)
+        status.update(f"[bold green]Executed query.")
+
+    cursor.close()
+    conn.commit()
+
+
 def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
         dbg(f"init_database({db_path})")
         conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
 
-        status.update("[bold green]Creating table images...")
-        cursor.execute('''CREATE TABLE IF NOT EXISTS images (
-                            id INTEGER PRIMARY KEY,
-                            file_path TEXT UNIQUE,
-                            size INTEGER,
-                            created_at TEXT,
-                            last_modified_at TEXT,
-                            md5 TEXT
-                        )''')
-        status.update("[bold green]Created table images.")
+        queries = [
+            'CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE, size INTEGER, created_at TEXT, last_modified_at TEXT, md5 TEXT)',
+            'CREATE TABLE IF NOT EXISTS detections (id INTEGER PRIMARY KEY, image_id INTEGER, model TEXT, label TEXT, confidence REAL, FOREIGN KEY(image_id) REFERENCES images(id))',
+            'CREATE TABLE IF NOT EXISTS empty_images (file_path TEXT UNIQUE, md5 TEXT)',
+            'CREATE TABLE IF NOT EXISTS ocr_results (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE, extracted_text TEXT, md5 TEXT)',
+            'CREATE TABLE IF NOT EXISTS image_description (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE, image_description TEXT, md5 TEXT)',
+            'CREATE TABLE IF NOT EXISTS person (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL)',
+            'CREATE TABLE IF NOT EXISTS image_person_mapping (image_id INTEGER NOT NULL, person_id INTEGER NOT NULL, PRIMARY KEY (image_id, person_id), FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE, FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE)',
+            'CREATE TABLE IF NOT EXISTS no_faces (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE NOT NULL)',
+            'CREATE TABLE IF NOT EXISTS no_qrcodes(id INTEGER PRIMARY KEY, file_path TEXT UNIQUE NOT NULL)',
+            'CREATE TABLE IF NOT EXISTS qrcodes (image_id INTEGER NOT NULL, content, FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE)',
 
-        status.update("[bold green]Creating index images(file_path)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_images_file_path ON images(file_path)')
-        status.update("[bold green]Created index images(file_path).")
+            'CREATE VIRTUAL TABLE IF NOT EXISTS documents USING fts5(file_path, content, tokenize = "porter")',
 
-        status.update("[bold green]Creating index images(md5)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_images_md5 ON images(md5)')
-        status.update("[bold green]Created index images(md5).")
+            'CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(confidence)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_image_model ON detections(image_id, model)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)',
+            'CREATE INDEX IF NOT EXISTS idx_images_file_path ON images(file_path)',
+            'CREATE INDEX IF NOT EXISTS idx_images_md5 ON images(md5)',
+            'CREATE INDEX IF NOT EXISTS idx_ocr_results_file_path ON ocr_results(file_path)',
+            'CREATE INDEX IF NOT EXISTS idx_ocr_results_md5 ON ocr_results(md5)',
+            'CREATE INDEX IF NOT EXISTS idx_empty_images_file_path ON empty_images(file_path)',
+            'CREATE INDEX IF NOT EXISTS idx_image_description_file_path ON image_description(file_path)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)',
+            'CREATE INDEX IF NOT EXISTS idx_images_file_path ON images(file_path)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_label_image_id ON detections(label, image_id)',
+            'CREATE INDEX IF NOT EXISTS idx_image_description_no_case ON image_description(image_description COLLATE NOCASE)',
+            'CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)'
+        ]
 
-        status.update("[bold green]Creating table detections...")
-        cursor.execute('''CREATE TABLE IF NOT EXISTS detections (
-                            id INTEGER PRIMARY KEY,
-                            image_id INTEGER,
-                            model TEXT,
-                            label TEXT,
-                            confidence REAL,
-                            FOREIGN KEY(image_id) REFERENCES images(id)
-                        )''')
-        status.update("[bold green]Created table detections.")
+        execute_queries(conn, queries, status)
 
-        status.update("[bold green]Creating index detections(image_id)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)')
-        status.update("[bold green]Created index detections(image_id).")
-
-        status.update("[bold green]Creating index detections(confidence)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(confidence)')
-        status.update("[bold green]Created index detections(confidence).")
-
-        status.update("[bold green]Creating index detections(image_id, model)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_model ON detections(image_id, model)')
-        status.update("[bold green]Created index detections(image_id, model).")
-
-        status.update("[bold green]Creating index detections(label)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label);')
-        status.update("[bold green]Created index detections(label).")
-
-        status.update("[bold green]Creating table empty_images...")
-        cursor.execute('''CREATE TABLE IF NOT EXISTS empty_images (
-                            file_path TEXT UNIQUE,
-                            md5 TEXT
-                        )''')
-        status.update("[bold green]Created table empty_images.")
-
-        status.update("[bold green]Creating index empty_images(file_path)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_empty_images_file_path ON empty_images(file_path)')
-        status.update("[bold green]Created index empty_images(file_path).")
-
-        status.update("[bold green]Creating table ocr_results...")
-        cursor.execute('''CREATE TABLE IF NOT EXISTS ocr_results (
-                            id INTEGER PRIMARY KEY,
-                            file_path TEXT UNIQUE,
-                            extracted_text TEXT,
-                            md5 TEXT
-                        )''')
-        status.update("[bold green]Created table ocr_results.")
-
-        status.update("[bold green]Creating index ocr_results(file_path)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ocr_results_file_path ON ocr_results(file_path)')
-        status.update("[bold green]Created index ocr_results(file_path).")
-
-        status.update("[bold green]Creating index ocr_results(md5)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ocr_results_md5 ON ocr_results(md5)')
-        status.update("[bold green]Created index ocr_results(md5).")
-
-        status.update("[bold green]Creating table image_description...")
-        cursor.execute('''CREATE TABLE IF NOT EXISTS image_description (
-                            id INTEGER PRIMARY KEY,
-                            file_path TEXT UNIQUE,
-                            image_description TEXT,
-                            md5 TEXT
-                        )''')
-        status.update("[bold green]Created table image_description.")
-
-        status.update("[bold green]Creating index image_description(file_path)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_image_description_file_path ON image_description(file_path)')
-        status.update("[bold green]Created index image_description(file_path).")
-
-        status.update("[bold green]Creating index detections(label)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)')
-        status.update("[bold green]Created index detections(label).")
-
-        status.update("[bold green]Creating index detections(image_id)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_image_id ON detections(image_id)')
-        status.update("[bold green]Created index detections(image_id).")
-
-        status.update("[bold green]Creating index images(file_path)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_images_file_path ON images(file_path)')
-        status.update("[bold green]Created index images(file_path).")
-
-        status.update("[bold green]Creating index detections(label, image_id)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label_image_id ON detections(label, image_id)')
-        status.update("[bold green]Created index detections(label, image_id).")
-
-        status.update("[bold green]Creating index image_description_no_case...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_image_description_no_case ON image_description(image_description COLLATE NOCASE)')
-        status.update("[bold green]Created index image_description_no_case.")
-
-        status.update("[bold green]Creating index detections(label)...")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_detections_label ON detections(label)')
-        status.update("[bold green]Created index detections(label).")
-
-        status.update("[bold green]Creating tables for person mapping...")
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS person (
-                id INTEGER PRIMARY KEY,
-                name TEXT UNIQUE NOT NULL
-            )
-        ''')
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS image_person_mapping (
-                image_id INTEGER NOT NULL,
-                person_id INTEGER NOT NULL,
-                PRIMARY KEY (image_id, person_id),
-                FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE,
-                FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE
-            )
-        ''')
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS no_faces (
-                id INTEGER PRIMARY KEY,
-                file_path TEXT UNIQUE NOT NULL
-            );
-        ''')
-
-        status.update("[bold green]Created tables for person mapping.")
-
-        status.update("[bold green]Creating tables for documents...")
-        cursor.execute('''
-            CREATE VIRTUAL TABLE IF NOT EXISTS documents USING fts5(
-                file_path,
-                content,
-                tokenize = 'porter'
-            );
-        ''')
-        status.update("[bold green]Created tables for documents.")
-
-        status.update("[bold green]Creating tables for qr-codes...")
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS no_qrcodes(
-                id INTEGER PRIMARY KEY,
-                file_path TEXT UNIQUE NOT NULL
-            );
-        ''')
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS qrcodes (
-                image_id INTEGER NOT NULL,
-                content,
-                FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
-            )
-        ''')
-        status.update("[bold green]Created tables for qr-codes.")
-
-        cursor.close()
-        conn.commit()
         return conn
 
 def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
