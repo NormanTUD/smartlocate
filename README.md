@@ -6,6 +6,25 @@ If the parameter `--ocr` is set while indexing, all images are also OCRed and th
 
 If the parameter `--describe` is set while indexing, the model `Salesforce/blip-image-captioning-large` will be used to generate descriptions of images automatically, which also then can be searched.
 
+## Quickstart
+
+````bash
+# Install the tool
+python3 -mvenv ~/smartlocate/
+source ~/smartlocate/bin/activate
+pip install smartlocate
+
+# Index files (Using all possible indexing methods)
+smartlocate --dir ~/Documents --index
+
+# Index files (using OCR, face-recognition, qr-code detection)
+
+smartlocate --dir ~/Documents --index --ocr --face_recognition --qrcodes
+
+# Search for cats
+smartlocate "cat"
+```
+
 ## Screenshots
 
 ### Indexing
