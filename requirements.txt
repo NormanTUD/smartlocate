@@ -10,3 +10,4 @@ pypandoc
 pdfplumber
 coverage
 pyzbar
+imageio

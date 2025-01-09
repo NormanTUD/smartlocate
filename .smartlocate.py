@@ -210,14 +210,20 @@ except KeyboardInterrupt:
     sys.exit(0)
 
 def get_qr_codes_from_image(file_path):
-    qr_codes = decode(Image.open(file_path))
+    try:
+        qr_codes = decode(Image.open(file_path))
 
-    data = []
+        data = []
 
-    for d in qr_codes:
-        data.append(d.data.decode("utf-8"))
+        for d in qr_codes:
+            data.append(d.data.decode("utf-8"))
 
-    return data
+        return data
+    except PIL.UnidentifiedImageError as e:
+        console.print(f"[red]Error while searching for Qr-Codes: {e}")
+
+    return []
+        
 
 def add_qrcodes_from_image(conn, file_path):
     if qr_code_already_existing(conn, file_path):
@@ -293,66 +299,76 @@ def load_encodings(file_name: str) -> dict:
             return pickle.load(file)
     return {}
 
-def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = args.tolerance_face_detection) -> tuple[list[str], dict, bool]:
-    face_encodings, face_locations = extract_face_encodings(image_path)
+def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = args.tolerance_face_detection) -> Optional[tuple[list[str], dict, bool]]:
+    try:
+        face_encodings, face_locations = extract_face_encodings(image_path)
 
-    manually_entered_name = False
+        manually_entered_name = False
 
-    new_ids = []
+        new_ids = []
 
-    c = 0
+        c = 0
 
-    nr_new_faces = 0
+        nr_new_faces = 0
 
-    for face_encoding in face_encodings:
-        matches = compare_faces(list(known_encodings.values()), face_encoding, tolerance)
+        for face_encoding in face_encodings:
+            matches = compare_faces(list(known_encodings.values()), face_encoding, tolerance)
 
-        this_face_location = face_locations[c]
+            this_face_location = face_locations[c]
 
-        if True in matches:
-            matched_id = list(known_encodings.keys())[matches.index(True)]
-            new_ids.append(matched_id)
-        else:
-            if c == 0:
-                console.print(f"[yellow]{image_path}:[/]")
-                display_sixel(image_path)
-
-            if args.dont_ask_new_faces:
-                if nr_new_faces == 0:
-                    console.print(f"[yellow]Ignoring face(s) detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
+            if True in matches:
+                matched_id = list(known_encodings.keys())[matches.index(True)]
+                new_ids.append(matched_id)
             else:
-                display_sixel_part(image_path, this_face_location)
-                try:
-                    new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
-                    if any(char.strip() for char in new_id):
-                        known_encodings[new_id] = face_encoding
-                        new_ids.append(new_id)
+                if c == 0:
+                    console.print(f"[yellow]{image_path}:[/]")
+                    display_sixel(image_path)
 
-                        manually_entered_name = True
-                    else:
-                        console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
-                except EOFError:
-                    console.print("[red]You pressed CTRL+d[/]")
-                    sys.exit(0)
-            nr_new_faces = nr_new_faces + 1
-        c = c + 1
+                if args.dont_ask_new_faces:
+                    if nr_new_faces == 0:
+                        console.print(f"[yellow]Ignoring face(s) detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
+                else:
+                    display_sixel_part(image_path, this_face_location)
+                    try:
+                        new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
+                        if any(char.strip() for char in new_id):
+                            known_encodings[new_id] = face_encoding
+                            new_ids.append(new_id)
 
-    return new_ids, known_encodings, manually_entered_name
+                            manually_entered_name = True
+                        else:
+                            console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
+                    except EOFError:
+                        console.print("[red]You pressed CTRL+d[/]")
+                        sys.exit(0)
+                nr_new_faces = nr_new_faces + 1
+            c = c + 1
+
+        return new_ids, known_encodings, manually_entered_name
+    except PIL.UnidentifiedImageError:
+        return None
+
+    return None
 
 def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> tuple[list[str], bool]:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
-    new_ids, known_encodings, manually_entered_name = detect_faces_and_name_them_when_needed(image_path, known_encodings)
-    console.print(f"[green]{image_path}: {new_ids}[/]")
+    recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings)
 
-    if len(new_ids):
-        add_image_persons_mapping(conn, image_path, new_ids)
-    else:
-        insert_into_no_faces(conn, image_path)
+    if recognized_faces is not None:
+        new_ids, known_encodings, manually_entered_name = recognized_faces
+        console.print(f"[green]{image_path}: {new_ids}[/]")
 
-    save_encodings(known_encodings, args.encoding_face_recognition_file)
+        if len(new_ids):
+            add_image_persons_mapping(conn, image_path, new_ids)
+        else:
+            insert_into_no_faces(conn, image_path)
 
-    return new_ids, manually_entered_name
+        save_encodings(known_encodings, args.encoding_face_recognition_file)
+
+        return new_ids, manually_entered_name
+    
+    return None
 
 def to_absolute_path(path: str) -> str:
     if os.path.isabs(path):
@@ -396,7 +412,7 @@ def ocr_img(img: str) -> Optional[str]:
 
         console.print(f"[red]ocr_img: file {img} not found[/]")
         return None
-    except (cv2.error, ValueError) as e:
+    except (cv2.error, ValueError, OSError) as e:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
@@ -1029,13 +1045,16 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
     except (OSError, RuntimeError):
         return None
     except ValueError as e:
-        console.print(f"[red]Value-Error: {e}[/]")
+        console.print(f"[red]Value-Error while analyzing image {image_path}: {e}[/]")
         return None
     except PIL.Image.DecompressionBombError as e:
-        console.print(f"[red]Error: {e}, probably the image is too large[/]")
+        console.print(f"[red]Error while analyzing image {image_path}: {e}, probably the image is too large[/]")
+        return None
+    except PIL.UnidentifiedImageError as e:
+        console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
         return None
     except Exception as e:
-        console.print(f"[red]Error: {e}[/]")
+        console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
         return None
 
 def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None:
@@ -1824,7 +1843,7 @@ def get_image_description(image_path: str) -> str:
         caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
 
         return caption
-    except PIL.Image.DecompressionBombError as e:
+    except (PIL.UnidentifiedImageError, PIL.Image.DecompressionBombError) as e:
         console.print(f"File {image_path} failed with error {e}")
         return ""
 
@@ -2246,11 +2265,16 @@ def main() -> None:
                     file_size = os.path.getsize(image_path)
 
                     if file_size < args.max_size * 1024 * 1024:
-                        new_ids, manually_entered_name = recognize_persons_in_image(conn, image_path)
+                        recognized_faces = recognize_persons_in_image(conn, image_path)
 
-                        if len(new_ids) and not manually_entered_name:
-                            console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                            display_sixel(image_path)
+                        if recognized_faces is None:
+                            console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
+                        else:
+                            new_ids, manually_entered_name = recognized_faces
+
+                            if len(new_ids) and not manually_entered_name:
+                                console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                                display_sixel(image_path)
                     else:
                         console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
                     c = c + 1
