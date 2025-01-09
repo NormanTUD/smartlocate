@@ -1466,7 +1466,7 @@ def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path:
         print(f"Error while checking entries in table '{table_name}': {e}. Full query:\n{query}")
         return 0
 
-def get_existing_documents(conn: sqlite3.Connection) -> dict[Any, Any]:
+def get_existing_documents(conn: sqlite3.Connection) -> set[Any]:
     cursor = conn.cursor()
     cursor.execute('''
         SELECT file_path FROM documents
