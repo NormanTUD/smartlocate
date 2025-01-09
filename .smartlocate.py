@@ -2216,7 +2216,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
-        console.print(f"[red]The file {file_path} is not a valid image file. Currently, Only image files are supported.[/]")
+        console.print(f"[red]The file {file_path} is not a searchable file. Currently, Only image files are supported.[/]")
 
 def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
