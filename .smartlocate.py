@@ -1518,7 +1518,6 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 
     return nr_qrcodes
 
-
 def search_faces(conn: sqlite3.Connection) -> int:
     person_results = None
 
@@ -1569,73 +1568,40 @@ def search_faces(conn: sqlite3.Connection) -> int:
 def search(conn: sqlite3.Connection) -> None:
     try:
         table = Table(title="Search overview")
+        search_flags = {
+            "yolo": args.yolo,
+            "ocr": args.ocr,
+            "describe": args.describe,
+            "face_recognition": args.face_recognition,
+            "documents": args.documents,
+            "qrcodes": args.qrcodes
+        }
 
-        yolo, ocr, desc, faces, documents, qrcodes = False, False, False, False, False, False
+        # Wenn keine Flags gesetzt sind, alle aktivieren
+        if not any(search_flags.values()):
+            search_flags = {key: True for key in search_flags}
 
-        if not args.yolo and not args.ocr and not args.describe and not args.face_recognition and not args.documents and not args.qrcodes:
-            yolo, ocr, desc, faces, documents, qrcodes = True, True, True, True, True, True
-        else:
-            if args.yolo:
-                yolo = True
-
-            if args.ocr:
-                ocr = True
-
-            if args.describe:
-                desc = True
-
-            if args.face_recognition:
-                faces = True
-
-            if args.documents:
-                documents = True
-
-            if args.qrcodes:
-                qrcodes = True
+        results = {
+            "yolo": search_yolo,
+            "ocr": search_ocr,
+            "describe": search_description,
+            "qrcodes": search_qrcodes,
+            "face_recognition": search_faces,
+            "documents": search_documents
+        }
 
         row = []
+        for flag, enabled in search_flags.items():
+            if enabled:
+                result = results[flag](conn)
+                if result:
+                    row.append(str(result))
+                    table.add_column(f"Nr. {flag.capitalize()} Results", justify="left", style="cyan")
 
-        if yolo:
-            nr_yolo = search_yolo(conn)
-            if nr_yolo:
-                row.append(str(nr_yolo))
-                table.add_column("Nr. Yolo Results", justify="left", style="cyan")
-
-        if ocr:
-            nr_ocr = search_ocr(conn)
-            if nr_ocr:
-                row.append(str(nr_ocr))
-                table.add_column("Nr. OCR Results", justify="left", style="cyan")
-
-        if desc:
-            nr_desc = search_description(conn)
-            if nr_desc:
-                row.append(str(nr_desc))
-                table.add_column("Nr. Description Results", justify="left", style="cyan")
-
-        if qrcodes:
-            nr_qrcodes = search_qrcodes(conn)
-            if nr_qrcodes:
-                row.append(str(nr_qrcodes))
-                table.add_column("Nr. Qr-Codes", justify="left", style="cyan")
-
-        if faces:
-            nr_faces = search_faces(conn)
-            if nr_faces:
-                row.append(str(nr_faces))
-                table.add_column("Nr. Recognized faces", justify="left", style="cyan")
-
-        if documents:
-            nr_documents = search_documents(conn)
-            if nr_documents:
-                row.append(str(nr_documents))
-                table.add_column("Nr. Documents", justify="left", style="cyan")
-
-        if len(row) == 0:
-            console.print(f"[yellow]No results found[/]")
+        if not row:
+            console.print("[yellow]No results found[/]")
         else:
             table.add_row(*row)
-
             console.print(table)
     except sqlite3.OperationalError as e:
         console.print(f"[red]Error while running sqlite-query: {e}[/]")
