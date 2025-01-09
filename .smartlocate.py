@@ -1286,6 +1286,18 @@ def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status: Any, fil
     if delete_status:
         delete_status.update(f"[bold green]Deleted from ocr_results for {file_path}.")
 
+def delete_qr_codes_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
+    image_id = get_image_id_by_file_path(conn, file_path)
+
+    if image_id is None:
+        return
+
+    if delete_status:
+        delete_status.update(f"[bold green]Deleting from qr-codes for {file_path}...")
+    execute_with_retry(conn, '''DELETE FROM qrcodes WHERE image_id = ?''', (image_id,))
+    if delete_status:
+        delete_status.update(f"[bold green]Deleted from qr-codes for {file_path}.")
+
 def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     image_id = get_image_id_by_file_path(conn, file_path)
 
@@ -1335,11 +1347,15 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
 
                 delete_ocr_from_image_path(conn, delete_status, file_path)
 
+                delete_faces_from_image_path(conn, delete_status, file_path)
+
                 delete_no_faces_from_image_path(conn, delete_status, file_path)
 
                 delete_image_description_from_image_path(conn, delete_status, file_path)
 
                 delete_document_from_document_path(conn, delete_status, file_path)
+
+                delete_qr_codes_from_image_path(conn, delete_status, file_path)
 
                 cursor.close()
                 conn.commit()
@@ -1961,6 +1977,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     strs["delete_desc"] = "Delete descriptions for this file"
     strs["delete_face_recognition"] = "Delete face-recognition entries for this file"
     strs["delete_document"] = "Delete document entries for this file"
+    strs["delete_qr_codes"] = "Delete qr-code entries for this file"
 
     strs["run_ocr"] = "Run OCR for this file"
     strs["run_yolo"] = "Run YOLO for this file"
@@ -1971,6 +1988,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     strs["list_desc"] = "Show description for this file"
     strs["list_ocr"] = "Show OCR for this file"
     strs["list_document"] = "Show document content for this file"
+    strs["list_qrcode"] = "Show qr-codes for this file"
 
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
@@ -2000,6 +2018,9 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             if check_entries_in_table(conn, "ocr_results", file_path):
                 options.insert(0, strs["delete_ocr"])
                 options.append(strs["list_ocr"])
+
+            if image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id"):
+                options.insert(0, strs["delete_qr_codes"])
 
             options.insert(0, strs["run_desc"])
             options.insert(0, strs["run_ocr"])
@@ -2034,6 +2055,9 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["delete_ocr"]:
                 if ask_confirmation():
                     delete_ocr_from_image_path(conn, None, file_path)
+            elif option == strs["delete_qr_codes"]:
+                if ask_confirmation():
+                    delete_qr_codes_from_image_path(conn, delete_status, file_path)
 
             elif option == strs["mark_image_as_no_face"]:
                 if ask_confirmation():
@@ -2099,6 +2123,9 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["list_document"]:
                 list_document(conn, file_path)
 
+            elif option == strs["list_qrcode"]:
+                list_qrcodes(conn, file_path)
+
             elif option == strs["delete_document"]:
                 if ask_confirmation():
                     delete_document_from_document_path(conn, None, file_path)
@@ -2107,6 +2134,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 delete_document_from_document_path(conn, None, file_path)
 
                 insert_document_if_not_exists(conn, file_path)
+
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
