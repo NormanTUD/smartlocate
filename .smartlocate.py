@@ -2071,13 +2071,14 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     strs["list_document"] = "Show document content for this file"
     strs["list_qrcode"] = "Show qr-codes for this file"
 
+    options: list[str] = []
+
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
 
         display_sixel(file_path)
 
         while True:
-            options: list[str] = []
 
             image_id = get_image_id_by_file_path(conn, file_path)
 
@@ -2188,9 +2189,6 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 console.print(f"[red]Unhandled option {option}[/]")
     elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
         while True:
-            options: list[str] = []
-
-
             if check_entries_in_table(conn, "documents", file_path):
                 options.insert(0, strs["delete_document"])
                 options.append(strs["list_document"])
