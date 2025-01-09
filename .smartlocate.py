@@ -151,7 +151,7 @@ def supports_sixel() -> bool:
 console = Console()
 
 if not supports_sixel() and not args.no_sixel:
-    console.print("[red]Cannot use sixel. Will set --no_sixel to true.[/]")
+    console.print(f"[red]Cannot use sixel. Will set --no_sixel to true.[/]")
 
     args.no_sixel = True
 
@@ -206,7 +206,7 @@ except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
 except KeyboardInterrupt:
-    console.print("\n[red]You pressed CTRL+C[/]")
+    console.print(f"\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
 def get_qr_codes_from_image(file_path: str) -> list[str]:
@@ -272,7 +272,7 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
 
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -345,7 +345,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                         else:
                             console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
                     except EOFError:
-                        console.print("[red]You pressed CTRL+d[/]")
+                        console.print(f"[red]You pressed CTRL+d[/]")
                         sys.exit(0)
                 nr_new_faces = nr_new_faces + 1
             c = c + 1
@@ -408,7 +408,7 @@ def ocr_img(img: str) -> Optional[str]:
             reader = easyocr.Reader(args.lang_ocr)
 
         if reader is None:
-            console.print("[red]reader was not defined. Will not OCR.[/]")
+            console.print(f"[red]reader was not defined. Will not OCR.[/]")
             return None
 
         if os.path.exists(img):
@@ -540,7 +540,7 @@ def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
             return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -588,7 +588,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
 
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -950,7 +950,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
             break
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 raise e
@@ -962,7 +962,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
             break
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 raise e
@@ -1004,7 +1004,7 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
             return res > 0
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -1084,7 +1084,7 @@ def show_general_stats(conn: sqlite3.Connection) -> int:
         documents = cursor.fetchone()[0]
 
         if documents or total_detections or total_images:
-            console.print("[bold underline cyan]General Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]General Statistics[/bold underline cyan]\n")
 
             table = Table(title="General Statistics")
             table.add_column("Metric", style="cyan")
@@ -1115,7 +1115,7 @@ def show_yolo_stats(conn: sqlite3.Connection) -> int:
         cursor.close()
 
         if yolo_stats:
-            console.print("[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]YOLO Detection Statistics[/bold underline cyan]\n")
 
             yolo_table = Table(title="YOLO Category Statistics")
             yolo_table.add_column("Label", justify="left", style="cyan")
@@ -1140,7 +1140,7 @@ def show_empty_images_stats(conn: sqlite3.Connection) -> int:
         total_empty_images = cursor.fetchone()[0]
 
         if total_empty_images:
-            console.print("[bold underline cyan]Empty Images Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]Empty Images Statistics[/bold underline cyan]\n")
 
             table = Table(title="Empty Images Statistics")
             table.add_column("Metric", style="cyan")
@@ -1162,7 +1162,7 @@ def show_documents_stats(conn: sqlite3.Connection) -> int:
         total_documents_stats= cursor.fetchone()[0]
 
         if total_documents_stats:
-            console.print("[bold underline cyan]Documents Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]Documents Statistics[/bold underline cyan]\n")
 
             table = Table(title="Documents Results Statistics")
             table.add_column("Metric", style="cyan")
@@ -1185,7 +1185,7 @@ def show_ocr_stats(conn: sqlite3.Connection) -> int:
         total_ocr_results = cursor.fetchone()[0]
 
         if total_ocr_results:
-            console.print("[bold underline cyan]OCR Results Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]OCR Results Statistics[/bold underline cyan]\n")
 
             table = Table(title="OCR Results Statistics")
             table.add_column("Metric", style="cyan")
@@ -1207,7 +1207,7 @@ def show_image_description_stats(conn: sqlite3.Connection) -> int:
         total_image_descriptions = cursor.fetchone()[0]
 
         if total_image_descriptions:
-            console.print("[bold underline cyan]Image Description Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]Image Description Statistics[/bold underline cyan]\n")
 
             table = Table(title="Image Description Statistics")
             table.add_column("Metric", style="cyan")
@@ -1230,7 +1230,7 @@ def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
         total_qr = cursor.fetchone()[0]
 
         if total_qr:
-            console.print("[bold underline cyan]Qr-Codes Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]Qr-Codes Statistics[/bold underline cyan]\n")
 
             table = Table(title="Person Mapping Statistics")
             table.add_column("Metric", style="cyan")
@@ -1255,7 +1255,7 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
         total_mappings = cursor.fetchone()[0]
 
         if total_mappings:
-            console.print("[bold underline cyan]Person Mapping Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]Person Mapping Statistics[/bold underline cyan]\n")
 
             table = Table(title="Person Mapping Statistics")
             table.add_column("Metric", style="cyan")
@@ -1286,7 +1286,7 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
         _sum = 0
 
         if face_recognition_stats:
-            console.print("[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
+            console.print(f"[bold underline cyan]Face Recognition Statistics[/bold underline cyan]\n")
 
             table = Table(title="Face Recognition Statistics (Sorted by Count)")
             table.add_column("Name", style="cyan")
@@ -1440,7 +1440,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
             return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print("[yellow]Database is locked, retrying...[/]")
+                console.print(f"[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 cursor.close()
@@ -1836,7 +1836,7 @@ def search(conn: sqlite3.Connection) -> None:
                 table.add_column("Nr. Documents", justify="left", style="cyan")
 
         if len(row) == 0:
-            console.print("[yellow]No results found[/]")
+            console.print(f"[yellow]No results found[/]")
         else:
             table.add_row(*row)
 
@@ -1982,14 +1982,14 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
                 if 1 <= choice_int <= len(options):
                     return options[choice_int - 1]
 
-                console.print("[red]Invalid option.[/]")
+                console.print(f"[red]Invalid option.[/]")
             else:
                 if choice.strip() == "quit" or choice.strip() == "q":
                     sys.exit(0)
                 else:
-                    console.print("[red]Invalid option.[/]")
+                    console.print(f"[red]Invalid option.[/]")
         except ValueError:
-            console.print("[red]Invalid option. Please enter number.[/]")
+            console.print(f"[red]Invalid option. Please enter number.[/]")
         except EOFError:
             sys.exit(0)
 
@@ -2325,7 +2325,7 @@ def main() -> None:
                         console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
                     c = c + 1
             else:
-                console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+                console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
         if args.describe or args.yolo or args.ocr or args.qrcodes or do_all:
             with Progress(
@@ -2351,7 +2351,7 @@ def main() -> None:
                                 global yolo_error_already_shown
 
                                 if not yolo_error_already_shown:
-                                    console.print("[red]--yolo was set, but model could not be loaded[/]")
+                                    console.print(f"[red]--yolo was set, but model could not be loaded[/]")
 
                                     yolo_error_already_shown = True
                         if args.ocr or do_all:
@@ -2381,5 +2381,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        console.print("\n[red]You pressed CTRL+C[/]")
+        console.print(f"\n[red]You pressed CTRL+C[/]")
         sys.exit(0)
