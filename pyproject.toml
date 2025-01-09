@@ -1,6 +1,6 @@
 [project]
 name = "smartlocate"
-description = "Similiar to locate, but looks at the content"
+description = "Similiar to locate, but less stupid"
 authors = [
   {email = "norman.koch@tu-dresden.de"},
   {name = "Norman Koch"}
