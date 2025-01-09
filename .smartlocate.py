@@ -1798,160 +1798,142 @@ def list_ocr(conn: sqlite3.Connection, file_path: str) -> None:
     print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
     print("==================")
 
+def add_option(options: list[str], condition: bool, option: str, insert_at_start: bool = False):
+    if condition:
+        if insert_at_start:
+            options.insert(0, option)
+        else:
+            options.append(option)
+
+def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[str], strs: dict) -> None:
+    image_id = get_image_id_by_file_path(conn, file_path)
+
+    # Bildspezifische Optionen
+    add_option(options, is_valid_image_file(file_path), strs["show_image_again"], True)
+    add_option(options, image_id and check_entries_in_table(conn, "detections", image_id, "image_id"), strs["delete_yolo"], True)
+    add_option(options, image_id and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"), strs["delete_face_recognition"], True)
+    add_option(options, check_entries_in_table(conn, "no_faces", file_path), strs["delete_entry_no_faces"], True)
+    add_option(options, not check_entries_in_table(conn, "no_faces", file_path), strs["mark_image_as_no_face"], False)
+    add_option(options, check_entries_in_table(conn, "image_description", file_path), strs["delete_desc"], True)
+    add_option(options, check_entries_in_table(conn, "ocr_results", file_path), strs["delete_ocr"], True)
+    add_option(options, image_id and check_entries_in_table(conn, "qrcodes", image_id, "image_id"), strs["delete_qr_codes"], True)
+
+    # Gemeinsame Optionen
+    options.insert(0, strs["run_desc"])
+    options.insert(0, strs["run_ocr"])
+    options.insert(0, strs["run_yolo"])
+    options.insert(0, strs["run_face_recognition"])
+
+    add_option(options, check_entries_in_table(conn, "image_description", file_path), strs["list_desc"], False)
+    add_option(options, check_entries_in_table(conn, "ocr_results", file_path), strs["list_ocr"], False)
+    add_option(options, check_entries_in_table(conn, "documents", file_path), strs["list_document"], False)
+
+    options.append(strs["delete_all"])
+    options.append("quit")
+
+def handle_document_options(conn: sqlite3.Connection, file_path: str, options: list[str], strs: dict) -> None:
+    add_option(options, check_entries_in_table(conn, "documents", file_path), strs["delete_document"], True)
+    options.append(strs["run_document"])
+    options.append("quit")
+
 def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
-    strs = {}
-
-    strs["show_image_again"] = "Show image again"
-
-    strs["mark_image_as_no_face"] = "Mark image as 'contains no face'"
-
-    strs["delete_all"] = "Delete all entries for this file"
-
-    strs["delete_entry_no_faces"] = "Delete entries from no_faces table"
-    strs["delete_ocr"] = "Delete OCR for this file"
-    strs["delete_yolo"] = "Delete YOLO-Detections for this file"
-    strs["delete_desc"] = "Delete descriptions for this file"
-    strs["delete_face_recognition"] = "Delete face-recognition entries for this file"
-    strs["delete_document"] = "Delete document entries for this file"
-    strs["delete_qr_codes"] = "Delete qr-code entries for this file"
-
-    strs["run_ocr"] = "Run OCR for this file"
-    strs["run_yolo"] = "Run YOLO for this file"
-    strs["run_face_recognition"] = "Run face recognition for this file"
-    strs["run_desc"] = "Run description generation for this file"
-    strs["run_document"] = "Run document generation for this file"
-
-    strs["list_desc"] = "Show description for this file"
-    strs["list_ocr"] = "Show OCR for this file"
-    strs["list_document"] = "Show document content for this file"
-    strs["list_qrcode"] = "Show qr-codes for this file"
+    strs = {
+        "show_image_again": "Show image again",
+        "mark_image_as_no_face": "Mark image as 'contains no face'",
+        "delete_all": "Delete all entries for this file",
+        "delete_entry_no_faces": "Delete entries from no_faces table",
+        "delete_ocr": "Delete OCR for this file",
+        "delete_yolo": "Delete YOLO-Detections for this file",
+        "delete_desc": "Delete descriptions for this file",
+        "delete_face_recognition": "Delete face-recognition entries for this file",
+        "delete_document": "Delete document entries for this file",
+        "delete_qr_codes": "Delete qr-code entries for this file",
+        "run_ocr": "Run OCR for this file",
+        "run_yolo": "Run YOLO for this file",
+        "run_face_recognition": "Run face recognition for this file",
+        "run_desc": "Run description generation for this file",
+        "run_document": "Run document generation for this file",
+        "list_desc": "Show description for this file",
+        "list_ocr": "Show OCR for this file",
+        "list_document": "Show document content for this file",
+        "list_qrcode": "Show qr-codes for this file"
+    }
 
     options: list[str] = []
 
     if is_valid_image_file(file_path):
         print(f"Options for file {file_path}:")
-
         display_sixel(file_path)
 
-        while True:
+        handle_file_options(conn, file_path, options, strs)
 
-            image_id = get_image_id_by_file_path(conn, file_path)
+        option = display_menu(options)
 
-            if image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id"):
-                options.insert(0, strs["delete_yolo"])
-
-            if image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id"):
-                options.insert(0, strs["delete_face_recognition"])
-
-            if check_entries_in_table(conn, "no_faces", file_path):
-                options.insert(0, strs["delete_entry_no_faces"])
-            else:
-                options.insert(0, strs["mark_image_as_no_face"])
-
-            if check_entries_in_table(conn, "image_description", file_path):
-                options.insert(0, strs["delete_desc"])
-                options.append(strs["list_desc"])
-
-            if check_entries_in_table(conn, "ocr_results", file_path):
-                options.insert(0, strs["delete_ocr"])
-                options.append(strs["list_ocr"])
-
-            if image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id"):
-                options.insert(0, strs["delete_qr_codes"])
-
-            options.insert(0, strs["run_desc"])
-            options.insert(0, strs["run_ocr"])
-            options.insert(0, strs["run_yolo"])
-            options.insert(0, strs["run_face_recognition"])
-            options.insert(0, strs["show_image_again"])
-
-            options.append(strs["delete_all"])
-            options.append("quit")
-
-            option = display_menu(options)
-
-            if option == "quit":
-                sys.exit(0)
-            elif option == strs["show_image_again"]:
-                display_sixel(file_path)
-            elif option == strs["delete_all"]:
-                if ask_confirmation():
-                    delete_entries_by_filename(conn, file_path)
-            elif option == strs["delete_entry_no_faces"]:
-                if ask_confirmation():
-                    delete_no_faces_from_image_path(conn, None, file_path)
-            elif option == strs["delete_desc"]:
-                if ask_confirmation():
-                    delete_image_description_from_image_path(conn, None, file_path)
-            elif option == strs["delete_yolo"]:
-                if ask_confirmation():
-                    delete_yolo_from_image_path(conn, None, file_path)
-            elif option == strs["delete_face_recognition"]:
-                if ask_confirmation():
-                    delete_faces_from_image_path(conn, None, file_path)
-            elif option == strs["delete_ocr"]:
-                if ask_confirmation():
-                    delete_ocr_from_image_path(conn, None, file_path)
-            elif option == strs["delete_qr_codes"]: # TODO: Doesnt work yet for some reason
-                if ask_confirmation():
-                    delete_qr_codes_from_image_path(conn, None, file_path)
-
-            elif option == strs["mark_image_as_no_face"]:
-                if ask_confirmation():
-                    delete_faces_from_image_path(conn, None, file_path)
-
-                    insert_into_no_faces(conn, file_path)
-
-            elif option == strs["run_desc"]:
-                delete_image_description_from_image_path(conn, None, file_path)
-
-                describe_img(conn, file_path)
-            elif option == strs["run_yolo"]:
-                try:
-                    with console.status("[bold green]Loading yolov5..."):
-                        if "yolov5" not in sys.modules:
-                            import yolov5
-
-                    model = yolov5.load(args.yolo_model)
-                    model.conf = 0
-
-                    delete_yolo_from_image_path(conn, None, file_path)
-
-                    yolo_file(conn, file_path, None, model)
-                except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
-                    console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
-            elif option == strs["run_ocr"]:
-                delete_ocr_from_image_path(conn, None, file_path)
-
-                ocr_file(conn, file_path)
-            elif option == strs["run_face_recognition"]:
+        if option == "quit":
+            sys.exit(0)
+        elif option == strs["show_image_again"]:
+            display_sixel(file_path)
+        elif option == strs["delete_all"]:
+            if ask_confirmation():
+                delete_entries_by_filename(conn, file_path)
+        elif option == strs["delete_entry_no_faces"]:
+            if ask_confirmation():
                 delete_no_faces_from_image_path(conn, None, file_path)
+        elif option == strs["delete_desc"]:
+            if ask_confirmation():
+                delete_image_description_from_image_path(conn, None, file_path)
+        elif option == strs["delete_yolo"]:
+            if ask_confirmation():
+                delete_yolo_from_image_path(conn, None, file_path)
+        elif option == strs["delete_face_recognition"]:
+            if ask_confirmation():
                 delete_faces_from_image_path(conn, None, file_path)
+        elif option == strs["delete_ocr"]:
+            if ask_confirmation():
+                delete_ocr_from_image_path(conn, None, file_path)
+        elif option == strs["delete_qr_codes"]:
+            if ask_confirmation():
+                delete_qr_codes_from_image_path(conn, None, file_path)
+        elif option == strs["mark_image_as_no_face"]:
+            if ask_confirmation():
+                delete_faces_from_image_path(conn, None, file_path)
+                insert_into_no_faces(conn, file_path)
+        elif option == strs["run_desc"]:
+            delete_image_description_from_image_path(conn, None, file_path)
+            describe_img(conn, file_path)
+        elif option == strs["run_yolo"]:
+            try:
+                with console.status("[bold green]Loading yolov5..."):
+                    if "yolov5" not in sys.modules:
+                        import yolov5
 
-                face_res = recognize_persons_in_image(conn, file_path)
+                model = yolov5.load(args.yolo_model)
+                model.conf = 0
 
-                if face_res:
-                    new_ids, manually_entered_name = face_res
+                delete_yolo_from_image_path(conn, None, file_path)
+                yolo_file(conn, file_path, None, model)
+            except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
+                console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
+        elif option == strs["run_ocr"]:
+            delete_ocr_from_image_path(conn, None, file_path)
+            ocr_file(conn, file_path)
+        elif option == strs["run_face_recognition"]:
+            delete_no_faces_from_image_path(conn, None, file_path)
+            delete_faces_from_image_path(conn, None, file_path)
+            face_res = recognize_persons_in_image(conn, file_path)
 
-                    if len(new_ids) and not manually_entered_name:
-                        console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                        display_sixel(file_path)
-            elif option == strs["list_desc"]:
-                list_desc(conn, file_path)
-            elif option == strs["list_ocr"]:
-                list_ocr(conn, file_path)
-            else:
-                console.print(f"[red]Unhandled option {option}[/]")
+            if face_res:
+                new_ids, manually_entered_name = face_res
+                if len(new_ids) and not manually_entered_name:
+                    console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                    display_sixel(file_path)
+        elif option == strs["list_desc"]:
+            list_desc(conn, file_path)
+        elif option == strs["list_ocr"]:
+            list_ocr(conn, file_path)
     elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
         while True:
-            if check_entries_in_table(conn, "documents", file_path):
-                options.insert(0, strs["delete_document"])
-                options.append(strs["list_document"])
-
-            options.append(strs["run_document"])
-
-            options.append("quit")
-
+            handle_document_options(conn, file_path, options, strs)
             option = display_menu(options)
 
             if option == "quit":
@@ -1960,18 +1942,13 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["list_document"]:
                 list_document(conn, file_path)
 
-            #elif option == strs["list_qrcode"]:
-            #    list_qrcodes(conn, file_path)
-
             elif option == strs["delete_document"]:
                 if ask_confirmation():
                     delete_document_from_document_path(conn, None, file_path)
 
             elif option == strs["run_document"]:
                 delete_document_from_document_path(conn, None, file_path)
-
                 insert_document_if_not_exists(conn, file_path)
-
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
