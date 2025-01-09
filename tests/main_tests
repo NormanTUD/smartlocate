@@ -46,8 +46,6 @@ if [[ $nr_of_missing_f_strings -ne 0 ]]; then
 	FINAL_EXIT_CODE=1
 fi
 
-exit $FINAL_EXIT_CODE
-
 run_and_fail "Bash-Syntax-Check" "bash -n smartlocate" 0
 
 run_and_fail "Compiling main script" "python3 -m py_compile .smartlocate.py" 0
