@@ -1133,21 +1133,21 @@ def show_statistics(conn: sqlite3.Connection) -> None:
         whole += show_empty_images_stats(conn)
 
     if args.yolo or do_all:
-        whole += sshow_yolo_stats(conn)
+        whole += show_yolo_stats(conn)
 
     if args.describe or do_all:
-        whole += sshow_image_description_stats(conn)
+        whole += show_image_description_stats(conn)
 
     if args.ocr or do_all:
-        whole += sshow_ocr_stats(conn)
+        whole += show_ocr_stats(conn)
 
     if args.documents or do_all:
-        whole += sshow_documents_stats(conn)
+        whole += show_documents_stats(conn)
 
     if args.face_recognition or do_all:
-        whole += sshow_person_mapping_stats(conn)
+        whole += show_person_mapping_stats(conn)
 
-        whole += sshow_face_recognition_stats(conn)
+        whole += show_face_recognition_stats(conn)
 
 
     if whole == 0:
