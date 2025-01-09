@@ -968,6 +968,7 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
         # Führe jede Abfrage einzeln aus
         results = []
         for query in queries:
+            dbg(query)
             cursor.execute(query)
             result = cursor.fetchone()  # Hole das Ergebnis der Abfrage
             results.append(result[0] if result else 0)  # Wenn ein Ergebnis vorhanden ist, füge es hinzu
@@ -1158,6 +1159,7 @@ def delete_from_table(conn: sqlite3.Connection, delete_status: Any, table_name: 
     if delete_status:
         delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
     query = f'''DELETE FROM {table_name} WHERE {condition_column} = ?'''
+    dbg(query)
     execute_with_retry(conn, query, (file_path,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
@@ -1192,6 +1194,7 @@ def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
     query = f'''DELETE FROM {table_name} WHERE {foreign_key_column} = ?'''
+    dbg(query)
     execute_with_retry(conn, query, (image_id,))
     if delete_status:
         delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
@@ -1260,9 +1263,7 @@ def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path:
 
 def get_existing_documents(conn: sqlite3.Connection) -> set[Any]:
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT file_path FROM documents
-    ''')
+    cursor.execute('SELECT file_path FROM documents')
     rows = cursor.fetchall()
     cursor.close()
     return {row[0] for row in rows}
