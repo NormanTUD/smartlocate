@@ -55,6 +55,7 @@ run_and_fail "Search for qr-code wikipedia" "bash smartlocate --dbfile $tmp_db_f
 run_and_fail "Vacuuming" "bash smartlocate --dbfile $tmp_db_file --vacuum" 0
 
 if [[ -e $tmp_db_file ]]; then
+	echo -e "${GREEN}Deleting tmp_db_file $tmp_db_file${NC}"
 	rm $tmp_db_file
 fi
 
