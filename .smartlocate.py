@@ -227,7 +227,7 @@ def get_qr_codes_from_image(file_path):
 
         return []
     except Exception as e:
-        print(f"Fehler beim Lesen der QR-Codes: {e}")
+        print(f"[red]Error while reading QR-Codes: {e}[/]")
         return []
 
 def add_qrcodes_from_image(conn, file_path):
@@ -395,7 +395,7 @@ def get_file_size_in_mb(file_path):
     except FileNotFoundError as fnf_error:
         return str(fnf_error)
     except Exception as e:
-        return f"Ein Fehler ist aufgetreten: {e}"
+        return f"An error occured while trying to get file size from {file_path}: {e}"
 
 def ocr_img(img: str) -> Optional[str]:
     global reader
@@ -576,7 +576,6 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
             else:
                 person_id = person_id[0]
 
-            # 3. Zuordnung in die image_person_mapping-Tabelle einfügen
             cursor.execute('''
                 INSERT OR IGNORE INTO image_person_mapping (image_id, person_id)
                 VALUES (?, ?)
@@ -585,13 +584,13 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
 
             dbg(f"Mapped image '{file_path}' (ID: {image_id}) to person '{person_name}' (ID: {person_id})")
             cursor.close()
-            return  # Erfolgreiche Zuordnung, Schleife beenden
+            return
 
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
-            else:  # Andere Fehler, die das Hinzufügen der Zuordnung verhindern
+            else:
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
@@ -874,7 +873,7 @@ def pdf_to_text(pdf_path: str) -> Optional[str]:
                 text += page.extract_text()
         return text
     except Exception as e:
-        print(f"Fehler beim Einlesen der PDF: {e}")
+        print(f"Error while reading the PDF: {e}")
         return None
 
 def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str]:
