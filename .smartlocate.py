@@ -56,7 +56,7 @@ DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_YOLO_THRESHOLD: float = 0.3
 DEFAULT_SIXEL_WIDTH: int = 400
 DEFAULT_MAX_SIZE: int = 5
-DEFAULT_DIR: str = Path.home()
+DEFAULT_DIR: str = str(Path.home())
 DEFAULT_BLIP_MODEL_NAME: str = "Salesforce/blip-image-captioning-large"
 DEFAULT_TOLERANCE_FACE_DETECTION: float = 0.6
 
