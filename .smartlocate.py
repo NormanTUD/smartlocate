@@ -360,17 +360,30 @@ def to_absolute_path(path: str) -> str:
 
     return os.path.abspath(path)
 
+
+def get_file_size_in_mb(file_path):
+    try:
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"Die angegebene Datei existiert nicht: {file_path}")
+
+        file_size_bytes = os.path.getsize(file_path)
+
+        file_size_mb = file_size_bytes / (1024 * 1024)
+        return f"{file_size_mb:.1f}MB"
+    except FileNotFoundError as fnf_error:
+        return str(fnf_error)
+    except Exception as e:
+        return f"Ein Fehler ist aufgetreten: {e}"
+
 def ocr_img(img: str) -> Optional[str]:
     global reader
 
     try:
         if reader is None:
-            with console.status("[bold green]Loading easyocr...") as load_status:
-                if "easyocr" not in sys.modules:
-                    import easyocr
+            if "easyocr" not in sys.modules:
+                import easyocr
 
-            with console.status("[bold green]Loading reader...") as load_status:
-                reader = easyocr.Reader(args.lang_ocr)
+            reader = easyocr.Reader(args.lang_ocr)
 
         if reader is None:
             console.print("[red]reader was not defined. Will not OCR.[/]")
@@ -2141,9 +2154,11 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
         console.print(f"[red]The file {file_path} is not a valid image file. Currently, Only image files are supported.[/]")
 
 def vacuum(conn):
+    console.print(f"File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}")
     with console.status("[yellow]Vacuuming {args.dbfile}..."):
         conn.execute("VACUUM")
         console.print(f"[yellow]Vacuuming {args.dbfile} done!")
+    console.print(f"File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}")
 
 def format_text_with_keywords(text, keywords, full_results):
     def replace_placeholder(match):
