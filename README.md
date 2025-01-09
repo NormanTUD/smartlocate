@@ -1,6 +1,6 @@
 # smartlocate - Intelligent File Indexer
 
-smartlocate is a tool for Linux that uses YOLO and many other AI tools to detect objects in images, describe images and creates a database of detected objects, image descriptions, text contents and so on, and makes them searchable. This database is stored locally and allows you to search for specific objects in images. smartlocate uses an SQLite database to efficiently store and search data.
+smartlocate is a tool for Linux that uses YOLO and many other AI tools (no GPU required! Everything is done locally) to detect objects in images, describe images and creates a database of detected objects, image descriptions, text contents and so on, and makes them searchable. This database is stored locally and allows you to search for specific objects in images. smartlocate uses an SQLite database to efficiently store and search data.
 
 If the parameter `--ocr` is set while indexing, all images are also OCRed and the found text is searchable. You can set the language with `--lang_ocr tr` for example. Default is `["de", "en"]`.
 
@@ -23,6 +23,10 @@ smartlocate --dir ~/Documents --index --ocr --face_recognition --qrcodes
 
 # Search for cats
 smartlocate "cat"
+
+# Help
+
+smartlocate --help
 ```
 
 ## Screenshots
@@ -200,6 +204,18 @@ smartlocate "text about cats"
 and get all `.txt`, `.md`, `.docx`, `.tex` and so on files in which something about cats is written. Currently, document indexing is only done via a full-text search.
 
 Same for videos and audio files. If someone wants to do it, feel free to contribute!
+
+## Troubleshooting
+
+### The SQlite3-file is too large
+
+When the sqlite3-file is too large, you can vacuum it:
+
+```bash
+smartlocate --vacuum
+```
+
+This will not delete any data, but just free up claimed, but yet unreleased space.
 
 ## License
 
