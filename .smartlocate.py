@@ -2104,7 +2104,8 @@ def main() -> None:
         shown_something = True
 
         if is_valid_file_path(args.search):
-            show_options_for_file(conn, args.search)
+            while True:
+                show_options_for_file(conn, args.search)
         else:
             search(conn)
 
