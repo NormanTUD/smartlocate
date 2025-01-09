@@ -665,7 +665,10 @@ def execute_queries(conn: sqlite3.Connection, queries: list, status) -> None:
             # Standardstatus, falls keine passende Query gefunden wird
             status_message = "Executing query..."
 
-        status.update(f"[bold green]{status_message}")
+        status_msg = f"[bold green]{status_message}"
+
+        dbg(status_msg)
+        status.update(status_msg)
         dbg(f"Executing query: {query}")
         cursor.execute(query)
         status.update(f"[bold green]Executed query.")
