@@ -474,32 +474,26 @@ def load_existing_images(conn: sqlite3.Connection) -> dict[Any, Any]:
     cursor.close()
     return {row[0]: row[1] for row in rows}
 
-def is_file_in_img_desc_db(conn: sqlite3.Connection, file_path: str) -> bool:
-    cursor = conn.cursor()
-    cursor.execute('''SELECT COUNT(*) FROM image_description WHERE file_path = ?''', (file_path,))
-    res = cursor.fetchone()[0]
-    cursor.close()
-
-    return res > 0
-
-def is_file_in_ocr_db(conn: sqlite3.Connection, file_path: str) -> bool:
-    cursor = conn.cursor()
-    cursor.execute('''SELECT COUNT(*) FROM ocr_results WHERE file_path = ?''', (file_path,))
-    res = cursor.fetchone()[0]
-    cursor.close()
-
-    return res > 0
-
-def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: Optional[dict]) -> bool:
+def is_file_in_db(conn: sqlite3.Connection, file_path: str, table_name: str, existing_files: Optional[dict] = None) -> bool:
     if existing_files and file_path in existing_files:
         return True
 
     cursor = conn.cursor()
-    cursor.execute('''SELECT COUNT(*) FROM images WHERE file_path = ?''', (file_path,))
+    query = f'''SELECT COUNT(*) FROM {table_name} WHERE file_path = ?'''
+    cursor.execute(query, (file_path,))
     res = cursor.fetchone()[0]
     cursor.close()
 
     return res > 0
+
+def is_file_in_img_desc_db(conn: sqlite3.Connection, file_path: str) -> bool:
+    return is_file_in_db(conn, file_path, "image_description")
+
+def is_file_in_ocr_db(conn: sqlite3.Connection, file_path: str) -> bool:
+    return is_file_in_db(conn, file_path, "ocr_results")
+
+def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: Optional[dict]) -> bool:
+    return is_file_in_db(conn, file_path, "images", existing_files)
 
 def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
     cursor = conn.cursor()
