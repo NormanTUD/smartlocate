@@ -382,7 +382,6 @@ def to_absolute_path(path: str) -> str:
 
     return os.path.abspath(path)
 
-
 def get_file_size_in_mb(file_path: str) -> str:
     try:
         if not os.path.isfile(file_path):
@@ -675,7 +674,6 @@ def execute_queries(conn: sqlite3.Connection, queries: list, status) -> None:
 
     cursor.close()
     conn.commit()
-
 
 def init_database(db_path: str) -> sqlite3.Connection:
     with console.status("[bold green]Initializing database...") as status:
