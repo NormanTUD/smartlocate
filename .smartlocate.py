@@ -230,6 +230,24 @@ def get_qr_codes_from_image(file_path: str) -> list[str]:
         console.print(f"[red]Error while reading QR-Codes: {e}[/]")
         return []
 
+def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT 1 FROM no_qrcodes WHERE file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True
+
+    cursor.execute('''SELECT 1 FROM qrcodes
+                      JOIN images ON images.id = qrcodes.image_id
+                      WHERE images.file_path = ?''', (image_path,))
+    if cursor.fetchone():
+        cursor.close()
+        return True
+
+    cursor.close()
+    return False
+
 def add_qrcodes_from_image(conn: sqlite3.Connection, file_path: str) -> None:
     if qr_code_already_existing(conn, file_path):
         console.print(f"[yellow]File {file_path} has already been searched for Qr-Codes[/]")
@@ -593,24 +611,6 @@ def insert_into_no_qrcodes(conn: sqlite3.Connection, file_path: str) -> None:
 def insert_into_no_faces(conn: sqlite3.Connection, file_path: str) -> None:
     execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path, ))
 
-def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
-    cursor = conn.cursor()
-
-    cursor.execute('''SELECT 1 FROM no_qrcodes WHERE file_path = ?''', (image_path,))
-    if cursor.fetchone():
-        cursor.close()
-        return True
-
-    cursor.execute('''SELECT 1 FROM qrcodes
-                      JOIN images ON images.id = qrcodes.image_id
-                      WHERE images.file_path = ?''', (image_path,))
-    if cursor.fetchone():
-        cursor.close()
-        return True
-
-    cursor.close()
-    return False
-
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
 
@@ -727,25 +727,6 @@ def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor.close()
     return False
 
-def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pandoc: bool = True) -> bool:
-    if document_already_exists(conn, file_path):
-        return False
-
-    text: Optional[str] = ""
-
-    if _pandoc:
-        text = convert_file_to_text(file_path)
-    else:
-        text = open(file_path, encoding="utf-8", mode="r").read()
-
-    if text:
-        insert_document(conn, file_path, text)
-
-    return True
-
-def insert_document(conn: sqlite3.Connection, file_path: str, document: str) -> None:
-    execute_with_retry(conn, '''INSERT INTO documents (file_path, content) VALUES (?, ?);''', (file_path, document, ))
-
 def pdf_to_text(pdf_path: str) -> Optional[str]:
     import pdfplumber
 
@@ -779,6 +760,25 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
         console.print(f"[red]Module not found:[/] {e}")
 
     return None
+
+def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pandoc: bool = True) -> bool:
+    if document_already_exists(conn, file_path):
+        return False
+
+    text: Optional[str] = ""
+
+    if _pandoc:
+        text = convert_file_to_text(file_path)
+    else:
+        text = open(file_path, encoding="utf-8", mode="r").read()
+
+    if text:
+        insert_document(conn, file_path, text)
+
+    return True
+
+def insert_document(conn: sqlite3.Connection, file_path: str, document: str) -> None:
+    execute_with_retry(conn, '''INSERT INTO documents (file_path, content) VALUES (?, ?);''', (file_path, document, ))
 
 def get_extension (path: str) -> str:
     file_extension = path.split('.')[-1] if '.' in path else ''
@@ -999,22 +999,6 @@ def show_general_stats(conn: sqlite3.Connection) -> int:
     ]
     return show_stats(conn, queries, "General Statistics", metrics)
 
-def show_yolo_stats(conn: sqlite3.Connection) -> int:
-    query = '''
-        SELECT detections.label, COUNT(*)
-        FROM detections
-        JOIN images ON images.id = detections.image_id
-        GROUP BY detections.label
-    '''
-    metrics = [("Label", "Count")]
-
-    try:
-        # Hier rufen wir eine angepasste version der show_stats Funktion auf
-        return show_yolo_custom_stats(conn, [query], "YOLO Detection Statistics", metrics)
-    except Exception as e:
-        console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
-        return 0
-
 def show_yolo_custom_stats(conn: sqlite3.Connection, queries, title, metrics) -> int:
     try:
         cursor = conn.cursor()
@@ -1042,6 +1026,22 @@ def show_yolo_custom_stats(conn: sqlite3.Connection, queries, title, metrics) ->
         return 0
     except Exception as e:
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
+        return 0
+
+def show_yolo_stats(conn: sqlite3.Connection) -> int:
+    query = '''
+        SELECT detections.label, COUNT(*)
+        FROM detections
+        JOIN images ON images.id = detections.image_id
+        GROUP BY detections.label
+    '''
+    metrics = [("Label", "Count")]
+
+    try:
+        # Hier rufen wir eine angepasste version der show_stats Funktion auf
+        return show_yolo_custom_stats(conn, [query], "YOLO Detection Statistics", metrics)
+    except Exception as e:
+        console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
         return 0
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> int:
@@ -1081,23 +1081,6 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
     ]
     return show_stats(conn, queries, "Person Mapping Statistics", metrics)
 
-def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
-    query = '''
-        SELECT person.name, COUNT(image_person_mapping.image_id) AS recognition_count
-        FROM person
-        JOIN image_person_mapping ON person.id = image_person_mapping.person_id
-        GROUP BY person.name
-        ORDER BY recognition_count DESC
-    '''
-    metrics = [("Name", "person")]
-
-    try:
-        # Hier rufen wir eine angepasste version der show_stats Funktion auf
-        return show_face_recognition_custom_stats(conn, [query], "Face Recognition Statistics", metrics)
-    except Exception as e:
-        console.print(f"[bold red]Error for Face Recognition Statistics:[/bold red] {str(e)}")
-        return 0
-
 def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries, title, metrics) -> int:
     try:
         cursor = conn.cursor()
@@ -1125,6 +1108,23 @@ def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries, title,
         return 0
     except Exception as e:
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
+        return 0
+
+def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
+    query = '''
+        SELECT person.name, COUNT(image_person_mapping.image_id) AS recognition_count
+        FROM person
+        JOIN image_person_mapping ON person.id = image_person_mapping.person_id
+        GROUP BY person.name
+        ORDER BY recognition_count DESC
+    '''
+    metrics = [("Name", "person")]
+
+    try:
+        # Hier rufen wir eine angepasste version der show_stats Funktion auf
+        return show_face_recognition_custom_stats(conn, [query], "Face Recognition Statistics", metrics)
+    except Exception as e:
+        console.print(f"[bold red]Error for Face Recognition Statistics:[/bold red] {str(e)}")
         return 0
 
 def show_statistics(conn: sqlite3.Connection) -> None:
@@ -1399,6 +1399,30 @@ def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     sql_query = f"SELECT file_path, extracted_text FROM ocr_results WHERE {' AND '.join(conditions)}"
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
+
+def format_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
+    def replace_placeholder(match: re.Match[str]) -> str:
+        return f'[bold reverse underline2 italic green]{match.group(0)}[/]'
+
+    if full_results:
+        text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
+
+        for keyword in keywords:
+            text = re.sub(rf'({re.escape(keyword)})', r'[bold reverse underline2 italic green]\1[/]', text)
+    else:
+        lines = text.split('\n')
+        formatted_lines = []
+
+        for line in lines:
+            for keyword in keywords:
+                if keyword.lower() in line.lower():  # Placeholder condition; modify this as needed
+                    formatted_lines.append(line)
+
+        text = '\n'.join(formatted_lines)
+
+        text = format_text_with_keywords(text, keywords, True)
+
+    return text
 
 def search_documents(conn: sqlite3.Connection) -> int:
     ocr_results = None
@@ -1947,30 +1971,6 @@ def vacuum(conn: sqlite3.Connection) -> None:
     with console.status(f"[yellow]Vacuuming {args.dbfile}..."):
         conn.execute("VACUUM")
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
-
-def format_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
-    def replace_placeholder(match: re.Match[str]) -> str:
-        return f'[bold reverse underline2 italic green]{match.group(0)}[/]'
-
-    if full_results:
-        text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
-
-        for keyword in keywords:
-            text = re.sub(rf'({re.escape(keyword)})', r'[bold reverse underline2 italic green]\1[/]', text)
-    else:
-        lines = text.split('\n')
-        formatted_lines = []
-
-        for line in lines:
-            for keyword in keywords:
-                if keyword.lower() in line.lower():  # Placeholder condition; modify this as needed
-                    formatted_lines.append(line)
-
-        text = '\n'.join(formatted_lines)
-
-        text = format_text_with_keywords(text, keywords, True)
-
-    return text
 
 def main() -> None:
     dbg(f"Arguments: {args}")
