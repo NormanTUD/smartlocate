@@ -1213,6 +1213,29 @@ def show_image_description_stats(conn: sqlite3.Connection) -> None:
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}")
 
+def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT COUNT(*) FROM qrcodes')
+        total_qr = cursor.fetchone()[0]
+
+        if total_qr:
+            console.print("[bold underline cyan]Qr-Codes Statistics[/bold underline cyan]\n")
+
+            table = Table(title="Person Mapping Statistics")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Total images with QR-Codes", str(total_qr))
+
+            console.print(table)
+
+        return total_qr
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {str(e)}")
+
+    return 0
+
 def show_person_mapping_stats(conn: sqlite3.Connection) -> None:
     try:
         cursor = conn.cursor()
@@ -1291,6 +1314,9 @@ def show_statistics(conn: sqlite3.Connection) -> None:
         whole += show_person_mapping_stats(conn)
 
         whole += show_face_recognition_stats(conn)
+
+    if args.qrcodes or do_all:
+        whole += show_qrcodes_stats(conn)
 
     if whole == 0:
         console.print(f"No data indexed yet.")
