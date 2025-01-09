@@ -1586,7 +1586,7 @@ def search(conn: sqlite3.Connection) -> None:
                     table.add_column(f"Nr. {flag.capitalize()} Results", justify="left", style="cyan")
 
         if not row:
-            console.print("[yellow]No results found[/]")
+            console.print(f"[yellow]No results found[/]")
         else:
             table.add_row(*row)
             console.print(table)
