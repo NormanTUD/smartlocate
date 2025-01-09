@@ -1415,28 +1415,15 @@ def search_documents(conn: sqlite3.Connection) -> int:
         ocr_results = cursor.fetchall()
         cursor.close()
 
-    if not args.no_sixel:
-        for row in ocr_results:
-            if not is_ignored_path(row[0]):
-                console.print(f"[italic]File: {row[0]}[/]\n")
-                try:
-                    console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results))
-                except rich.errors.MarkupError as e:
-                    console.print(f"Text:\n{row[1]}\n")
-                print("\n")
-                nr_documents += 1
-    else:
-        table = Table(title="Documents Search Results")
-        table.add_column("File Path", justify="left", style="cyan")
-        table.add_column("Text", justify="center", style="magenta")
-        for row in ocr_results:
-            file_path, extracted_text = row
-            if not is_ignored_path(file_path):
-                table.add_row(file_path, extracted_text)
-                nr_documents += 1
-
-        if len(ocr_results):
-            console.print(table)
+    for row in ocr_results:
+        if not is_ignored_path(row[0]):
+            console.print(f"[italic]File: {row[0]}[/]\n")
+            try:
+                console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results))
+            except rich.errors.MarkupError as e:
+                console.print(f"Text:\n{row[1]}\n")
+            print("\n")
+            nr_documents += 1
 
     return nr_documents
 
