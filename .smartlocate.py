@@ -458,7 +458,9 @@ def ocr_img(img: str) -> Optional[str]:
             return None
 
         if os.path.exists(img):
+            console.print(f"[red]Trying to OCR {img}...[/]")
             result = reader.readtext(img)
+            console.print(f"[red]OCR {img} done.[/]")
 
             return result
 
