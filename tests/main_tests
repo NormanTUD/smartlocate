@@ -36,7 +36,7 @@ function run_and_fail {
 	fi
 }
 
-find_missing_f_code="cat .smartlocate.py | grep 'print'  | grep '\[' | grep -v 'f\"' | grep '\"'"
+find_missing_f_code="cat .smartlocate.py | grep 'print'  | grep '\{' | grep -v 'f\"' | grep '\"'"
 
 nr_of_missing_f_strings=$(eval "$find_missing_f_code" | wc -l)
 
