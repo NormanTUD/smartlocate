@@ -69,7 +69,7 @@ blip_model: Any = None
 reader: Any = None
 
 supported_image_formats: set[str] = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
-allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.pdf']
+allowed_document_extensions: list = ['.doc', '.docx', '.pptx', '.ppt', '.odp', '.odt', '.pdf', '.rtf', '.html']
 
 parser = argparse.ArgumentParser(description="Smart file indexer", formatter_class=RichHelpFormatter)
 
