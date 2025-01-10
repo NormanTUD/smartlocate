@@ -977,8 +977,8 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
         cursor = conn.cursor()
 
         # Tabelle für die Anzeige vorbereiten
-        console.print(f"[bold underline cyan]{title}[/bold underline cyan]\n")
-        table = Table(title=title)
+        console.print(Panel.fit(f"{title}:"))
+        table = Table()
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green")
 
@@ -1019,19 +1019,16 @@ def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: 
         cursor = conn.cursor()
         results = []
 
-        # Führe alle Abfragen aus
         for query in queries:
             cursor_execute(cursor, query)
             results.append(cursor.fetchall())
 
-        # Tabelle anzeigen
-        console.print(f"[bold underline cyan]{title}[/bold underline cyan]\n")
-        table = Table(title=title)
+        console.print(Panel.fit(f"{title}:"))
+        table = Table()
         for metric in metrics:
             table.add_column(metric[0], style="cyan")
             table.add_column("Value", style="green")
 
-        # Füge die Zeilen zur Tabelle hinzu
         for result in results:
             for row in result:
                 table.add_row(row[0], str(row[1]))
@@ -1106,8 +1103,8 @@ def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[s
             results.append(cursor.fetchall())
 
         # Tabelle anzeigen
-        console.print(f"[bold underline cyan]{title}[/bold underline cyan]\n")
-        table = Table(title=title)
+        console.print(Panel.fit(f"{title}:"))
+        table = Table()
         for metric in metrics:
             table.add_column(metric[0], style="cyan")
             table.add_column("Value", style="green")
