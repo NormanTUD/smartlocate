@@ -1423,7 +1423,7 @@ def print_text_with_keywords(text: str, keywords: list[str], full_results: bool)
     highlighter_console = Console(highlighter=SearchHighlighter(), theme=theme)
 
     if full_results:
-            highlighter_console.print(text)
+        highlighter_console.print(text)
     else:
         lines = text.split('\n')
 
