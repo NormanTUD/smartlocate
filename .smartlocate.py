@@ -147,9 +147,9 @@ def print_file_title(file_path, after=None):
     if os.path.exists(file_path):
         size_in_mb = get_file_size_in_mb(file_path)
         if after:
-            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}MB\n{after}"))
+            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}\n{after}"))
         else:
-            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}MB"))
+            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}"))
     else:
         if after:
             console.print(Panel.fit(f"File: {file_path} (not found!)\n{after}"))
