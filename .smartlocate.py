@@ -143,12 +143,18 @@ def conn_execute(conn: sqlite3.Connection, query: str):
     res = conn.execute(query);
     return res;
 
-def print_file_title(file_path):
+def print_file_title(file_path, after=None):
     if os.path.exists(file_path):
         size_in_mb = get_file_size_in_mb(file_path)
-        console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}MB"))
+        if after:
+            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}MB\n{after}"))
+        else:
+            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}MB"))
     else:
-        console.print(Panel.fit(f"File: {file_path} (not found!)"))
+        if after:
+            console.print(Panel.fit(f"File: {file_path} (not found!)\n{after}"))
+        else:
+            console.print(Panel.fit(f"File: {file_path} (not found!)"))
 
 def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
     res = None
@@ -1332,7 +1338,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
             conf = row[2]
             if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
-                    console.print(Panel.fit(f"File: {row[0]} (certainty: {conf:.2f})"))
+                    print_file_title(row[0], f"(certainty: {conf:.2f})"
                     display_sixel(row[0])
                     print("\n")
 
