@@ -139,6 +139,11 @@ def conn_execute(conn: sqlite3.Connection, query: str):
     res = conn.execute(query);
     return res;
 
+def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
+    console.log(f"[bold yellow]DEBUG:[/] {query}")
+    res = cursor.execute(query);
+    return res;
+
 def supports_sixel() -> bool:
     term = os.environ.get("TERM", "").lower()
     if "xterm" in term or "mlterm" in term:
@@ -238,14 +243,12 @@ def get_qr_codes_from_image(file_path: str) -> list[str]:
 def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
 
-    cursor.execute('''SELECT 1 FROM no_qrcodes WHERE file_path = ?''', (image_path,))
+    cursor_execute(cursor, 'SELECT 1 FROM no_qrcodes WHERE file_path = ?', (image_path,))
     if cursor.fetchone():
         cursor.close()
         return True
 
-    cursor.execute('''SELECT 1 FROM qrcodes
-                      JOIN images ON images.id = qrcodes.image_id
-                      WHERE images.file_path = ?''', (image_path,))
+    cursor_execute(cursor, 'SELECT 1 FROM qrcodes JOIN images ON images.id = qrcodes.image_id WHERE images.file_path = ?', (image_path,))
     if cursor.fetchone():
         cursor.close()
         return True
@@ -273,21 +276,18 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
 
     while True:
         try:
-            cursor.execute('''SELECT id FROM images WHERE file_path = ?''', (file_path,))
+            cursor_execute(cursor, 'SELECT id FROM images WHERE file_path = ?', (file_path,))
             image_id = cursor.fetchone()
 
             if not image_id:
-                cursor.execute('''INSERT INTO images (file_path) VALUES (?)''', (file_path,))
+                cursor_execute(cursor, 'INSERT INTO images (file_path) VALUES (?)', (file_path,))
                 conn.commit()
                 image_id = cursor.lastrowid
                 conn.commit()
             else:
                 image_id = image_id[0]
 
-            cursor.execute('''
-                INSERT OR IGNORE INTO qrcodes (image_id, content)
-                VALUES (?, ?)
-            ''', (image_id, content))
+            cursor_execute(cursor, 'INSERT OR IGNORE INTO qrcodes (image_id, content) VALUES (?, ?)', (image_id, content))
             conn.commit()
 
             cursor.close()
@@ -487,11 +487,7 @@ def display_sixel(image_path: str) -> None:
 
 def load_existing_images(conn: sqlite3.Connection) -> dict[Any, Any]:
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT file_path, md5 FROM images
-        UNION ALL
-        SELECT file_path, md5 FROM ocr_results;
-    ''')
+    cursor_execute(cursor, 'SELECT file_path, md5 FROM images UNION ALL SELECT file_path, md5 FROM ocr_results')
     rows = cursor.fetchall()
     cursor.close()
     return {row[0]: row[1] for row in rows}
@@ -980,8 +976,7 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
         # Führe jede Abfrage einzeln aus
         results = []
         for query in queries:
-            dbg(query)
-            cursor.execute(query)
+            cursor_execute(cursor, query)
             result = cursor.fetchone()  # Hole das Ergebnis der Abfrage
             results.append(result[0] if result else 0)  # Wenn ein Ergebnis vorhanden ist, füge es hinzu
 
@@ -999,9 +994,9 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
 
 def show_general_stats(conn: sqlite3.Connection) -> int:
     queries = [
-        '''SELECT COUNT(*) FROM images;''',
-        '''SELECT COUNT(*) FROM detections;''',
-        '''SELECT COUNT(*) FROM documents;'''
+        'SELECT COUNT(*) FROM images',
+        'SELECT COUNT(*) FROM detections',
+        'SELECT COUNT(*) FROM documents'
     ]
     metrics = [
         ("Total Images", "images"),
@@ -1049,34 +1044,33 @@ def show_yolo_stats(conn: sqlite3.Connection) -> int:
     metrics = [("Label", "Count")]
 
     try:
-        # Hier rufen wir eine angepasste version der show_stats Funktion auf
         return show_yolo_custom_stats(conn, [query], "YOLO Detection Statistics", metrics)
     except Exception as e:
         console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
         return 0
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> int:
-    query = '''SELECT COUNT(*) FROM empty_images'''
+    query = 'SELECT COUNT(*) FROM empty_images'
     metrics = [("Total Empty Images", "empty_images")]
     return show_stats(conn, [query], "Empty Images Statistics", metrics)
 
 def show_documents_stats(conn: sqlite3.Connection) -> int:
-    query = '''SELECT COUNT(*) FROM documents'''
+    query = 'SELECT COUNT(*) FROM documents'
     metrics = [("Total Documents Results", "documents")]
     return show_stats(conn, [query], "Documents Results Statistics", metrics)
 
 def show_ocr_stats(conn: sqlite3.Connection) -> int:
-    query = '''SELECT COUNT(*) FROM ocr_results'''
+    query = 'SELECT COUNT(*) FROM ocr_results'
     metrics = [("Total OCR Results", "ocr_results")]
     return show_stats(conn, [query], "OCR Results Statistics", metrics)
 
 def show_image_description_stats(conn: sqlite3.Connection) -> int:
-    query = '''SELECT COUNT(*) FROM image_description'''
+    query = 'SELECT COUNT(*) FROM image_description'
     metrics = [("Total Image Descriptions", "image_description")]
     return show_stats(conn, [query], "Image Description Statistics", metrics)
 
 def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
-    query = '''SELECT COUNT(*) FROM qrcodes'''
+    query = 'SELECT COUNT(*) FROM qrcodes'
     metrics = [("Total images with QR-Codes", "qrcodes")]
     return show_stats(conn, [query], "QR-Codes Statistics", metrics)
 
@@ -1447,7 +1441,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
 
         # Build the SQL query dynamically
         sql_query, values = build_sql_query_documents(words)
-        cursor.execute(sql_query, values)
+        cursor_execute(cursor, sql_query, values)
         ocr_results = cursor.fetchall()
         cursor.close()
 
@@ -1475,7 +1469,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
 
         # Build the SQL query dynamically
         sql_query, values = build_sql_query_ocr(words)
-        cursor.execute(sql_query, values)
+        cursor_execute(cursor, sql_query, values)
         ocr_results = cursor.fetchall()
         cursor.close()
 
@@ -1545,7 +1539,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
     person_results = None
 
     cursor = conn.cursor()
-    cursor.execute('''SELECT id FROM person WHERE name LIKE ?''', (f"%{args.search}%",))
+    cursor_execute(cursor, 'SELECT id FROM person WHERE name LIKE ?', (f"%{args.search}%",))
     person_results = cursor.fetchall()
     cursor.close()
 
@@ -1792,7 +1786,7 @@ def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, sea
 
         # Execute the query
         cursor = conn.cursor()
-        cursor.execute(query, (search_by,))
+        cursor_execute(cursor, query, (search_by,))
         result = cursor.fetchone()
 
         # Return the value if found, otherwise None
