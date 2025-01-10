@@ -621,7 +621,7 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
         cursor.close()
         return True  # Bild befindet sich in der no_faces-Tabelle
 
-    cursor.execute('''SELECT 1 FROM image_person_mapping
+    cursor_execute(cursor, '''SELECT 1 FROM image_person_mapping
                       JOIN images ON images.id = image_person_mapping.image_id
                       WHERE images.file_path = ?''', (image_path,))
     if cursor.fetchone():
@@ -883,12 +883,12 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
             stats = os.stat(file_path)
             last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
 
-            cursor.execute('''SELECT COUNT(*) FROM images
-                               JOIN detections ON images.id = detections.image_id
-                               WHERE images.file_path = ?
-                               AND detections.model = ?
-                               AND images.last_modified_at = ?''',
-                           (file_path, args.yolo_model, last_modified_at))
+            cursor_execute(cursor, '''SELECT COUNT(*) FROM images
+                   JOIN detections ON images.id = detections.image_id
+                   WHERE images.file_path = ?
+                   AND detections.model = ?
+                   AND images.last_modified_at = ?''',
+               (file_path, args.yolo_model, last_modified_at))
 
             res = cursor.fetchone()[0]
             cursor.close()
@@ -1307,7 +1307,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
 
     with console.status("[bold green]Searching through YOLO-results...") as status:
         cursor = conn.cursor()
-        cursor.execute('''SELECT images.file_path, detections.label, detections.confidence
+        cursor_execute(cursor, '''SELECT images.file_path, detections.label, detections.confidence
                           FROM images JOIN detections ON images.id = detections.image_id
                           WHERE detections.label LIKE ? GROUP BY images.file_path''', (f"%{args.search}%",))
         yolo_results = cursor.fetchall()
