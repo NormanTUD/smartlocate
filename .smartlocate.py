@@ -151,7 +151,7 @@ def supports_sixel() -> bool:
 console = Console()
 
 if not supports_sixel() and not args.no_sixel:
-    console.print(f"[red]Cannot use sixel. Will set --no_sixel to true.[/]")
+    console.print("[red]Cannot use sixel. Will set --no_sixel to true.[/]")
 
     args.no_sixel = True
 
@@ -206,7 +206,7 @@ except ModuleNotFoundError as e:
     console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
 except KeyboardInterrupt:
-    console.print(f"\n[red]You pressed CTRL+C[/]")
+    console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
 def get_qr_codes_from_image(file_path: str) -> list[str]:
@@ -290,7 +290,7 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
 
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -363,7 +363,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                         else:
                             console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
                     except EOFError:
-                        console.print(f"[red]You pressed CTRL+d[/]")
+                        console.print("[red]You pressed CTRL+d[/]")
                         sys.exit(0)
                 nr_new_faces = nr_new_faces + 1
             c = c + 1
@@ -425,7 +425,7 @@ def ocr_img(img: str) -> Optional[str]:
             reader = easyocr.Reader(args.lang_ocr)
 
         if reader is None:
-            console.print(f"[red]reader was not defined. Will not OCR.[/]")
+            console.print("[red]reader was not defined. Will not OCR.[/]")
             return None
 
         if os.path.exists(img):
@@ -551,7 +551,7 @@ def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
             return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -599,7 +599,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
 
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):  # Wenn die Datenbank gesperrt ist, erneut versuchen
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -674,7 +674,7 @@ def execute_queries(conn: sqlite3.Connection, queries: list[str], status: Any) -
         status.update(status_msg)
         dbg(f"Executing query: {query}")
         cursor.execute(query)
-        status.update(f"[bold green]Executed query.")
+        status.update("[bold green]Executed query.")
 
     cursor.close()
     conn.commit()
@@ -840,7 +840,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
             break
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 raise e
@@ -852,7 +852,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
             break
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 raise e
@@ -894,7 +894,7 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
             return res > 0
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 console.print(f"\n[red]Error: {e}[/]")
@@ -934,7 +934,7 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
         predictions = results.pred[0]
         detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= args.yolo_min_confidence_for_saving]
         return detections
-    except (OSError, RuntimeError):
+    except RuntimeError:
         return None
     except ValueError as e:
         console.print(f"[red]Value-Error while analyzing image {image_path}: {e}[/]")
@@ -944,6 +944,8 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
         return None
     except PIL.UnidentifiedImageError as e:
         console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
+        return None
+    except OSError:
         return None
     except Exception as e:
         console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
@@ -1243,7 +1245,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
             return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
-                console.print(f"[yellow]Database is locked, retrying...[/]")
+                console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
                 cursor.close()
@@ -1615,7 +1617,7 @@ def search(conn: sqlite3.Connection) -> None:
                     table.add_column(f"Nr. {flag.capitalize()} Results", justify="left", style="cyan")
 
         if not row:
-            console.print(f"[yellow]No results found[/]")
+            console.print("[yellow]No results found[/]")
         else:
             table.add_row(*row)
             console.print(table)
@@ -1757,14 +1759,14 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
                 if 1 <= choice_int <= len(options):
                     return options[choice_int - 1]
 
-                console.print(f"[red]Invalid option.[/]")
+                console.print("[red]Invalid option.[/]")
             else:
                 if choice.strip() == "quit" or choice.strip() == "q":
                     sys.exit(0)
                 else:
-                    console.print(f"[red]Invalid option.[/]")
+                    console.print("[red]Invalid option.[/]")
         except ValueError:
-            console.print(f"[red]Invalid option. Please enter number.[/]")
+            console.print("[red]Invalid option. Please enter number.[/]")
         except EOFError:
             sys.exit(0)
 
@@ -2053,7 +2055,7 @@ def main() -> None:
                         console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
                     c = c + 1
             else:
-                console.print(f"[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+                console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
         if args.describe or args.yolo or args.ocr or args.qrcodes or do_all:
             with Progress(
@@ -2079,7 +2081,7 @@ def main() -> None:
                                 global yolo_error_already_shown
 
                                 if not yolo_error_already_shown:
-                                    console.print(f"[red]--yolo was set, but model could not be loaded[/]")
+                                    console.print("[red]--yolo was set, but model could not be loaded[/]")
 
                                     yolo_error_already_shown = True
                         if args.ocr or do_all:
@@ -2110,5 +2112,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        console.print(f"\n[red]You pressed CTRL+C[/]")
+        console.print("\n[red]You pressed CTRL+C[/]")
         sys.exit(0)
