@@ -143,18 +143,18 @@ def conn_execute(conn: sqlite3.Connection, query: str):
     res = conn.execute(query);
     return res;
 
-def print_file_title(file_path, after=None):
+def print_file_title(_title: str, file_path, after=None):
     if os.path.exists(file_path):
         size_in_mb = get_file_size_in_mb(file_path)
         if after:
-            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}\n{after}"))
+            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}\n{after}", title=_title))
         else:
-            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}"))
+            console.print(Panel.fit(f"File: {file_path}\nSize: {size_in_mb}", title=_title))
     else:
         if after:
-            console.print(Panel.fit(f"File: {file_path} (not found!)\n{after}"))
+            console.print(Panel.fit(f"File: {file_path} (not found!)\n{after}", title=_title))
         else:
-            console.print(Panel.fit(f"File: {file_path} (not found!)"))
+            console.print(Panel.fit(f"File: {file_path} (not found!)", title=_title))
 
 def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
     res = None
@@ -374,7 +374,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                 new_ids.append(matched_id)
             else:
                 if c == 0:
-                    print_file_title(image_path)
+                    print_file_title("Face-Detection", image_path)
                     display_sixel(image_path)
 
                 if args.dont_ask_new_faces:
@@ -1340,7 +1340,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
             conf = row[2]
             if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
-                    print_file_title(row[0], f"Certainty: {conf:.2f}")
+                    print_file_title("YOLO", row[0], f"Certainty: {conf:.2f}")
                     display_sixel(row[0])
                     print("\n")
 
@@ -1393,7 +1393,7 @@ def search_description(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                print_file_title(row[0])
+                print_file_title("Description", row[0])
                 print(f"Description:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
@@ -1473,7 +1473,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
             try:
                 print_text_with_keywords(row[0], f"Text:\n{row[1]}\n", words, args.full_results)
             except rich.errors.MarkupError as e:
-                print_file_title(row[0])
+                print_file_title("Document", row[0])
                 console.print(f"Text:\n{row[1]}\n")
             print("\n")
             nr_documents += 1
@@ -1499,7 +1499,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                print_file_title(row[0])
+                print_file_title("OCR", row[0])
                 print_text_with_keywords(row[0], f"Extracted Text:\n{row[1]}\n", words, args.full_results)
                 display_sixel(row[0])
                 print("\n")
@@ -1538,7 +1538,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in qr_code_imgs:
-            print_file_title(row[0])
+            print_file_title("Qr-Code", row[0])
             print("\nQr-Code content:")
             print(row[1])
             print("\n")
@@ -1588,7 +1588,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in person_images:
-            print_file_title(row[0])
+            print_file_title("Face Recognition", row[0])
             display_sixel(row[0])  # Falls Sixel angezeigt werden soll
             print("\n")
             nr_images += 1
