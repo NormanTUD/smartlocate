@@ -140,11 +140,12 @@ def conn_execute(conn: sqlite3.Connection, query: str):
     return res;
 
 def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
-    console.log(f"[bold yellow]DEBUG:[/] {query}")
     res = None
     if entries is not None:
+        console.log(f"[bold yellow]DEBUG:[/]\n{query}\n{entries}\n")
         res = cursor.execute(query, entries);
     else:
+        console.log(f"[bold yellow]DEBUG:[/] {query}")
         res = cursor.execute(query);
     return res;
 
