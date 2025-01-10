@@ -142,10 +142,12 @@ def conn_execute(conn: sqlite3.Connection, query: str):
 def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
     res = None
     if entries is not None:
-        console.log(f"[bold yellow]DEBUG:[/]\n{query}\n{entries}\n")
+        if args.debug:
+            console.log(f"[bold yellow]DEBUG:[/]\n{query}\n{entries}\n")
         res = cursor.execute(query, entries);
     else:
-        console.log(f"[bold yellow]DEBUG:[/] {query}")
+        if args.debug:
+            console.log(f"[bold yellow]DEBUG:[/] {query}")
         res = cursor.execute(query);
     return res;
 
@@ -635,7 +637,7 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
 def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optional[int]:
     try:
         # SQL query to retrieve the image ID
-        query = '''SELECT id FROM images WHERE file_path = ?'''
+        query = 'SELECT id FROM images WHERE file_path = ?'
 
         # Execute the query
         cursor = conn.cursor()
@@ -785,7 +787,7 @@ def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pan
     return True
 
 def insert_document(conn: sqlite3.Connection, file_path: str, document: str) -> None:
-    execute_with_retry(conn, '''INSERT INTO documents (file_path, content) VALUES (?, ?);''', (file_path, document, ))
+    execute_with_retry(conn, 'INSERT INTO documents (file_path, content) VALUES (?, ?);', (file_path, document, ))
 
 def get_extension (path: str) -> str:
     file_extension = path.split('.')[-1] if '.' in path else ''
@@ -868,7 +870,7 @@ def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, s
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
 
-    execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
+    execute_with_retry(conn, 'INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
     cursor_execute(cursor, 'SELECT id FROM images WHERE file_path = ?', (file_path,))
     image_id = cursor.fetchone()[0]
@@ -910,7 +912,7 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
 def add_detections(conn: sqlite3.Connection, image_id: int, model_name: str, detections: list) -> None:
     dbg(f"add_detections(conn, {image_id}, detections)")
     for label, confidence in detections:
-        execute_with_retry(conn, '''INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)''', (image_id, model_name, label, confidence))
+        execute_with_retry(conn, 'INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)', (image_id, model_name, label, confidence))
 
 def is_ignored_path(path: str) -> bool:
     if args.exclude:
@@ -1166,7 +1168,7 @@ def show_statistics(conn: sqlite3.Connection) -> None:
 def delete_from_table(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str, condition_column: str = "file_path") -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
-    query = f'''DELETE FROM {table_name} WHERE {condition_column} = ?'''
+    query = f'DELETE FROM {table_name} WHERE {condition_column} = ?'
     dbg(query)
     execute_with_retry(conn, query, (file_path,))
     if delete_status:
@@ -1201,7 +1203,7 @@ def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name:
 
     if delete_status:
         delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
-    query = f'''DELETE FROM {table_name} WHERE {foreign_key_column} = ?'''
+    query = f'DELETE FROM {table_name} WHERE {foreign_key_column} = ?'
     dbg(query)
     execute_with_retry(conn, query, (image_id,))
     if delete_status:
