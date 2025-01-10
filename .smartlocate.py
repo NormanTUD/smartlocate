@@ -21,12 +21,15 @@ try:
     from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
     from rich.table import Table
     from rich.console import Console
+    from rich_argparse import RichHelpFormatter
+    from rich.highlighter import RegexHighlighter
+    from rich.theme import Theme
+
     import PIL
     from PIL import Image
     from sixel import converter
     import cv2
 
-    from rich_argparse import RichHelpFormatter
     import rich.errors
     from pathlib import Path
 
@@ -1409,29 +1412,25 @@ def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
 
-def format_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
-    def replace_placeholder(match: re.Match[str]) -> str:
-        return f'[bold reverse underline2 italic green]{match.group(0)}[/]'
+def print_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
+    keyword_pattern = "|".join(re.escape(keyword) for keyword in keywords)  # Escape, um Sonderzeichen in Keywords zu behandeln
+
+    class SearchHighlighter(RegexHighlighter):
+        base_style = "search_highlighter."
+        highlights = [rf"(?P<matches>{keyword_pattern})"]
+
+    theme = Theme({"search_highlighter.matches": "bold reverse underline2 italic green"})
+    highlighter_console = Console(highlighter=SearchHighlighter(), theme=theme)
 
     if full_results:
-        text = re.sub(r'\[.*?\](.*?)\[/.*?\]', replace_placeholder, text)
-
-        for keyword in keywords:
-            text = re.sub(rf'({re.escape(keyword)})', r'[bold reverse underline2 italic green]\1[/]', text)
+            highlighter_console.print(text)
     else:
         lines = text.split('\n')
-        formatted_lines = []
 
         for line in lines:
             for keyword in keywords:
-                if keyword.lower() in line.lower():  # Placeholder condition; modify this as needed
-                    formatted_lines.append(line)
-
-        text = '\n'.join(formatted_lines)
-
-        text = format_text_with_keywords(text, keywords, True)
-
-    return text
+                if keyword.lower() in line.lower():
+                    highlighter_console.print(line)
 
 def search_documents(conn: sqlite3.Connection) -> int:
     ocr_results = None
@@ -1453,7 +1452,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
         if not is_ignored_path(row[0]):
             console.print(f"[italic]File: {row[0]}[/]\n")
             try:
-                console.print(format_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results))
+                print_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results)
             except rich.errors.MarkupError as e:
                 console.print(f"Text:\n{row[1]}\n")
             print("\n")
@@ -1481,7 +1480,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(f"[italic]File: {row[0]}[/]\n")
-                console.print(format_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words, args.full_results))
+                print_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words, args.full_results)
                 display_sixel(row[0])
                 print("\n")
                 nr_ocr += 1
