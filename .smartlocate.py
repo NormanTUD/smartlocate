@@ -134,6 +134,11 @@ if not os.path.exists(args.dir):
 
 yolo_error_already_shown: bool = False
 
+def conn_execute(conn: sqlite3.Connection, query: str):
+    dbg(query)
+    res = conn.execute(query);
+    return res;
+
 def supports_sixel() -> bool:
     term = os.environ.get("TERM", "").lower()
     if "xterm" in term or "mlterm" in term:
@@ -1975,7 +1980,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
 def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
     with console.status(f"[yellow]Vacuuming {args.dbfile}..."):
-        conn.execute("VACUUM")
+        conn_execute(conn, "VACUUM")
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
 def main() -> None:
