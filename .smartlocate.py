@@ -141,7 +141,11 @@ def conn_execute(conn: sqlite3.Connection, query: str):
 
 def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
     console.log(f"[bold yellow]DEBUG:[/] {query}")
-    res = cursor.execute(query);
+    res = None
+    if entries is not None:
+        res = cursor.execute(query, entries);
+    else:
+        res = cursor.execute(query);
     return res;
 
 def supports_sixel() -> bool:
@@ -497,8 +501,8 @@ def is_file_in_db(conn: sqlite3.Connection, file_path: str, table_name: str, exi
         return True
 
     cursor = conn.cursor()
-    query = f'''SELECT COUNT(*) FROM {table_name} WHERE file_path = ?'''
-    cursor.execute(query, (file_path,))
+    query = f'SELECT COUNT(*) FROM {table_name} WHERE file_path = ?'
+    cursor_execute(cursor, query, (file_path,))
     res = cursor.fetchone()[0]
     cursor.close()
 
@@ -515,7 +519,7 @@ def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files:
 
 def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
     cursor = conn.cursor()
-    cursor.execute('''SELECT label FROM detections WHERE label = ? LIMIT 1''', (label,))
+    cursor_execute(cursor, 'SELECT label FROM detections WHERE label = ? LIMIT 1', (label,))
     res = cursor.fetchone()  # Gibt entweder eine Zeile oder None zurück
     cursor.close()
 
@@ -536,16 +540,16 @@ def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
 
     while True:
         try:
-            cursor.execute('''SELECT md5 FROM empty_images WHERE file_path = ?''', (file_path,))
+            cursor_execute(cursor, 'SELECT md5 FROM empty_images WHERE file_path = ?', (file_path,))
             existing_hash = cursor.fetchone()
 
             if existing_hash:
                 if existing_hash[0] != md5_hash:
-                    cursor.execute('''UPDATE empty_images SET md5 = ? WHERE file_path = ?''', (md5_hash, file_path))
+                    cursor_execute(cursor, 'UPDATE empty_images SET md5 = ? WHERE file_path = ?', (md5_hash, file_path))
                     conn.commit()
                     dbg(f"Updated MD5 hash for {file_path}")
             else:
-                cursor.execute('''INSERT INTO empty_images (file_path, md5) VALUES (?, ?)''', (file_path, md5_hash))
+                cursor_execute(cursor, 'INSERT INTO empty_images (file_path, md5) VALUES (?, ?)', (file_path, md5_hash))
                 conn.commit()
                 dbg(f"Added empty image: {file_path}")
             cursor.close()
@@ -568,30 +572,27 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
     while True:
         try:
             # 1. Image ID aus der images-Tabelle holen oder einfügen
-            cursor.execute('''SELECT id FROM images WHERE file_path = ?''', (file_path,))
+            cursor_execute(cursor, 'SELECT id FROM images WHERE file_path = ?', (file_path,))
             image_id = cursor.fetchone()
 
             if not image_id:
-                cursor.execute('''INSERT INTO images (file_path) VALUES (?)''', (file_path,))
+                cursor_execute(cursor, 'INSERT INTO images (file_path) VALUES (?)', (file_path,))
                 conn.commit()
                 image_id = cursor.lastrowid
             else:
                 image_id = image_id[0]
 
-            cursor.execute('''SELECT id FROM person WHERE name = ?''', (person_name,))
+            cursor_execute(cursor, 'SELECT id FROM person WHERE name = ?', (person_name,))
             person_id = cursor.fetchone()
 
             if not person_id:
-                cursor.execute('''INSERT INTO person (name) VALUES (?)''', (person_name,))
+                cursor_execute(cursor,  'INSERT INTO person (name) VALUES (?)', (person_name,))
                 conn.commit()
                 person_id = cursor.lastrowid
             else:
                 person_id = person_id[0]
 
-            cursor.execute('''
-                INSERT OR IGNORE INTO image_person_mapping (image_id, person_id)
-                VALUES (?, ?)
-            ''', (image_id, person_id))
+            cursor_execute(cursor, 'INSERT OR IGNORE INTO image_person_mapping (image_id, person_id) VALUES (?, ?)', (image_id, person_id))
             conn.commit()
 
             dbg(f"Mapped image '{file_path}' (ID: {image_id}) to person '{person_name}' (ID: {person_id})")
@@ -615,7 +616,7 @@ def insert_into_no_faces(conn: sqlite3.Connection, file_path: str) -> None:
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
 
-    cursor.execute('''SELECT 1 FROM no_faces WHERE file_path = ?''', (image_path,))
+    cursor_execute(cursor, 'SELECT 1 FROM no_faces WHERE file_path = ?', (image_path,))
     if cursor.fetchone():
         cursor.close()
         return True  # Bild befindet sich in der no_faces-Tabelle
@@ -637,7 +638,7 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
 
         # Execute the query
         cursor = conn.cursor()
-        cursor.execute(query, (file_path,))
+        cursor_execute(cursor, query, (file_path,))
         result = cursor.fetchone()
 
         # Check if a result was found
@@ -674,7 +675,7 @@ def execute_queries(conn: sqlite3.Connection, queries: list[str], status: Any) -
         dbg(status_msg)
         status.update(status_msg)
         dbg(f"Executing query: {query}")
-        cursor.execute(query)
+        cursor_execute(cursor, query)
         status.update("[bold green]Executed query.")
 
     cursor.close()
@@ -724,7 +725,7 @@ def init_database(db_path: str) -> sqlite3.Connection:
 def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor = conn.cursor()
 
-    cursor.execute('''SELECT 1 FROM documents WHERE file_path = ?''', (file_path,))
+    cursor_execute(cursor, 'SELECT 1 FROM documents WHERE file_path = ?', (file_path,))
     if cursor.fetchone():
         cursor.close()
         return True
@@ -837,7 +838,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
 
     while True:
         try:
-            cursor.execute(query, params)
+            cursor_execute(cursor, query, params)
             break
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
@@ -868,7 +869,7 @@ def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, s
 
     execute_with_retry(conn, '''INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)''', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
-    cursor.execute('SELECT id FROM images WHERE file_path = ?', (file_path,))
+    cursor_execute(cursor, 'SELECT id FROM images WHERE file_path = ?', (file_path,))
     image_id = cursor.fetchone()[0]
 
     return image_id, md5_hash
@@ -1012,7 +1013,7 @@ def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: 
 
         # Führe alle Abfragen aus
         for query in queries:
-            cursor.execute(query)
+            cursor_execute(cursor, query)
             results.append(cursor.fetchall())
 
         # Tabelle anzeigen
@@ -1077,8 +1078,8 @@ def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
 def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
     # Jede Abfrage als separate SQL-String in einer Liste
     queries = [
-        '''SELECT COUNT(*) FROM person;''',
-        '''SELECT COUNT(*) FROM image_person_mapping'''
+        'SELECT COUNT(*) FROM person',
+        'SELECT COUNT(*) FROM image_person_mapping'
     ]
     metrics = [
         ("Total Persons", "person"),
@@ -1093,7 +1094,7 @@ def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[s
 
         # Führe alle Abfragen aus
         for query in queries:
-            cursor.execute(query)
+            cursor_execute(cursor, query)
             results.append(cursor.fetchall())
 
         # Tabelle anzeigen
@@ -1259,7 +1260,7 @@ def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path:
             raise ValueError(f"Invalid table name: {table_name}")
 
         cursor = conn.cursor()
-        cursor.execute(query, (file_path,))
+        cursor_execute(cursor, query, (file_path,))
         count = cursor.fetchone()[0]
 
         return count
@@ -1269,7 +1270,7 @@ def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path:
 
 def get_existing_documents(conn: sqlite3.Connection) -> set[Any]:
     cursor = conn.cursor()
-    cursor.execute('SELECT file_path FROM documents')
+    cursor_execute(cursor, 'SELECT file_path FROM documents')
     rows = cursor.fetchall()
     cursor.close()
     return {row[0] for row in rows}
@@ -1365,7 +1366,7 @@ def search_description(conn: sqlite3.Connection) -> int:
         cursor = conn.cursor()
         words = clean_search_query(args.search)  # Clean and split the search string
         sql_query, values = build_sql_query_description(words)  # Build the SQL query dynamically
-        cursor.execute(sql_query, values)
+        cursor_execute(cursor, sql_query, values)
         ocr_results = cursor.fetchall()
         cursor.close()
 
@@ -1507,7 +1508,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
             JOIN qrcodes ON images.id = qrcodes.image_id
             WHERE content like ?
         '''
-        cursor.execute(query, (f"%{args.search}%",))
+        cursor_execute(cursor, query, (f"%{args.search}%",))
         qr_code_imgs = cursor.fetchall()
         cursor.close()
 
@@ -1557,7 +1558,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
             JOIN image_person_mapping ON images.id = image_person_mapping.image_id
             WHERE image_person_mapping.person_id IN ({placeholders})
         '''
-        cursor.execute(query, person_ids)
+        cursor_execute(cursor, query, person_ids)
         person_images = cursor.fetchall()
         cursor.close()
 
