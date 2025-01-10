@@ -1413,7 +1413,7 @@ def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     return sql_query, values
 
 def print_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
-    keyword_pattern = "|".join(re.escape(keyword) for keyword in keywords)  # Escape, um Sonderzeichen in Keywords zu behandeln
+    keyword_pattern = "|".join(re.escape(keyword) for keyword in keywords)
 
     class SearchHighlighter(RegexHighlighter):
         base_style = "search_highlighter."
