@@ -2059,7 +2059,7 @@ def main() -> None:
 
                 c: int = 1
                 for image_path in face_recognition_images:
-                    console.print(f"Face recognition: {c}/{len(face_recognition_images)}")
+                    console.print(f"Face recognition {image_path}: {c}/{len(face_recognition_images)}")
                     try:
                         file_size = os.path.getsize(image_path)
 
