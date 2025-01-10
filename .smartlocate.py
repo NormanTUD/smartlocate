@@ -1425,11 +1425,11 @@ def print_text_with_keywords(file_path: str, text: str, keywords: list[str], ful
     highlighter_console = Console(highlighter=SearchHighlighter(), theme=theme)
 
     if full_results:
-        highlighter_console.print(Panel.fit(f"File: {file_path}\n\n{text}"))
+        highlighter_console.print(Panel.fit(text, title=file_path))
     else:
         lines = text.split('\n')
 
-        matching_lines = [f"File {file_path}:\n\n"]
+        matching_lines = []
 
         for line in lines:
             for keyword in keywords:
@@ -1438,7 +1438,7 @@ def print_text_with_keywords(file_path: str, text: str, keywords: list[str], ful
 
         joined_matching_lines = "\n".join(matching_lines)
     
-        highlighter_console.print(Panel.fit(joined_matching_lines))
+        highlighter_console.print(Panel.fit(joined_matching_lines, title=file_path))
 
 def search_documents(conn: sqlite3.Connection) -> int:
     ocr_results = None
