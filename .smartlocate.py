@@ -362,7 +362,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
             else:
                 if c == 0:
                     console.print(f"[yellow]{image_path}:[/]")
-                    console.print(Panel(f"File: {image_path}"))
+                    console.print(Panel.fit(f"File: {image_path}"))
                     display_sixel(image_path)
 
                 if args.dont_ask_new_faces:
@@ -1328,7 +1328,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
             conf = row[2]
             if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
-                    console.print(Panel(f"File: {row[0]} (certainty: {conf:.2f})"))
+                    console.print(Panel.fit(f"File: {row[0]} (certainty: {conf:.2f})"))
                     display_sixel(row[0])
                     print("\n")
 
@@ -1381,7 +1381,7 @@ def search_description(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(Panel(f"File: {row[0]}"))
+                console.print(Panel.fit(f"File: {row[0]}"))
                 print(f"Description:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
@@ -1452,7 +1452,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
 
     for row in ocr_results:
         if not is_ignored_path(row[0]):
-            console.print(Panel(f"File: {row[0]}"))
+            console.print(Panel.fit(f"File: {row[0]}"))
             try:
                 print_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results)
             except rich.errors.MarkupError as e:
@@ -1481,7 +1481,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(Panel(f"File: {row[0]}"))
+                console.print(Panel.fit(f"File: {row[0]}"))
                 print_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words, args.full_results)
                 display_sixel(row[0])
                 print("\n")
@@ -1520,7 +1520,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in qr_code_imgs:
-            console.print(Panel(f"File: {row[0]}"))
+            console.print(Panel.fit(f"File: {row[0]}"))
             print("\nQr-Code content:")
             print(row[1])
             print("\n")
@@ -1570,7 +1570,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in person_images:
-            console.print(Panel(f"File: {row[0]}"))
+            console.print(Panel.fit(f"File: {row[0]}"))
             display_sixel(row[0])  # Falls Sixel angezeigt werden soll
             print("\n")
             nr_images += 1
