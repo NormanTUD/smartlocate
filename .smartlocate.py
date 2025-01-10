@@ -1414,7 +1414,7 @@ def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
 
-def print_text_with_keywords(text: str, keywords: list[str], full_results: bool) -> str:
+def print_text_with_keywords(file_path: str, text: str, keywords: list[str], full_results: bool) -> str:
     keyword_pattern = "|".join(re.escape(keyword) for keyword in keywords)
 
     class SearchHighlighter(RegexHighlighter):
@@ -1425,14 +1425,20 @@ def print_text_with_keywords(text: str, keywords: list[str], full_results: bool)
     highlighter_console = Console(highlighter=SearchHighlighter(), theme=theme)
 
     if full_results:
-        highlighter_console.print(text)
+        highlighter_console.print(Panel.fit(f"File: {file_path}\n\n{text}"))
     else:
         lines = text.split('\n')
+
+        matching_lines = [f"File {file_path}:\n\n"]
 
         for line in lines:
             for keyword in keywords:
                 if keyword.lower() in line.lower():
-                    highlighter_console.print(line)
+                    matching_lines.append(line)
+
+        joined_matching_lines = "\n".join(matching_lines)
+    
+        highlighter_console.print(Panel.fit(joined_matching_lines))
 
 def search_documents(conn: sqlite3.Connection) -> int:
     ocr_results = None
@@ -1452,10 +1458,10 @@ def search_documents(conn: sqlite3.Connection) -> int:
 
     for row in ocr_results:
         if not is_ignored_path(row[0]):
-            console.print(Panel.fit(f"File: {row[0]}"))
             try:
-                print_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results)
+                print_text_with_keywords(row[0], f"Text:\n{row[1]}\n", words, args.full_results)
             except rich.errors.MarkupError as e:
+                console.print(Panel.fit(f"File: {row[0]}"))
                 console.print(f"Text:\n{row[1]}\n")
             print("\n")
             nr_documents += 1
@@ -1482,7 +1488,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
                 console.print(Panel.fit(f"File: {row[0]}"))
-                print_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words, args.full_results)
+                print_text_with_keywords(row[0], f"Extracted Text:\n{row[1]}\n", words, args.full_results)
                 display_sixel(row[0])
                 print("\n")
                 nr_ocr += 1
