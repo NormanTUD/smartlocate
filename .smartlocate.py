@@ -2060,21 +2060,24 @@ def main() -> None:
                 c: int = 1
                 for image_path in face_recognition_images:
                     console.print(f"Face recognition: {c}/{len(face_recognition_images)}")
-                    file_size = os.path.getsize(image_path)
+                    try:
+                        file_size = os.path.getsize(image_path)
 
-                    if file_size < args.max_size * 1024 * 1024:
-                        recognized_faces = recognize_persons_in_image(conn, image_path)
+                        if file_size < args.max_size * 1024 * 1024:
+                            recognized_faces = recognize_persons_in_image(conn, image_path)
 
-                        if recognized_faces is None:
-                            console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
+                            if recognized_faces is None:
+                                console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
+                            else:
+                                new_ids, manually_entered_name = recognized_faces
+
+                                if len(new_ids) and not manually_entered_name:
+                                    console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                                    display_sixel(image_path)
                         else:
-                            new_ids, manually_entered_name = recognized_faces
-
-                            if len(new_ids) and not manually_entered_name:
-                                console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                                display_sixel(image_path)
-                    else:
-                        console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
+                            console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
+                    except FileNotFoundError:
+                        console.print(f"[red]The file {image_path} was not found[/]")
                     c = c + 1
             else:
                 console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
