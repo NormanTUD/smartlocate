@@ -362,6 +362,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
             else:
                 if c == 0:
                     console.print(f"[yellow]{image_path}:[/]")
+                    console.print(Panel(f"File: {image_path}"))
                     display_sixel(image_path)
 
                 if args.dont_ask_new_faces:
@@ -1327,7 +1328,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
             conf = row[2]
             if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
-                    print(f"{row[0]} (certainty: {conf:.2f})")
+                    console.print(Panel(f"File: {row[0]} (certainty: {conf:.2f})"))
                     display_sixel(row[0])
                     print("\n")
 
@@ -1519,7 +1520,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in qr_code_imgs:
-            console.print(f"[bold underline cyan]{row[0]}[/bold underline cyan]\n")
+            console.print(Panel(f"File: {row[0]}"))
             print("\nQr-Code content:")
             print(row[1])
             print("\n")
@@ -1569,7 +1570,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in person_images:
-            print(row[0])
+            console.print(Panel(f"File: {row[0]}"))
             display_sixel(row[0])  # Falls Sixel angezeigt werden soll
             print("\n")
             nr_images += 1
