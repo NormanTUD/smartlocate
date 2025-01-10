@@ -1338,7 +1338,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
             conf = row[2]
             if conf >= args.yolo_threshold:
                 if not is_ignored_path(row[0]):
-                    print_file_title(row[0], f"(certainty: {conf:.2f})"
+                    print_file_title(row[0], f"(certainty: {conf:.2f})")
                     display_sixel(row[0])
                     print("\n")
 
