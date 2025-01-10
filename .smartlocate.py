@@ -374,8 +374,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                 new_ids.append(matched_id)
             else:
                 if c == 0:
-                    console.print(f"[yellow]{image_path}:[/]")
-                    print_file_title(row[0])
+                    print_file_title(image_path)
                     display_sixel(image_path)
 
                 if args.dont_ask_new_faces:
