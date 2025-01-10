@@ -24,13 +24,14 @@ try:
     from rich_argparse import RichHelpFormatter
     from rich.highlighter import RegexHighlighter
     from rich.theme import Theme
+    import rich.errors
+    from rich.panel import Panel
 
     import PIL
     from PIL import Image
     from sixel import converter
     import cv2
 
-    import rich.errors
     from pathlib import Path
 
     from pyzbar.pyzbar import decode
@@ -1379,7 +1380,7 @@ def search_description(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(f"[italic]File: {row[0]}[/]\n")
+                console.print(Panel(f"File: {row[0]}"))
                 print(f"Description:\n{row[1]}\n")
                 display_sixel(row[0])
                 print("\n")
@@ -1450,7 +1451,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
 
     for row in ocr_results:
         if not is_ignored_path(row[0]):
-            console.print(f"[italic]File: {row[0]}[/]\n")
+            console.print(Panel(f"File: {row[0]}"))
             try:
                 print_text_with_keywords(f"Text:\n{row[1]}\n", words, args.full_results)
             except rich.errors.MarkupError as e:
@@ -1479,7 +1480,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                console.print(f"[italic]File: {row[0]}[/]\n")
+                console.print(Panel(f"File: {row[0]}"))
                 print_text_with_keywords(f"Extracted Text:\n{row[1]}\n", words, args.full_results)
                 display_sixel(row[0])
                 print("\n")
