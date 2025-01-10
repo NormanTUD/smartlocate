@@ -820,38 +820,45 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
 
     found_and_converted_some = False
 
+    found_files = []
+
     with console.status(f"[bold green]Finding documents in {args.dir}...") as status:
         for root, _, files in os.walk(directory_path):
             for file_name in files:
                 file_path = os.path.join(root, file_name)
+                found_files.append(file_path)
 
-                # Check if file has an allowed extension
-                if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
-                    try:
-                        status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
-                        found_something = insert_document_if_not_exists(conn, file_path)
+    if args.shuffle_index:
+        random.shuffle(found_files)
 
-                        if found_something:
-                            console.print(f"[bold green]Indexed {file_path}[/]")
-                            found_and_converted_some = True
-                        else:
-                            console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
-                        status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
-                    except Exception as e:
-                        console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
-                elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt") or file_name.lower().endswith(".tex"):
-                    try:
-                        status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
-                        found_something = insert_document_if_not_exists(conn, file_path, False)
+    for file_name in found_files:
+        # Check if file has an allowed extension
+        if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
+            try:
+                status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
+                found_something = insert_document_if_not_exists(conn, file_path)
 
-                        if found_something:
-                            console.print(f"[bold green]Indexed {file_path}[/]")
-                            found_and_converted_some = True
-                        else:
-                            console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
-                        status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
-                    except Exception as e:
-                        console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
+                if found_something:
+                    console.print(f"[bold green]Indexed {file_path}[/]")
+                    found_and_converted_some = True
+                else:
+                    console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
+            except Exception as e:
+                console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
+        elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt") or file_name.lower().endswith(".tex"):
+            try:
+                status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
+                found_something = insert_document_if_not_exists(conn, file_path, False)
+
+                if found_something:
+                    console.print(f"[bold green]Indexed {file_path}[/]")
+                    found_and_converted_some = True
+                else:
+                    console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
+            except Exception as e:
+                console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
 
     return found_and_converted_some
 
