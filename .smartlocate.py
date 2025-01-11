@@ -138,7 +138,7 @@ if not 0 < args.max_size:
 
 if args.dir is None:
     if os.path.exists(args.search):
-        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: {args.search}")
+        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: {args.search}, search will be set to None")
         args.dir = os.path.expanduser(args.search)
 
         args.search = None
