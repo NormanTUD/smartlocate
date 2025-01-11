@@ -136,10 +136,16 @@ if not 0 < args.max_size:
     console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
     sys.exit(2)
 
+original_pwd = os.getenv("ORIGINAL_PWD")
+
+if original_pwd is not None and os.path.exists(original_pwd):
+    dbg(f"Changing dir to {original_pwd}")
+    os.chdir(original_pwd)
+
 if args.dir is None:
     if os.path.exists(args.search):
-        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: {args.search}, search will be set to None")
         args.dir = os.path.expanduser(args.search)
+        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: '{args.dir}' (from '{args.search}'). --search will be set to None")
 
         args.search = None
     else:
