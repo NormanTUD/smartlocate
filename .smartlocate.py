@@ -53,6 +53,8 @@ console: Console = Console(
     force_terminal=True
 )
 
+original_pwd = os.getenv("ORIGINAL_PWD")
+
 DEFAULT_MIN_CONFIDENCE_FOR_SAVING: float = 0.1
 DEFAULT_DB_PATH: str = os.path.expanduser('~/.smartlocate_db')
 DEFAULT_ENCODINGS_FILE: str = os.path.expanduser("~/.smartlocate_face_encodings.pkl")
@@ -60,9 +62,12 @@ DEFAULT_MODEL: str = "yolov5s.pt"
 DEFAULT_YOLO_THRESHOLD: float = 0.7
 DEFAULT_SIXEL_WIDTH: int = 400
 DEFAULT_MAX_SIZE: int = 5
-DEFAULT_DIR: str = str(Path.home())
 DEFAULT_BLIP_MODEL_NAME: str = "Salesforce/blip-image-captioning-large"
 DEFAULT_TOLERANCE_FACE_DETECTION: float = 0.6
+DEFAULT_DIR: str = str(Path.home())
+
+if original_pwd and os.path.exists(original_pwd):
+    DEFAULT_DIR = original_pwd
 
 blip_processor: Any = None
 blip_model: Any = None
@@ -135,8 +140,6 @@ if not 0 <= args.yolo_threshold <= 1:
 if not 0 < args.max_size:
     console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
     sys.exit(2)
-
-original_pwd = os.getenv("ORIGINAL_PWD")
 
 if original_pwd is not None and os.path.exists(original_pwd):
     dbg(f"Changing dir to {original_pwd}")
