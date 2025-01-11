@@ -2009,6 +2009,8 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             list_ocr(conn, file_path)
         elif os.path.exists(option):
             show_options_for_file(conn, option)
+
+            sys.exit(0)
         else:
             console.print(f"[red]Invalid option {option}[/]")
     elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
@@ -2031,6 +2033,8 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 insert_document_if_not_exists(conn, file_path)
             elif os.path.exists(option):
                 show_options_for_file(conn, option)
+
+                sys.exit(0)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
