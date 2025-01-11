@@ -487,16 +487,19 @@ def ocr_img(img: str) -> Optional[str]:
 
         console.print(f"[red]ocr_img: file {img} not found[/]")
         return None
-    except (cv2.error, ValueError, OSError) as e:
+    except (cv2.error, ValueError, OSError, AttributeError) as e:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
 def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
     with Image.open(input_path) as img:
-        img.thumbnail((max_size, max_size))
-        img.save(output_path)
+        try:
+            img.thumbnail((max_size, max_size))
+            img.save(output_path)
 
-        return True
+            return True
+        except OSError as e:
+            console.print(f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
 
     return False
 
