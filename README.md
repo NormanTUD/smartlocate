@@ -15,10 +15,10 @@ source ~/smartlocate/bin/activate
 pip install smartlocate
 
 # Index files (Using all possible indexing methods)
-smartlocate --dir ~/Documents --index
+smartlocate ~/Documents --index
 
 # Index files (using OCR, face-recognition, qr-code detection)
-smartlocate --dir ~/Documents --index --ocr --face_recognition --qrcodes
+smartlocate ~/Documents --index --ocr --face_recognition --qrcodes
 
 # Search for cats
 smartlocate "cat"
