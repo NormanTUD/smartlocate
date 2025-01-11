@@ -142,7 +142,7 @@ if original_pwd is not None and os.path.exists(original_pwd):
     dbg(f"Changing dir to {original_pwd}")
     os.chdir(original_pwd)
 
-if args.dir is None:
+if args.dir is None and args.index:
     if os.path.exists(args.search):
         args.dir = os.path.expanduser(args.search)
         dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: '{args.dir}' (from '{args.search}'). --search will be set to None")
