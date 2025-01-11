@@ -731,7 +731,7 @@ def init_database(db_path: str) -> sqlite3.Connection:
 
         queries = [
             'CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE, size INTEGER, created_at TEXT, last_modified_at TEXT, md5 TEXT)',
-            'CREATE TABLE IF NOT EXISTS detections (id INTEGER PRIMARY KEY, image_id INTEGER, model TEXT, label TEXT, confidence REAL, FOREIGN KEY(image_id) REFERENCES images(id))',
+            'CREATE TABLE IF NOT EXISTS detections (id INTEGER PRIMARY KEY, image_id INTEGER, model TEXT, label TEXT, confidence REAL, FOREIGN KEY(image_id) REFERENCES images(id) ON DELETE CASCADE)',
             'CREATE TABLE IF NOT EXISTS empty_images (file_path TEXT UNIQUE, md5 TEXT)',
             'CREATE TABLE IF NOT EXISTS ocr_results (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE, extracted_text TEXT, md5 TEXT)',
             'CREATE TABLE IF NOT EXISTS image_description (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE, image_description TEXT, md5 TEXT)',
