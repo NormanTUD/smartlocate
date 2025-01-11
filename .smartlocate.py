@@ -140,6 +140,8 @@ if args.dir is None:
     if os.path.exists(args.search):
         dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: {args.search}")
         args.dir = os.path.expanduser(args.search)
+
+        args.search = None
     else:
         dbg(f"--dir was not set, will set it to {DEFAULT_DIR}")
         args.dir = DEFAULT_DIR
