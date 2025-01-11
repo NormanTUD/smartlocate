@@ -1498,7 +1498,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
                 try:
                     console.print(f"Text:\n{row[1]}\n")
                 except:
-                    console.print(f"Text:\n{row[1]}\n")
+                    print(f"Text:\n{row[1]}\n")
             print("\n")
             nr_documents += 1
 
