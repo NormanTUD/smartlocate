@@ -1788,7 +1788,7 @@ def is_valid_image_file(path: str) -> bool:
     except Exception as e:
         return False
 
-def display_menu(options: list, prompt: str = "Choose an option (enter the number): ") -> Optional[str]:
+def display_menu(options: list, prompt: str = "Choose an option (enter the number) or enter a new file path: ") -> Optional[str]:
     for idx, option in enumerate(options, start=1):
         prompt_color = ""
         if "Run" in option:
@@ -2010,7 +2010,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
         elif os.path.exists(option):
             show_options_for_file(conn, option)
 
-            sys.exit(0)
+            return
         else:
             console.print(f"[red]Invalid option {option}[/]")
     elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
@@ -2034,7 +2034,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif os.path.exists(option):
                 show_options_for_file(conn, option)
 
-                sys.exit(0)
+                return
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
