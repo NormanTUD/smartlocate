@@ -370,7 +370,7 @@ def extract_face_encodings(image_path: str) -> tuple[list, list]:
 
         return face_encodings, face_locations
     except PIL.Image.DecompressionBombError as e:
-        console.print("[red]Error while trying to extract face encodings: {e}[/]")
+        console.print(f"[red]Error while trying to extract face encodings: {e}[/]")
         return ([], [],)
 
 def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = args.tolerance_face_detection) -> list:
