@@ -189,7 +189,12 @@ def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
     if entries is not None:
         if args.debug:
             console.log(f"[bold yellow]DEBUG:[/]\n{query}\n{entries}\n")
-        res = cursor.execute(query, entries);
+        while True:
+            try:
+                res = cursor.execute(query, entries);
+            except sqlite3.OperationalError:
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)
     else:
         if args.debug:
             console.log(f"[bold yellow]DEBUG:[/] {query}")
