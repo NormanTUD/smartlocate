@@ -1495,7 +1495,10 @@ def search_documents(conn: sqlite3.Connection) -> int:
                 print_text_with_keywords(row[0], f"Text:\n{row[1]}\n", words, args.full_results)
             except rich.errors.MarkupError as e:
                 print_file_title("Document", row[0])
-                console.print(f"Text:\n{row[1]}\n")
+                try:
+                    console.print(f"Text:\n{row[1]}\n")
+                except:
+                    console.print(f"Text:\n{row[1]}\n")
             print("\n")
             nr_documents += 1
 
