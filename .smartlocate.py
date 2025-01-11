@@ -193,8 +193,14 @@ def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
     else:
         if args.debug:
             console.log(f"[bold yellow]DEBUG:[/] {query}")
-        res = cursor.execute(query);
-    return res;
+        while True:
+            try:
+                res = cursor.execute(query);
+                return res
+            except sqlite3.OperationalError:
+                console.print("[yellow]Database is locked, retrying...[/]")
+                time.sleep(1)
+    return None
 
 def supports_sixel() -> bool:
     term = os.environ.get("TERM", "").lower()
