@@ -1687,7 +1687,7 @@ def get_image_description(image_path: str) -> str:
         caption = blip_processor.decode(outputs[0], skip_special_tokens=True)
 
         return caption
-    except (PIL.UnidentifiedImageError, PIL.Image.DecompressionBombError) as e:
+    except (OSError, PIL.UnidentifiedImageError, PIL.Image.DecompressionBombError) as e:
         console.print(f"File {image_path} failed with error {e}")
         return ""
 
