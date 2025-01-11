@@ -152,6 +152,11 @@ if args.dir is None:
         dbg(f"--dir was not set, will set it to {DEFAULT_DIR}")
         args.dir = DEFAULT_DIR
 
+if args.dir is not None:
+    orig_dir = args.dir
+    args.dir = os.path.abspath(args.dir)
+    dbg(f"--dir was defined (either via --dir or via --search), and will be set to an absolute path, from '{orig_dir}' to '{args.dir}'")
+
 if not os.path.exists(args.dir):
     console.print(f"[red]--dir refers to a directory that doesn't exist: {args.dir}[/]")
     sys.exit(2)
