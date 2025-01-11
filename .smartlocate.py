@@ -352,11 +352,15 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
 def extract_face_encodings(image_path: str) -> tuple[list, list]:
     import face_recognition
 
-    image = face_recognition.load_image_file(image_path)
-    face_locations = face_recognition.face_locations(image)
-    face_encodings = face_recognition.face_encodings(image, face_locations)
+    try:
+        image = face_recognition.load_image_file(image_path)
+        face_locations = face_recognition.face_locations(image)
+        face_encodings = face_recognition.face_encodings(image, face_locations)
 
-    return face_encodings, face_locations
+        return face_encodings, face_locations
+    except PIL.Image.DecompressionBombError as e:
+        console.print("[red]Error while trying to extract face encodings: {e}[/]")
+        return ([], [],)
 
 def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = args.tolerance_face_detection) -> list:
     import face_recognition
@@ -1815,6 +1819,8 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
             else:
                 if choice.strip() == "quit" or choice.strip() == "q":
                     sys.exit(0)
+                if os.path.exists(choice.strip()):
+                    return choice.strip()
                 else:
                     console.print("[red]Invalid option.[/]")
         except ValueError:
@@ -2001,6 +2007,10 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             list_desc(conn, file_path)
         elif option == strs["list_ocr"]:
             list_ocr(conn, file_path)
+        elif os.path.exists(option):
+            show_options_for_file(conn, option)
+        else:
+            console.print(f"[red]Invalid option {option}[/]")
     elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
         while True:
             handle_document_options(conn, file_path, options, strs)
@@ -2019,6 +2029,8 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["run_document"]:
                 delete_document_from_document_path(conn, None, file_path)
                 insert_document_if_not_exists(conn, file_path)
+            elif os.path.exists(option):
+                show_options_for_file(conn, option)
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
