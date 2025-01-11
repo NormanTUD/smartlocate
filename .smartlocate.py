@@ -111,12 +111,16 @@ ocr_related.add_argument("--dont_ask_new_faces", action="store_true", help="Don'
 ocr_related.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
 
 file_handling_related = parser.add_argument_group("File Handling")
-file_handling_related.add_argument("--dir", default=DEFAULT_DIR, help="Directory to search or index")
+file_handling_related.add_argument("--dir", default=None, help="Directory to search or index")
 file_handling_related.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
 file_handling_related.add_argument("--exclude", action='append', default=[], help="Folders or paths to ignore. Can be used multiple times.")
 file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max size in MB (default: {DEFAULT_MAX_SIZE})")
 
 args = parser.parse_args()
+
+def dbg(msg: Any) -> None:
+    if args.debug:
+        console.log(f"[bold yellow]DEBUG:[/] {msg}")
 
 do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
 
@@ -131,6 +135,14 @@ if not 0 <= args.yolo_threshold <= 1:
 if not 0 < args.max_size:
     console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
     sys.exit(2)
+
+if args.dir is None:
+    if os.path.exists(args.search):
+        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: {args.search}")
+        args.dir = os.path.expanduser(args.search)
+    else:
+        dbg(f"--dir was not set, will set it to {DEFAULT_DIR}")
+        args.dir = DEFAULT_DIR
 
 if not os.path.exists(args.dir):
     console.print(f"[red]--dir refers to a directory that doesn't exist: {args.dir}[/]")
@@ -188,10 +200,6 @@ if not supports_sixel() and not args.no_sixel:
     console.print("[red]Cannot use sixel. Will set --no_sixel to true.[/]")
 
     args.no_sixel = True
-
-def dbg(msg: Any) -> None:
-    if args.debug:
-        console.log(f"[bold yellow]DEBUG:[/] {msg}")
 
 try:
     import warnings
