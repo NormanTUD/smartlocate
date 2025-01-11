@@ -192,6 +192,7 @@ def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
         while True:
             try:
                 res = cursor.execute(query, entries);
+                return res
             except sqlite3.OperationalError:
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
