@@ -1246,8 +1246,7 @@ def delete_from_table(conn: sqlite3.Connection, delete_status: Any, table_name: 
         delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
 
 def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
-    image_id = get_image_id_by_file_path(conn, file_path)
-    delete_by_image_id(conn, delete_status, "detections", image_id, "image_id")
+    delete_by_image_id(conn, delete_status, "detections", file_path, "image_id")
 
 def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "empty_images", file_path)
