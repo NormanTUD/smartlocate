@@ -534,7 +534,7 @@ def ocr_img(img: str) -> Optional[str]:
             result = reader.readtext(img)
             console.print(f"[green]OCR {img} done.[/]")
 
-            return "\n".join(result)
+            return result
 
         console.print(f"[red]ocr_img: file {img} not found[/]")
         return None
