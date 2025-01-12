@@ -65,6 +65,7 @@ DEFAULT_MAX_SIZE: int = 5
 DEFAULT_BLIP_MODEL_NAME: str = "Salesforce/blip-image-captioning-large"
 DEFAULT_TOLERANCE_FACE_DETECTION: float = 0.6
 DEFAULT_DIR: str = str(Path.home())
+DEFAULT_LANG_OCR: list[str] = ['de', 'en']
 
 if original_pwd and os.path.exists(original_pwd):
     DEFAULT_DIR = original_pwd
@@ -108,7 +109,7 @@ model_related.add_argument("--yolo_min_confidence_for_saving", type=float, defau
 ocr_related = parser.add_argument_group("OCR & Face Recognition")
 ocr_related.add_argument("--ocr", action="store_true", help="Enable OCR")
 ocr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
-ocr_related.add_argument("--lang_ocr", nargs='+', default=['de', 'en'], help="OCR languages, default: de, en. Accepts multiple languages.")
+ocr_related.add_argument("--lang_ocr", nargs='+', default=[], help=f"OCR languages, default: {', '.join(DEFAULT_LANG_OCR)}. Accepts multiple languages.")
 ocr_related.add_argument("--face_recognition", action="store_true", help="Enable face recognition (needs user interaction)")
 ocr_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
 ocr_related.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
@@ -128,6 +129,9 @@ def dbg(msg: Any) -> None:
         console.log(f"[bold yellow]DEBUG:[/] {msg}")
 
 do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
+
+if len(args.lang_ocr) == 0:
+    args.lang_ocr = DEFAULT_LANG_OCR
 
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
     console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
