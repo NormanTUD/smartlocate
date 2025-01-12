@@ -53,6 +53,14 @@ console: Console = Console(
     force_terminal=True
 )
 
+error_console: Console = Console(
+    force_interactive=True,
+    soft_wrap=True,
+    color_system="256",
+    force_terminal=True,
+    stderr=True
+)
+
 original_pwd = os.getenv("ORIGINAL_PWD")
 
 DEFAULT_MIN_CONFIDENCE_FOR_SAVING: float = 0.1
@@ -130,15 +138,15 @@ def dbg(msg: Any) -> None:
 do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
 
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
-    console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
+    error_console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
     sys.exit(2)
 
 if not 0 <= args.yolo_threshold <= 1:
-    console.print(f"[red]--yolo_threshold must be between 0 and 1, is {args.yolo_threshold}[/]")
+    error_console.print(f"[red]--yolo_threshold must be between 0 and 1, is {args.yolo_threshold}[/]")
     sys.exit(2)
 
 if not 0 < args.max_size:
-    console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
+    error_console.print(f"[red]--max_size must be greater than 0, is set to {args.max_size}[/]")
     sys.exit(2)
 
 if original_pwd is not None and os.path.exists(original_pwd):
@@ -161,7 +169,7 @@ if args.dir is not None:
     dbg(f"--dir was defined (either via --dir or via --search), and will be set to an absolute path, from '{orig_dir}' to '{args.dir}'")
 
 if args.dir is not None and not os.path.exists(args.dir):
-    console.print(f"[red]--dir refers to a directory that doesn't exist: {args.dir}[/]")
+    error_console.print(f"[red]--dir refers to a directory that doesn't exist: {args.dir}[/]")
     sys.exit(2)
 
 yolo_error_already_shown: bool = False
@@ -225,7 +233,7 @@ def supports_sixel() -> bool:
 console = Console()
 
 if not supports_sixel() and not args.no_sixel:
-    console.print("[red]Cannot use sixel. Will set --no_sixel to true.[/]")
+    error_console.print("[red]Cannot use sixel. Will set --no_sixel to true.[/]")
 
     args.no_sixel = True
 
@@ -249,7 +257,7 @@ try:
                 try:
                     reader = easyocr.Reader(args.lang_ocr)
                 except ValueError as e:
-                    console.print(f"[red]Loading OCR failed. This is probably an error with the --lang_ocr option. Error:[/] {e}")
+                    error_console.print(f"[red]Loading OCR failed. This is probably an error with the --lang_ocr option. Error:[/] {e}")
 
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition..."):
@@ -266,17 +274,17 @@ try:
                 try:
                     blip_processor = BlipProcessor.from_pretrained(args.blip_model_name)
                 except OSError as e:
-                    console.print(f"[red]Loading BlipProcessor failed with this error:[/] {e}")
+                    error_console.print(f"[red]Loading BlipProcessor failed with this error:[/] {e}")
 
                 try:
                     blip_model = BlipForConditionalGeneration.from_pretrained(args.blip_model_name)
                 except OSError as e:
-                    console.print(f"[red]Loading BlipModel failed with this error:[/] {e}")
+                    error_console.print(f"[red]Loading BlipModel failed with this error:[/] {e}")
 except ModuleNotFoundError as e:
-    console.print(f"[red]Module not found:[/] {e}")
+    error_console.print(f"[red]Module not found:[/] {e}")
     sys.exit(1)
 except KeyboardInterrupt:
-    console.print("\n[red]You pressed CTRL+C[/]")
+    error_console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
 
 def get_qr_codes_from_image(file_path: str) -> list[str]:
@@ -297,7 +305,7 @@ def get_qr_codes_from_image(file_path: str) -> list[str]:
 
         return []
     except Exception as e:
-        console.print(f"[red]Error while reading QR-Codes: {e}[/]")
+        error_console.print(f"[red]Error while reading QR-Codes: {e}[/]")
         return []
 
 def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
@@ -358,7 +366,7 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
-                console.print(f"\n[red]Error: {e}[/]")
+                error_console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
 def extract_face_encodings(image_path: str) -> tuple[list, list]:
@@ -371,7 +379,7 @@ def extract_face_encodings(image_path: str) -> tuple[list, list]:
 
         return face_encodings, face_locations
     except PIL.Image.DecompressionBombError as e:
-        console.print(f"[red]Error while trying to extract face encodings: {e}[/]")
+        error_console.print(f"[red]Error while trying to extract face encodings: {e}[/]")
         return ([], [],)
 
 def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = args.tolerance_face_detection) -> list:
@@ -432,7 +440,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                         else:
                             console.print(f"[yellow]Ignoring wrongly detected face in {image_path}[/]")
                     except EOFError:
-                        console.print("[red]You pressed CTRL+d[/]")
+                        error_console.print("[red]You pressed CTRL+d[/]")
                         sys.exit(0)
                 nr_new_faces = nr_new_faces + 1
             c = c + 1
@@ -494,7 +502,7 @@ def ocr_img(img: str) -> Optional[str]:
             reader = easyocr.Reader(args.lang_ocr)
 
         if reader is None:
-            console.print("[red]reader was not defined. Will not OCR.[/]")
+            error_console.print("[red]reader was not defined. Will not OCR.[/]")
             return None
 
         if os.path.exists(img):
@@ -504,10 +512,10 @@ def ocr_img(img: str) -> Optional[str]:
 
             return result
 
-        console.print(f"[red]ocr_img: file {img} not found[/]")
+        error_console.print(f"[red]ocr_img: file {img} not found[/]")
         return None
     except (cv2.error, ValueError, OSError, AttributeError) as e:
-        console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
+        error_console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
 def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
@@ -518,7 +526,7 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
 
             return True
         except OSError as e:
-            console.print(f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
+            error_console.print(f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
 
     return False
 
@@ -538,7 +546,7 @@ def display_sixel_part(image_path: str, location: list) -> None:
 
 def display_sixel(image_path: str) -> None:
     if not supports_sixel():
-        console.print(f"[red]Error: This terminal does not support sixel. Cannot display {image_path}[/]")
+        error_console.print(f"[red]Error: This terminal does not support sixel. Cannot display {image_path}[/]")
         return
 
     unique_filename = f"/tmp/{uuid.uuid4().hex}_resized_image.png"
@@ -549,7 +557,7 @@ def display_sixel(image_path: str) -> None:
         c = converter.SixelConverter(unique_filename)
         c.write(sys.stdout)
     except FileNotFoundError:
-        console.print(f"[red]Could not find {image_path}[/]")
+        error_console.print(f"[red]Could not find {image_path}[/]")
     finally:
         if os.path.exists(unique_filename):
             os.remove(unique_filename)
@@ -624,7 +632,7 @@ def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
-                console.print(f"\n[red]Error: {e}[/]")
+                error_console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
 def add_image_persons_mapping(conn: sqlite3.Connection, file_path: str, person_names: list[str]) -> None:
@@ -669,7 +677,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
-                console.print(f"\n[red]Error: {e}[/]")
+                error_console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
 def insert_into_no_qrcodes(conn: sqlite3.Connection, file_path: str) -> None:
@@ -808,7 +816,7 @@ def pdf_to_text(pdf_path: str) -> Optional[str]:
                 text += page.extract_text()
         return text
     except Exception as e:
-        console.print(f"[red]Error while reading the PDF: {e}[/]")
+        error_console.print(f"[red]Error while reading the PDF: {e}[/]")
         return None
 
 def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str]:
@@ -828,7 +836,7 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
         except Exception as e:
             return f"Error: {e}"
     except ModuleNotFoundError as e:
-        console.print(f"[red]Module not found:[/] {e}")
+        error_console.print(f"[red]Module not found:[/] {e}")
 
     return None
 
@@ -858,7 +866,7 @@ def get_extension (path: str) -> str:
 
 def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bool:
     if not os.path.isdir(directory_path):
-        console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
+        error_console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
         return False
 
     found_and_converted_some = False
@@ -881,7 +889,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                             console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
                         status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
-                        console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
+                        error_console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
                 elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt") or file_name.lower().endswith(".tex"):
                     try:
                         status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
@@ -894,7 +902,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                             console.print(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
                         status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
-                        console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
+                        error_console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
 
     return found_and_converted_some
 
@@ -964,7 +972,7 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
                 console.print("[yellow]Database is locked, retrying...[/]")
                 time.sleep(1)
             else:
-                console.print(f"\n[red]Error: {e}[/]")
+                error_console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
         except FileNotFoundError:
             return True
@@ -1004,18 +1012,18 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
     except RuntimeError:
         return None
     except ValueError as e:
-        console.print(f"[red]Value-Error while analyzing image {image_path}: {e}[/]")
+        error_console.print(f"[red]Value-Error while analyzing image {image_path}: {e}[/]")
         return None
     except PIL.Image.DecompressionBombError as e:
-        console.print(f"[red]Error while analyzing image {image_path}: {e}, probably the image is too large[/]")
+        error_console.print(f"[red]Error while analyzing image {image_path}: {e}, probably the image is too large[/]")
         return None
     except PIL.UnidentifiedImageError as e:
-        console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
+        error_console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
         return None
     except OSError:
         return None
     except Exception as e:
-        console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
+        error_console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
         return None
 
 def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None:
@@ -1055,7 +1063,7 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
 
         return sum(results)  # Summiere alle Ergebnisse
     except Exception as e:
-        console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
+        error_console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
         return 0
 
 def show_general_stats(conn: sqlite3.Connection) -> int:
@@ -1094,7 +1102,7 @@ def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: 
 
         return 0
     except Exception as e:
-        console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
+        error_console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
         return 0
 
 def show_yolo_stats(conn: sqlite3.Connection) -> int:
@@ -1109,7 +1117,7 @@ def show_yolo_stats(conn: sqlite3.Connection) -> int:
     try:
         return show_yolo_custom_stats(conn, [query], "YOLO Detection Statistics", metrics)
     except Exception as e:
-        console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
+        error_console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
         return 0
 
 def show_empty_images_stats(conn: sqlite3.Connection) -> int:
@@ -1192,7 +1200,7 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
         # Hier rufen wir eine angepasste version der show_stats Funktion auf
         return show_face_recognition_custom_stats(conn, [query], "Face Recognition Statistics", metrics)
     except Exception as e:
-        console.print(f"[bold red]Error for Face Recognition Statistics:[/bold red] {str(e)}")
+        error_console.print(f"[bold red]Error for Face Recognition Statistics:[/bold red] {str(e)}")
         return 0
 
 def show_statistics(conn: sqlite3.Connection) -> None:
@@ -1304,7 +1312,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 cursor.close()
                 conn.commit()
 
-                console.print(f"[red]Deleted all entries for {file_path}[/]")
+                error_console.print(f"[red]Deleted all entries for {file_path}[/]")
             return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
@@ -1312,7 +1320,7 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 time.sleep(1)
             else:
                 cursor.close()
-                console.print(f"\n[red]Error: {e}[/]")
+                error_console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
 def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path: str | int, where_name: str = "file_path") -> int:
@@ -1690,7 +1698,7 @@ def search(conn: sqlite3.Connection) -> None:
             table.add_row(*row)
             console.print(table)
     except sqlite3.OperationalError as e:
-        console.print(f"[red]Error while running sqlite-query: {e}[/]")
+        error_console.print(f"[red]Error while running sqlite-query: {e}[/]")
 
 def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if model is None:
@@ -1751,7 +1759,7 @@ def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
                 add_description(conn, image_path, "")
 
         except FileNotFoundError:
-            console.print(f"[red]File {image_path} not found[/]")
+            error_console.print(f"[red]File {image_path} not found[/]")
 
 def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
     if is_file_in_ocr_db(conn, image_path):
@@ -1776,9 +1784,9 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
                     add_ocr_result(conn, image_path, "")
 
             else:
-                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_size}MB, is {file_size / 1024 / 1024}MB[/]")
+                error_console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_size}MB, is {file_size / 1024 / 1024}MB[/]")
         except FileNotFoundError:
-            console.print(f"[red]File {image_path} not found[/]")
+            error_console.print(f"[red]File {image_path} not found[/]")
 
 def is_valid_file_path(path: str) -> bool:
     try:
@@ -1827,16 +1835,16 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
                 if 1 <= choice_int <= len(options):
                     return options[choice_int - 1]
 
-                console.print("[red]Invalid option.[/]")
+                error_console.print("[red]Invalid option.[/]")
             else:
                 if choice.strip() == "quit" or choice.strip() == "q":
                     sys.exit(0)
                 if os.path.exists(choice.strip()):
                     return choice.strip()
                 else:
-                    console.print("[red]Invalid option.[/]")
+                    error_console.print("[red]Invalid option.[/]")
         except ValueError:
-            console.print("[red]Invalid option. Please enter number.[/]")
+            error_console.print("[red]Invalid option. Please enter number.[/]")
         except EOFError:
             sys.exit(0)
 
@@ -2001,7 +2009,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
                 delete_yolo_from_image_path(conn, None, file_path)
                 yolo_file(conn, file_path, None, model)
             except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
-                console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
+                error_console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
         elif option == strs["run_ocr"]:
             delete_ocr_from_image_path(conn, None, file_path)
             ocr_file(conn, file_path)
@@ -2024,7 +2032,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
 
             return
         else:
-            console.print(f"[red]Invalid option {option}[/]")
+            error_console.print(f"[red]Invalid option {option}[/]")
     elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
         while True:
             handle_document_options(conn, file_path, options, strs)
@@ -2048,9 +2056,9 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
 
                 return
             else:
-                console.print(f"[red]Unhandled option {option}[/]")
+                error_console.print(f"[red]Unhandled option {option}[/]")
     else:
-        console.print(f"[red]The file {file_path} is not a searchable file. Currently, Only image files are supported.[/]")
+        error_console.print(f"[red]The file {file_path} is not a searchable file. Currently, Only image files are supported.[/]")
 
 def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
@@ -2093,7 +2101,7 @@ def main() -> None:
                 model = yolov5.load(args.yolo_model)
                 model.conf = args.yolo_min_confidence_for_saving
             except (FileNotFoundError, requests.exceptions.ConnectionError) as e:
-                console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
+                error_console.print(f"[red]!!! Error while loading yolov5 model[/red]: {e}")
 
         image_paths = []
 
@@ -2125,7 +2133,7 @@ def main() -> None:
                             recognized_faces = recognize_persons_in_image(conn, image_path)
 
                             if recognized_faces is None:
-                                console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
+                                error_console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
                             else:
                                 new_ids, manually_entered_name = recognized_faces
 
@@ -2135,10 +2143,10 @@ def main() -> None:
                         else:
                             console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
                     except FileNotFoundError:
-                        console.print(f"[red]The file {image_path} was not found[/]")
+                        error_console.print(f"[red]The file {image_path} was not found[/]")
                     c = c + 1
             else:
-                console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+                error_console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
         if args.describe or args.yolo or args.ocr or args.qrcodes or do_all:
             with Progress(
@@ -2164,7 +2172,7 @@ def main() -> None:
                                 global yolo_error_already_shown
 
                                 if not yolo_error_already_shown:
-                                    console.print("[red]--yolo was set, but model could not be loaded[/]")
+                                    error_console.print("[red]--yolo was set, but model could not be loaded[/]")
 
                                     yolo_error_already_shown = True
                         if args.ocr or do_all:
@@ -2173,7 +2181,7 @@ def main() -> None:
                         if args.qrcodes or do_all:
                             add_qrcodes_from_image(conn, image_path)
                     else:
-                        console.print(f"[red]Could not find {image_path}[/]")
+                        error_console.print(f"[red]Could not find {image_path}[/]")
 
                     progress.update(task, advance=1)
 
@@ -2195,5 +2203,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        console.print("\n[red]You pressed CTRL+C[/]")
+        error_console.print("\n[red]You pressed CTRL+C[/]")
         sys.exit(0)
