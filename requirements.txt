@@ -13,3 +13,4 @@ pyzbar
 typeguard
 mypy
 types-requests
+flake8

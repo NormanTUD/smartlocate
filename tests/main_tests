@@ -48,6 +48,8 @@ fi
 
 run_and_fail "mypy" "bash tests/mypy" 0
 
+run_and_fail "flake8" "bash tests/flake8" 0
+
 run_and_fail "Param check (yolo_min_confidence_for_saving -123)" "bash smartlocate --yolo_min_confidence_for_saving -123" 2
 
 run_and_fail "Param check (yolo_min_confidence_for_saving 123)" "bash smartlocate --yolo_min_confidence_for_saving 123" 2

@@ -696,7 +696,7 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
             person_id = cursor.fetchone()
 
             if not person_id:
-                cursor_execute(cursor,  'INSERT INTO person (name) VALUES (?)', (person_name,))
+                cursor_execute(cursor, 'INSERT INTO person (name) VALUES (?)', (person_name,))
                 conn.commit()
                 person_id = cursor.lastrowid
             else:
@@ -908,7 +908,7 @@ def insert_document(conn: sqlite3.Connection, file_path: str, document: str) -> 
     execute_with_retry(conn, 'INSERT INTO documents (file_path, content) VALUES (?, ?);', (file_path, document, ))
 
 @typechecked
-def get_extension (path: str) -> str:
+def get_extension(path: str) -> str:
     file_extension = path.split('.')[-1] if '.' in path else ''
 
     return file_extension
@@ -1465,7 +1465,7 @@ def search_yolo(conn: sqlite3.Connection) -> int:
     if not is_existing_detections_label(conn, args.search):
         return 0
 
-    with console.status("[bold green]Searching through YOLO-results...") as status:
+    with console.status("[bold green]Searching through YOLO-results..."):
         cursor = conn.cursor()
         cursor_execute(cursor, '''SELECT images.file_path, detections.label, detections.confidence
                           FROM images JOIN detections ON images.id = detections.image_id
@@ -1525,7 +1525,7 @@ def search_description(conn: sqlite3.Connection) -> int:
 
     nr_desc = 0
 
-    with console.status("[bold green]Searching through descriptions...") as status:
+    with console.status("[bold green]Searching through descriptions..."):
         cursor = conn.cursor()
         words = clean_search_query(args.search)  # Clean and split the search string
         sql_query, values = build_sql_query_description(words)  # Build the SQL query dynamically
@@ -1595,7 +1595,7 @@ def print_text_with_keywords(file_path: str, text: str, keywords: list[str], ful
                     matching_lines.append(line)
 
         joined_matching_lines = "\n".join(matching_lines)
-    
+
         highlighter_console.print(Panel.fit(joined_matching_lines, title=file_path))
 
 @typechecked
@@ -1603,7 +1603,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
     ocr_results = None
     nr_documents = 0
 
-    with console.status("[bold green]Searching through documents...") as status:
+    with console.status("[bold green]Searching through documents..."):
         cursor = conn.cursor()
 
         # Clean and split the search string
@@ -1619,11 +1619,11 @@ def search_documents(conn: sqlite3.Connection) -> int:
         if not is_ignored_path(row[0]):
             try:
                 print_text_with_keywords(row[0], f"Text:\n{row[1]}\n", words, args.full_results)
-            except rich.errors.MarkupError as e:
+            except rich.errors.MarkupError:
                 print_file_title("Document", row[0])
                 try:
                     console.print(f"Text:\n{row[1]}\n")
-                except:
+                except Exception:
                     print(f"Text:\n{row[1]}\n")
             print("\n")
             nr_documents += 1
@@ -1635,7 +1635,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     ocr_results = None
     nr_ocr = 0
 
-    with console.status("[bold green]Searching through OCR results...") as status:
+    with console.status("[bold green]Searching through OCR results..."):
         cursor = conn.cursor()
 
         # Clean and split the search string
@@ -1674,7 +1674,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
 def search_qrcodes(conn: sqlite3.Connection) -> int:
     qr_code_imgs = []
 
-    with console.status("[bold green]Searching for qr-codes...") as status:
+    with console.status("[bold green]Searching for qr-codes..."):
         cursor = conn.cursor()
         query = '''
             SELECT images.file_path, content
@@ -1723,7 +1723,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
         return 0  # Keine Person gefunden
 
     # Suchen nach Bildern, die mit der gefundenen Person verknüpft sind
-    with console.status("[bold green]Searching for images of the person...") as status:
+    with console.status("[bold green]Searching for images of the person..."):
         cursor = conn.cursor()
         person_ids = tuple(str(row[0]) for row in person_results)
 
@@ -1912,7 +1912,7 @@ def is_valid_image_file(path: str) -> bool:
         with Image.open(path) as img:
             img.verify()
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 @typechecked
@@ -2223,7 +2223,7 @@ def main() -> None:
 
         image_paths = []
 
-        with console.status(f"[bold green]Finding images in {args.dir}...") as status:
+        with console.status(f"[bold green]Finding images in {args.dir}..."):
             if existing_files is not None:
                 image_paths = list(find_images(existing_files))
         total_images: int = len(image_paths)
