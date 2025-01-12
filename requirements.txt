@@ -12,3 +12,4 @@ imageio
 pyzbar
 typeguard
 mypy
+types-requests
