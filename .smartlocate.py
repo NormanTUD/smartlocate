@@ -180,7 +180,7 @@ def conn_execute(conn: sqlite3.Connection, query: str):
     res = conn.execute(query)
     return res
 
-def print_file_title(_title: str, file_path, after=None):
+def print_file_title(_title: str, file_path: str, after: Optional[str] = None):
     if os.path.exists(file_path):
         size_in_mb = get_file_size_in_mb(file_path)
         if after:
@@ -193,7 +193,7 @@ def print_file_title(_title: str, file_path, after=None):
         else:
             console.print(Panel.fit(f"File: {file_path} (not found!)", title=_title))
 
-def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
+def cursor_execute(cursor: sqlite3.Cursor, query: str, entries: Optional[tuple] = None):
     res = None
     if entries is not None:
         if args.debug:
@@ -2031,7 +2031,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             list_desc(conn, file_path)
         elif option == strs["list_ocr"]:
             list_ocr(conn, file_path)
-        elif os.path.exists(option):
+        elif option is not None and os.path.exists(option):
             show_options_for_file(conn, option)
 
             return
