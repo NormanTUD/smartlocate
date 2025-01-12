@@ -1356,7 +1356,7 @@ def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name:
         execute_with_retry(conn, query, (image_id,))
         if delete_status:
             delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
         console.print(f"[red]Error while trying to delete_by_image_id(conn, delete_status, table_name = {table_name}, file_path = {file_path}, foreign_key_column = {foreign_key_column}): {e}[/]")
 
     return
