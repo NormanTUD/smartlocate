@@ -151,7 +151,7 @@ else:
     args.search = " ".join(args.search)
 
 if args.dir is None and args.index:
-    if os.path.exists(args.search):
+    if args.search is not None and os.path.exists(args.search):
         args.dir = os.path.expanduser(args.search)
         dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: '{args.dir}' (from '{args.search}'). --search will be set to None")
 
@@ -496,7 +496,10 @@ def ocr_img(img: str) -> Optional[str]:
             if "easyocr" not in sys.modules:
                 import easyocr
 
-            reader = easyocr.Reader(args.lang_ocr)
+            try:
+                reader = easyocr.Reader(args.lang_ocr)
+            except UnboundLocalError:
+                pass
 
         if reader is None:
             console.print("[red]reader was not defined. Will not OCR.[/]")
