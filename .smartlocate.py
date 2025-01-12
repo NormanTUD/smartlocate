@@ -1725,7 +1725,8 @@ def search_faces(conn: sqlite3.Connection) -> int:
     # Suchen nach Bildern, die mit der gefundenen Person verknüpft sind
     with console.status("[bold green]Searching for images of the person...") as status:
         cursor = conn.cursor()
-        person_ids = [str(row[0]) for row in person_results]
+        person_ids = tuple(str(row[0]) for row in person_results)
+
         placeholders = ",".join("?" * len(person_ids))  # Platzhalter für die IDs der Personen
         query = f'''
             SELECT images.file_path
