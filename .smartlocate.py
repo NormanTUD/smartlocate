@@ -511,8 +511,8 @@ def get_file_size_in_mb(file_path: str) -> str:
     except Exception as e:
         return f"An error occured while trying to get file size from {file_path}: {e}"
 
-@typechecked
-def ocr_img(img: str) -> Optional[str]:
+#@typechecked
+def ocr_img(img: str) -> Optional[list[str]]:
     global reader
 
     try:
@@ -2184,7 +2184,6 @@ def vacuum(conn: sqlite3.Connection) -> None:
         conn_execute(conn, "VACUUM")
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
-@typechecked
 def main() -> None:
     dbg(f"Arguments: {args}")
 
