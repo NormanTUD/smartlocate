@@ -177,8 +177,8 @@ yolo_error_already_shown: bool = False
 
 def conn_execute(conn: sqlite3.Connection, query: str):
     dbg(query)
-    res = conn.execute(query);
-    return res;
+    res = conn.execute(query)
+    return res
 
 def print_file_title(_title: str, file_path, after=None):
     if os.path.exists(file_path):
@@ -200,7 +200,7 @@ def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
             console.log(f"[bold yellow]DEBUG:[/]\n{query}\n{entries}\n")
         while True:
             try:
-                res = cursor.execute(query, entries);
+                res = cursor.execute(query, entries)
                 return res
             except sqlite3.OperationalError:
                 console.print("[yellow]Database is locked, retrying...[/]")
@@ -210,7 +210,7 @@ def cursor_execute(cursor, query: str, entries: Optional[tuple] = None):
             console.log(f"[bold yellow]DEBUG:[/] {query}")
         while True:
             try:
-                res = cursor.execute(query);
+                res = cursor.execute(query)
                 return res
             except sqlite3.OperationalError:
                 console.print("[yellow]Database is locked, retrying...[/]")
@@ -2055,7 +2055,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             elif option == strs["run_document"]:
                 delete_document_from_document_path(conn, None, file_path)
                 insert_document_if_not_exists(conn, file_path)
-            elif os.path.exists(option):
+            elif option is not None and os.path.exists(option):
                 show_options_for_file(conn, option)
 
                 return
