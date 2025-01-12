@@ -86,7 +86,7 @@ index_related.add_argument("--describe", action="store_true", help="Enable image
 index_related.add_argument("--documents", action="store_true", help="Enable document indexing")
 
 search_related = parser.add_argument_group("Search Related")
-search_related.add_argument("search", nargs="+", help="Search term for indexed results", default=[])
+search_related.add_argument("search", nargs="*", help="Search term for indexed results", default=[])
 search_related.add_argument("--exact", action="store_true", help="Exact search")
 search_related.add_argument("--full_results", action="store_true", help="Show full results for OCR and file content search, not only the matching lines")
 
