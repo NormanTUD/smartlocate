@@ -984,7 +984,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
                 raise e
 
 @typechecked
-def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, str]:
+def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> int:
     dbg(f"add_image_metadata(conn, {file_path})")
     cursor = conn.cursor()
     stats = os.stat(file_path)
@@ -997,7 +997,7 @@ def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> tuple[int, s
     cursor_execute(cursor, 'SELECT id FROM images WHERE file_path = ?', (file_path,))
     image_id = cursor.fetchone()[0]
 
-    return image_id, md5_hash
+    return image_id
 
 @typechecked
 def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
@@ -1087,7 +1087,7 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
 def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None:
     dbg(f"process_image({image_path}, model, conn)")
 
-    image_id, md5_hash = add_image_metadata(conn, image_path)
+    image_id = add_image_metadata(conn, image_path)
 
     detections = analyze_image(model, image_path)
     if detections:
@@ -1949,8 +1949,8 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
                     sys.exit(0)
                 if os.path.exists(choice.strip()):
                     return choice.strip()
-                else:
-                    console.print("[red]Invalid option.[/]")
+
+                console.print("[red]Invalid option.[/]")
         except ValueError:
             console.print("[red]Invalid option. Please enter number.[/]")
         except EOFError:
@@ -2024,7 +2024,7 @@ def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[
     add_option(options, image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id") > 0, strs["delete_yolo"], True)
     add_option(options, image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id") > 0, strs["delete_face_recognition"], True)
     add_option(options, check_entries_in_table(conn, "no_faces", file_path) > 0, strs["delete_entry_no_faces"], True)
-    add_option(options, not check_entries_in_table(conn, "no_faces", file_path) > 0, strs["mark_image_as_no_face"], False)
+    add_option(options, check_entries_in_table(conn, "no_faces", file_path) <= 0, strs["mark_image_as_no_face"], False)
     add_option(options, check_entries_in_table(conn, "image_description", file_path) > 0, strs["delete_desc"], True)
     add_option(options, check_entries_in_table(conn, "ocr_results", file_path) > 0, strs["delete_ocr"], True)
     add_option(options, image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id") > 0, strs["delete_qr_codes"], True)
