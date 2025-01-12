@@ -1481,7 +1481,7 @@ def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
 
-def print_text_with_keywords(file_path: str, text: str, keywords: list[str], full_results: bool) -> str:
+def print_text_with_keywords(file_path: str, text: str, keywords: list[str], full_results: bool) -> None:
     keyword_pattern = "|".join(re.escape(keyword) for keyword in keywords)
 
     class SearchHighlighter(RegexHighlighter):
