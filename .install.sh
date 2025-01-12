@@ -332,6 +332,8 @@
 		MAX_NR="${#install_those[@]}"
 		NUMBER_OF_INSTALLED_MODULES=$(get_nr_of_already_installed_modules)
 
+		exit
+
 		PROGRESSBAR=$(generate_progress_bar_setup "$MAX_NR")
 
 		for key in "${!install_those[@]}"; do
