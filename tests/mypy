@@ -12,10 +12,10 @@ exit_code=0
 
 if command -v mypy 2>/dev/null >/dev/null; then
 	if [[ -z $1 ]]; then
-		mypy --check-untyped-defs --ignore-missing-imports --disallow-untyped-defs .*.py
+		mypy --disallow-untyped-calls --check-untyped-defs --ignore-missing-imports --disallow-untyped-defs .*.py
 		exit_code=$?
 	else
-		mypy --check-untyped-defs --ignore-missing-imports --disallow-untyped-defs $*
+		mypy --disallow-untyped-calls --check-untyped-defs --ignore-missing-imports --disallow-untyped-defs $*
 		exit_code=$?
 	fi
 else
