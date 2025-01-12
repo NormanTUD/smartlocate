@@ -175,12 +175,12 @@ if args.dir is not None and not os.path.exists(args.dir):
 
 yolo_error_already_shown: bool = False
 
-def conn_execute(conn: sqlite3.Connection, query: str):
+def conn_execute(conn: sqlite3.Connection, query: str) -> sqlite3.Cursor:
     dbg(query)
     res = conn.execute(query)
     return res
 
-def print_file_title(_title: str, file_path: str, after: Optional[str] = None):
+def print_file_title(_title: str, file_path: str, after: Optional[str] = None) -> None:
     if os.path.exists(file_path):
         size_in_mb = get_file_size_in_mb(file_path)
         if after:
@@ -193,7 +193,7 @@ def print_file_title(_title: str, file_path: str, after: Optional[str] = None):
         else:
             console.print(Panel.fit(f"File: {file_path} (not found!)", title=_title))
 
-def cursor_execute(cursor: sqlite3.Cursor, query: str, entries: Optional[tuple] = None):
+def cursor_execute(cursor: sqlite3.Cursor, query: str, entries: Optional[tuple] = None) -> sqlite3.Cursor:
     res = None
     if entries is not None:
         if args.debug:
