@@ -13,7 +13,7 @@ try:
     import random
     from pprint import pprint
     import time
-    from typing import Optional, Any, Generator
+    from typing import Optional, Any, Generator, Union
 
     from pathlib import Path
     from datetime import datetime
@@ -556,7 +556,7 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
     return False
 
 @typechecked
-def display_sixel_part(image_path: str, location: list) -> None:
+def display_sixel_part(image_path: str, location: Union[tuple, list]) -> None:
     top, right, bottom, left = location
 
     with tempfile.NamedTemporaryFile(mode="wb") as jpg:
