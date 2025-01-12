@@ -10,3 +10,4 @@ pypandoc
 pdfplumber
 imageio
 pyzbar
+typeguard
