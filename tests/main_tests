@@ -46,6 +46,8 @@ if [[ $nr_of_missing_f_strings -ne 0 ]]; then
 	FINAL_EXIT_CODE=1
 fi
 
+run_and_fail "mypy" "bash tests/mypy" 0
+
 run_and_fail "Param check (yolo_min_confidence_for_saving -123)" "bash smartlocate --yolo_min_confidence_for_saving -123" 2
 
 run_and_fail "Param check (yolo_min_confidence_for_saving 123)" "bash smartlocate --yolo_min_confidence_for_saving 123" 2

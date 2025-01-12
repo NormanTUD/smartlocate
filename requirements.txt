@@ -11,3 +11,4 @@ pdfplumber
 imageio
 pyzbar
 typeguard
+mypy
