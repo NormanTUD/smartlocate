@@ -1343,18 +1343,23 @@ def delete_document_from_document_path(conn: sqlite3.Connection, delete_status: 
 
 @typechecked
 def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str, foreign_key_column: str = "image_id") -> None:
-    image_id = get_image_id_by_file_path(conn, file_path)
+    try:
+        image_id = get_image_id_by_file_path(conn, file_path)
 
-    if image_id is None:
-        return
+        if image_id is None:
+            return
 
-    if delete_status:
-        delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
-    query = f'DELETE FROM {table_name} WHERE {foreign_key_column} = ?'
-    dbg(query)
-    execute_with_retry(conn, query, (image_id,))
-    if delete_status:
-        delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
+        if delete_status:
+            delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
+        query = f'DELETE FROM {table_name} WHERE {foreign_key_column} = ?'
+        dbg(query)
+        execute_with_retry(conn, query, (image_id,))
+        if delete_status:
+            delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
+    except sqlite3.IntegrityError:
+        console.print(f"[red]Error while trying to delete_by_image_id(conn, delete_status, table_name = {table_name}, file_path = {file_path}, foreign_key_column = {foreign_key_column}): {e}[/]")
+
+    return
 
 @typechecked
 def delete_qr_codes_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
