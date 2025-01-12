@@ -454,19 +454,17 @@
 	fi
 
 	if [[ -z $DONT_INSTALL_MODULES ]]; then
-		if [[ -z $SLURM_JOB_ID ]]; then
-			set +e
-			FROZEN=$(pip --disable-pip-version-check list --format=freeze)
-			exit_code_pip=$?
-			set -e
+		set +e
+		FROZEN=$(pip --disable-pip-version-check list --format=freeze)
+		exit_code_pip=$?
+		set -e
 
-			if [[ "$exit_code_pip" -ne "0" ]]; then
-				printf "pip list --format=freeze exited with exit code %s\n" $exit_code_pip
-				exit 12
-			fi
-
-			install_required_modules
+		if [[ "$exit_code_pip" -ne "0" ]]; then
+			printf "pip list --format=freeze exited with exit code %s\n" $exit_code_pip
+			exit 12
 		fi
+
+		install_required_modules
 	else
 		if [[ -z $DONT_SHOW_DONT_INSTALL_MESSAGE ]]; then
 			red_text "\$DONT_INSTALL_MODULES is set. Don't install modules.\n"
