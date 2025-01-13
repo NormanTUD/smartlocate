@@ -126,12 +126,12 @@ file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_S
 
 args = parser.parse_args()
 
+do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
+
 @typechecked
 def dbg(msg: Any) -> None:
     if args.debug:
         console.log(f"[bold yellow]DEBUG:[/] {msg}")
-
-do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
 
 if len(args.lang_ocr) == 0:
     args.lang_ocr = DEFAULT_LANG_OCR
