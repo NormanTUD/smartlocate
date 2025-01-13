@@ -185,6 +185,21 @@ def conn_execute(conn: sqlite3.Connection, query: str) -> sqlite3.Cursor:
     return res
 
 @typechecked
+def get_file_size_in_mb(file_path: str) -> str:
+    try:
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"The provided file does not exist: {file_path}")
+
+        file_size_bytes = os.path.getsize(file_path)
+
+        file_size_mb = file_size_bytes / (1024 * 1024)
+        return f"{file_size_mb:.1f}MB"
+    except FileNotFoundError as fnf_error:
+        return str(fnf_error)
+    except Exception as e:
+        return f"An error occured while trying to get file size from {file_path}: {e}"
+
+@typechecked
 def print_file_title(_title: str, file_path: str, after: Optional[str] = None) -> None:
     if os.path.exists(file_path):
         size_in_mb = get_file_size_in_mb(file_path)
@@ -495,21 +510,6 @@ def to_absolute_path(path: str) -> str:
         return path
 
     return os.path.abspath(path)
-
-@typechecked
-def get_file_size_in_mb(file_path: str) -> str:
-    try:
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError(f"The provided file does not exist: {file_path}")
-
-        file_size_bytes = os.path.getsize(file_path)
-
-        file_size_mb = file_size_bytes / (1024 * 1024)
-        return f"{file_size_mb:.1f}MB"
-    except FileNotFoundError as fnf_error:
-        return str(fnf_error)
-    except Exception as e:
-        return f"An error occured while trying to get file size from {file_path}: {e}"
 
 #@typechecked
 def ocr_img(img: str) -> Optional[list[str]]:
