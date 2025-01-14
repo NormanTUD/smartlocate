@@ -108,15 +108,19 @@ model_related.add_argument("--yolo_model", default=DEFAULT_MODEL, help="Model to
 model_related.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"YOLO confidence threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
 model_related.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Min YOLO confidence to save detections (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}")
 
-ocr_related = parser.add_argument_group("OCR & Face Recognition")
+ocr_related = parser.add_argument_group("OCR")
 ocr_related.add_argument("--ocr", action="store_true", help="Enable OCR")
-ocr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
 ocr_related.add_argument("--lang_ocr", nargs='+', default=[], help=f"OCR languages, default: {', '.join(DEFAULT_LANG_OCR)}. Accepts multiple languages.")
-ocr_related.add_argument("--face_recognition", action="store_true", help="Enable face recognition (needs user interaction)")
-ocr_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
-ocr_related.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
-ocr_related.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatic tagging)")
-ocr_related.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
+
+face_related = parser.add_argument_group("Face Recognition")
+face_related.add_argument("--face_recognition", action="store_true", help="Enable face recognition (needs user interaction)")
+face_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
+face_related.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
+face_related.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatic tagging)")
+face_related.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
+
+qr_related = parser.add_argument_group("QR-Codes")
+qr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
 
 file_handling_related = parser.add_argument_group("File Handling")
 file_handling_related.add_argument("--dir", default=None, help="Directory to search or index")
