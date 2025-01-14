@@ -2330,7 +2330,7 @@ def main() -> None:
 
     conn.close()
 
-def delete_person(conn: sqlite3.Connection, name: str):
+def delete_person(conn: sqlite3.Connection, name: str) -> None:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
     if name in known_encodings:
         console.print(f"[yellow]Deleting {name} from {args.encoding_face_recognition_file}")
