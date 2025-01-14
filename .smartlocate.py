@@ -118,6 +118,7 @@ face_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_EN
 face_related.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
 face_related.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatic tagging)")
 face_related.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
+face_related.add_argument("--person_delete", type=str, default=None, help="person_delete")
 
 qr_related = parser.add_argument_group("QR-Codes")
 qr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
@@ -2214,6 +2215,9 @@ def main() -> None:
 
         delete_non_existing_documents(conn)
 
+    if args.person_delete:
+        delete_person(conn, args.person_delete)
+
     if args.index:
         shown_something = True
 
@@ -2325,6 +2329,24 @@ def main() -> None:
         show_statistics(conn)
 
     conn.close()
+
+def delete_person(conn: sqlite3.Connection, name: str):
+    known_encodings = load_encodings(args.encoding_face_recognition_file)
+    if name in known_encodings:
+        console.print(f"[yellow]Deleting {name} from {args.encoding_face_recognition_file}")
+        if ask_confirmation():
+            del known_encodings[name]
+            save_encodings(known_encodings, args.encoding_face_recognition_file)
+        else:
+            console.print(f"[yellow]{name} found in {args.encoding_face_recognition_file}, but deletion was cancelled.[/]")
+    else:
+        console.print(f"[red]{name} not found in {args.encoding_face_recognition_file}. Not deleting it.[/]")
+
+    console.print(f"[yellow]Deleting {name} from {args.dbfile}")
+    if ask_confirmation():
+        delete_from_table(conn, None, "person", name, "name")
+    else:
+        console.print(f"[yellow]Not deleting {name} from database")
 
 if __name__ == "__main__":
     try:
