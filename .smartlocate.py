@@ -538,7 +538,7 @@ def ocr_img(img: str) -> Optional[list[str]]:
 
         console.print(f"[red]ocr_img: file {img} not found[/]")
         return None
-    except (cv2.error, ValueError, OSError, AttributeError) as e:
+    except (cv2.error, ValueError, OSError, AttributeError, PIL.Image.DecompressionBombError) as e:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
