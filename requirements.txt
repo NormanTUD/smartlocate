@@ -1,4 +1,5 @@
 torch
+torchvision
 yolov5
 rich
 sixel
