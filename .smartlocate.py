@@ -2356,6 +2356,7 @@ def delete_person(conn: sqlite3.Connection, name: str) -> None:
         console.print(f"[yellow]Not deleting {name} from database")
 
 if __name__ == "__main__":
+    dbg("About to start main()...")
     try:
         main()
     except KeyboardInterrupt:
