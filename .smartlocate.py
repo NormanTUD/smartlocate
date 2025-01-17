@@ -1,6 +1,9 @@
 import sys
 
 try:
+    import warnings
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     import numpy
     import subprocess
     import requests
@@ -262,6 +265,7 @@ def supports_sixel() -> bool:
 
     return False
 
+dbg("Defining console")
 console = Console()
 
 if not supports_sixel() and not args.no_sixel:
@@ -269,10 +273,8 @@ if not supports_sixel() and not args.no_sixel:
 
     args.no_sixel = True
 
+dbg("Loading further modules")
 try:
-    import warnings
-    warnings.simplefilter(action='ignore', category=FutureWarning)
-
     with console.status("[bold green]Loading pickle..."):
         import pickle
 
@@ -318,6 +320,8 @@ except ModuleNotFoundError as e:
 except KeyboardInterrupt:
     console.print("\n[red]You pressed CTRL+C[/]")
     sys.exit(0)
+
+dbg("Done loading further modules")
 
 @typechecked
 def get_qr_codes_from_image(file_path: str) -> list[str]:
