@@ -1,6 +1,10 @@
 try:
     import sys
-except Exception:
+except KeyboardInterrupt:
+    print("You pressed CTRL+c")
+    raise SystemExit(1)
+except ModuleNotFoundError as e:
+    print(f"The following module could not be found: {e}")
     raise SystemExit(1)
 
 try:
