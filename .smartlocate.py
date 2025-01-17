@@ -1,7 +1,7 @@
 try:
     import sys
 except Exception:
-    raise SystemExit()
+    raise SystemExit(1)
 
 try:
     import warnings
