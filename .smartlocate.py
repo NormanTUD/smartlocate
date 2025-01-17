@@ -28,7 +28,6 @@ try:
     from rich.panel import Panel
 
     import PIL
-    from PIL import Image
     from sixel import converter
     import cv2
 
@@ -324,7 +323,7 @@ except KeyboardInterrupt:
 def get_qr_codes_from_image(file_path: str) -> list[str]:
     try:
         try:
-            img = Image.open(file_path)
+            img = PIL.Image.open(file_path)
         except Exception as e:
             raise ValueError(f'Image could not be loaded: {e}') from e
 
@@ -554,7 +553,7 @@ def ocr_img(img: str) -> Optional[list[str]]:
 
 @typechecked
 def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
-    with Image.open(input_path) as img:
+    with PIL.Image.open(input_path) as img:
         try:
             img.thumbnail((max_size, max_size))
             img.save(output_path)
@@ -574,7 +573,7 @@ def display_sixel_part(image_path: str, location: Union[tuple, list]) -> None:
 
         image = face_recognition.load_image_file(image_path)
         face_image = image[top:bottom, left:right]
-        pil_image = Image.fromarray(face_image)
+        pil_image = PIL.Image.fromarray(face_image)
 
         pil_image.save(jpg.name, format="JPEG")
 
@@ -1836,7 +1835,7 @@ def get_image_description(image_path: str) -> str:
     global blip_model, blip_processor
 
     try:
-        image = Image.open(image_path).convert("RGB")
+        image = PIL.Image.open(image_path).convert("RGB")
         if blip_processor is None:
             import transformers
 
@@ -1924,7 +1923,7 @@ def is_valid_image_file(path: str) -> bool:
         if not os.path.isfile(path):
             return False
 
-        with Image.open(path) as img:
+        with PIL.Image.open(path) as img:
             img.verify()
         return True
     except Exception:

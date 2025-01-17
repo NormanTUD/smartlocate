@@ -56,6 +56,8 @@ run_and_fail "pylint" "bash tests/pylint" 0
 
 run_and_fail "Param check (yolo_min_confidence_for_saving -123)" "bash smartlocate --yolo_min_confidence_for_saving -123" 2
 
+export DONT_INSTALL_MODULES=1
+
 run_and_fail "Param check (yolo_min_confidence_for_saving 123)" "bash smartlocate --yolo_min_confidence_for_saving 123" 2
 
 run_and_fail "Param check (yolo_threshold -123)" "bash smartlocate --yolo_threshold -123" 2
