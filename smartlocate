@@ -9,6 +9,14 @@ cd $SCRIPT_DIR
 
 source .install.sh
 
-python3 .smartlocate.py $*
+if [[ -z $FLAMEPROF ]]; then
+	python3 .smartlocate.py $*
+else
+	python3 -m cProfile -o input.prof .smartlocate.py $*
+
+	flameprof input.prof > output.svg
+
+	rm input.prof
+fi
 
 exit $?
