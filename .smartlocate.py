@@ -1,4 +1,7 @@
-import sys
+try:
+    import sys
+except Exception:
+    raise SystemExit()
 
 try:
     import warnings
