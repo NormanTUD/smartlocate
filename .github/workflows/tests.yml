@@ -38,7 +38,7 @@ jobs:
 
     - name: main test script
       run: |
-        bash tests/main_tests
+        bash tests/main
 
     - name: Create a new version
       if: ${{ success() }}
