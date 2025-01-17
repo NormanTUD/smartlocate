@@ -158,11 +158,14 @@ if original_pwd is not None and os.path.exists(original_pwd):
     os.chdir(original_pwd)
 
 if len(args.search) == 0:
+    dbg("Setting args.search to None")
     args.search = None
 else:
+    dbg("Joining args.search to a string")
     args.search = " ".join(args.search)
 
 if args.dir is None and args.index:
+    dbg(f"--dir is set to None and --index is set. Checking if args.search contains a dir")
     if args.search is not None and os.path.exists(args.search):
         args.dir = os.path.expanduser(args.search)
         dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: '{args.dir}' (from '{args.search}'). --search will be set to None")
@@ -182,6 +185,8 @@ if args.dir is not None and not os.path.exists(args.dir):
     sys.exit(2)
 
 yolo_error_already_shown: bool = False
+
+dbg("Finished declaring global variables")
 
 @typechecked
 def conn_execute(conn: sqlite3.Connection, query: str) -> sqlite3.Cursor:
@@ -2332,6 +2337,7 @@ def main() -> None:
 
 @typechecked
 def delete_person(conn: sqlite3.Connection, name: str) -> None:
+    dbg(f"delete_person(conn, {name})")
     known_encodings = load_encodings(args.encoding_face_recognition_file)
     if name in known_encodings:
         console.print(f"[yellow]Deleting {name} from {args.encoding_face_recognition_file}")
