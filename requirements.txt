@@ -16,3 +16,4 @@ mypy
 types-requests
 flake8
 pylint
+flameprof
