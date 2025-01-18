@@ -57,6 +57,13 @@ console: Console = Console(
     force_terminal=True
 )
 
+@typechecked
+def to_absolute_path(path: str) -> str:
+    if os.path.isabs(path):
+        return path
+
+    return os.path.abspath(path)
+
 original_pwd = os.getenv("ORIGINAL_PWD")
 
 DEFAULT_MIN_CONFIDENCE_FOR_SAVING: float = 0.1
@@ -174,9 +181,10 @@ else:
             if os.path.exists(search_elem):
                 if args.dir is None:
                     dbg(f"Found {search_elem}: is a valid directory, and --dir is not set")
-                    args.dir = search_elem
+                    args.dir = to_absolute_path(search_elem)
                 else:
                     dbg(f"Found {search_elem}: is a valid directory, but --dir is already set ({args.dir})")
+                    arguments.append(search_elem)
             else:
                 dbg(f"{search_elem} is not a valid directory")
                 arguments.append(search_elem)
@@ -539,13 +547,6 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> Opt
         return new_ids, manually_entered_name
 
     return None
-
-@typechecked
-def to_absolute_path(path: str) -> str:
-    if os.path.isabs(path):
-        return path
-
-    return os.path.abspath(path)
 
 #@typechecked
 def ocr_img(img: str) -> Optional[list[str]]:
