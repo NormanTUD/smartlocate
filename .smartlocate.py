@@ -171,7 +171,32 @@ if len(args.search) == 0:
     args.search = None
 else:
     dbg("Joining args.search to a string")
-    args.search = " ".join(args.search)
+
+    arguments = []
+
+    if args.dir is None:
+        dbg("args.dir is None. Checking if any search term is a valid search directory.")
+        for search_elem in args.search:
+            dbg(f"Checking if {search_elem} is a valid directory...")
+            if os.path.exists(search_elem):
+                if args.dir is None:
+                    dbg(f"Found {search_elem}: is a valid directory, and --dir is not set")
+                    args.dir = search_elem
+                else:
+                    dbg(f"Found {search_elem}: is a valid directory, but --dir is already set ({args.dir})")
+            else:
+                dbg(f"{search_elem} is not a valid directory")
+                arguments.append(search_elem)
+    else:
+        dbg("--dir seems to be set. Just concatenating all search terms together")
+        arguments = args.search
+
+    if len(arguments) > 0:
+        args.search = " ".join(arguments)
+    else:
+        args.search = []
+
+    #dier("A")
 
 if args.dir is None and args.index:
     dbg("--dir is set to None and --index is set. Checking if args.search contains a dir")
