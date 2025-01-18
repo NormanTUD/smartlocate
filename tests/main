@@ -13,6 +13,10 @@ cd $SCRIPT_DIR
 
 cd ..
 
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    deactivate
+fi
+
 FINAL_EXIT_CODE=0
 
 tmp_db_file="$HOME/db_file"
