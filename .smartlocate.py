@@ -41,9 +41,7 @@ try:
 
     if os.getenv("IS_TESTING") == "1":
         from typeguard import typechecked
-
     else:
-        # Leerer Decorator
         def typechecked(func):
             return func
 except KeyboardInterrupt:
