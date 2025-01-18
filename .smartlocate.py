@@ -199,9 +199,11 @@ else:
 
 if args.dir is None and args.index:
     dbg("--dir is set to None and --index is set. Checking if args.search contains a dir")
-    if args.search is not None and os.path.exists(args.search):
-        args.dir = os.path.expanduser(args.search)
-        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: '{args.dir}' (from '{args.search}'). --search will be set to None")
+    _search: str = str(args.search)
+
+    if _search is not None and os.path.exists(_search):
+        args.dir = os.path.expanduser(_search)
+        dbg(f"--dir was not set, but the search parameter was a valid directory. Will be using it: '{args.dir}' (from '{_search}'). --search will be set to None")
 
         args.search = None
     else:
