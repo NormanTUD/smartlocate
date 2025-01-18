@@ -24,7 +24,13 @@ smartlocate ~/Documents --index --ocr --face_recognition --qrcodes
 smartlocate "cat"
 
 # Search for cat in /home/username/Documents
-smartlocate "cat" /home/username/Documents
+smartlocate cat /home/username/Documents
+
+# Search for "cat and dog" (order doesn't matter) in /home/username/Documents
+smartlocate cat and dog /home/username/Documents
+
+# Search for "cat and dog" (exactly in that order) in /home/username/Documents
+smartlocate cat and dog /home/username/Documents --exact
 
 # Help
 smartlocate --help
