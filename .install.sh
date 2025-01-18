@@ -287,6 +287,7 @@
 				green_reset_line "${PROGRESSBAR}✅$MODULE installed successfully$(bg_jobs_str)"
 			fi
 		fi
+
 		set -e
 	}
 
