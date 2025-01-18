@@ -39,10 +39,14 @@ try:
 
     from pyzbar.pyzbar import decode
 
+    from typing import Callable, TypeVar
+
+    F = TypeVar("F", bound=Callable[..., object])
+
     if os.getenv("IS_TESTING") == "1":
         from typeguard import typechecked
     else:
-        def typechecked(func):
+        def typechecked(func: F) -> F:
             return func
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
