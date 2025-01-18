@@ -23,6 +23,9 @@ smartlocate ~/Documents --index --ocr --face_recognition --qrcodes
 # Search for cats
 smartlocate "cat"
 
+# Search for cat in /home/username/Documents
+smartlocate "cat" /home/username/Documents
+
 # Help
 smartlocate --help
 ```
