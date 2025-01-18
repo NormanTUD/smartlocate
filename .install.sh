@@ -220,7 +220,7 @@
 
 		MODULES_WITHOUT_VERSIONS=$(echo "$MODULE" | sed -e 's#[=<>]=.*##' -e 's#~.*##')
 
-		echo "$FROZEN" | grep -i "$MODULES_WITHOUT_VERSIONS" 2>/dev/null >/dev/null
+		echo "$FROZEN" | grep -qi "$MODULES_WITHOUT_VERSIONS"
 		_exit_code=$?
 
 		if [[ "$_exit_code" != "0" ]]; then
