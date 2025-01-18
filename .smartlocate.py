@@ -38,7 +38,6 @@ try:
     from pathlib import Path
 
     from pyzbar.pyzbar import decode
-    from typeguard import typechecked
 
     if os.getenv("IS_TESTING") == "1":
         from typeguard import typechecked
