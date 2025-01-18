@@ -30,7 +30,7 @@ smartlocate cat /home/username/Documents
 smartlocate cat and dog /home/username/Documents
 
 # Search for "cat and dog" (exactly in that order) in /home/username/Documents
-smartlocate cat and dog /home/username/Documents --exact
+smartlocate "cat and dog" /home/username/Documents --exact
 
 # Help
 smartlocate --help
