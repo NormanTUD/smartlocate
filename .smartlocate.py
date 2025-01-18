@@ -1,6 +1,5 @@
 import sys
 import os
-import importlib
 
 try:
     import warnings
@@ -44,6 +43,7 @@ try:
     F = TypeVar("F", bound=Callable[..., object])
 
     if os.getenv("IS_TESTING") == "1":
+        import importlib
         typechecked = importlib.import_module("typeguard").typechecked
     else:
         def typechecked(func: F) -> F:
