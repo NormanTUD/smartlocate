@@ -222,6 +222,14 @@ yolo_error_already_shown: bool = False
 dbg("Finished declaring global variables")
 
 @typechecked
+def show(path: str) -> bool:
+    if args.dir:
+        if path.startswith(args.dir):
+            return True
+        return False
+    return True
+
+@typechecked
 def conn_execute(conn: sqlite3.Connection, query: str) -> sqlite3.Cursor:
     dbg(query)
     res = conn.execute(query)
@@ -1520,13 +1528,14 @@ def search_yolo(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in yolo_results:
             conf = row[2]
-            if conf >= args.yolo_threshold:
-                if not is_ignored_path(row[0]):
-                    print_file_title("YOLO", row[0], f"Certainty: {conf:.2f}")
-                    display_sixel(row[0])
-                    print("\n")
+            if show(row[0]):
+                if conf >= args.yolo_threshold:
+                    if not is_ignored_path(row[0]):
+                        print_file_title("YOLO", row[0], f"Certainty: {conf:.2f}")
+                        display_sixel(row[0])
+                        print("\n")
 
-                    nr_yolo = nr_yolo + 1
+                        nr_yolo = nr_yolo + 1
     else:
         table = Table(title="Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -1534,11 +1543,12 @@ def search_yolo(conn: sqlite3.Connection) -> int:
         table.add_column("Confidence", justify="right", style="green")
         for row in yolo_results:
             conf = row[2]
-            if conf >= args.yolo_threshold:
-                if not is_ignored_path(row[0]):
-                    table.add_row(*map(str, row))
+            if show(row[0]):
+                if conf >= args.yolo_threshold:
+                    if not is_ignored_path(row[0]):
+                        table.add_row(*map(str, row))
 
-                    nr_yolo = nr_yolo + 1
+                        nr_yolo = nr_yolo + 1
 
         if len(yolo_results):
             console.print(table)
@@ -1578,12 +1588,13 @@ def search_description(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                print_file_title("Description", row[0])
-                print(f"Description:\n{row[1]}\n")
-                display_sixel(row[0])
-                print("\n")
+                if show(row[0]):
+                    print_file_title("Description", row[0])
+                    print(f"Description:\n{row[1]}\n")
+                    display_sixel(row[0])
+                    print("\n")
 
-            nr_desc = nr_desc + 1
+                    nr_desc = nr_desc + 1
     else:
         table = Table(title="OCR Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -1591,9 +1602,10 @@ def search_description(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             file_path, extracted_text = row
             if not is_ignored_path(file_path):
-                table.add_row(file_path, extracted_text)
+                if show(row[0]):
+                    table.add_row(file_path, extracted_text)
 
-                nr_desc = nr_desc + 1
+                    nr_desc = nr_desc + 1
         if len(ocr_results):
             console.print(table)
 
@@ -1659,16 +1671,17 @@ def search_documents(conn: sqlite3.Connection) -> int:
 
     for row in ocr_results:
         if not is_ignored_path(row[0]):
-            try:
-                print_text_with_keywords(row[0], f"Text:\n{row[1]}\n", words, args.full_results)
-            except rich.errors.MarkupError:
-                print_file_title("Document", row[0])
+            if show(row[0]):
                 try:
-                    console.print(f"Text:\n{row[1]}\n")
-                except Exception:
-                    print(f"Text:\n{row[1]}\n")
-            print("\n")
-            nr_documents += 1
+                    print_text_with_keywords(row[0], f"Text:\n{row[1]}\n", words, args.full_results)
+                except rich.errors.MarkupError:
+                    print_file_title("Document", row[0])
+                    try:
+                        console.print(f"Text:\n{row[1]}\n")
+                    except Exception:
+                        print(f"Text:\n{row[1]}\n")
+                print("\n")
+                nr_documents += 1
 
     return nr_documents
 
@@ -1692,11 +1705,12 @@ def search_ocr(conn: sqlite3.Connection) -> int:
     if not args.no_sixel:
         for row in ocr_results:
             if not is_ignored_path(row[0]):
-                print_file_title("OCR", row[0])
-                print_text_with_keywords(row[0], f"Extracted Text:\n{row[1]}\n", words, args.full_results)
-                display_sixel(row[0])
-                print("\n")
-                nr_ocr += 1
+                if show(row[0]):
+                    print_file_title("OCR", row[0])
+                    print_text_with_keywords(row[0], f"Extracted Text:\n{row[1]}\n", words, args.full_results)
+                    display_sixel(row[0])
+                    print("\n")
+                    nr_ocr += 1
     else:
         table = Table(title="OCR Search Results")
         table.add_column("File Path", justify="left", style="cyan")
@@ -1704,8 +1718,9 @@ def search_ocr(conn: sqlite3.Connection) -> int:
         for row in ocr_results:
             file_path, extracted_text = row
             if not is_ignored_path(file_path):
-                table.add_row(file_path, extracted_text)
-                nr_ocr += 1
+                if show(row[0]):
+                    table.add_row(file_path, extracted_text)
+                    nr_ocr += 1
 
         if len(ocr_results):
             console.print(table)
@@ -1732,18 +1747,20 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in qr_code_imgs:
-            print_file_title("Qr-Code", row[0])
-            print("\nQr-Code content:")
-            print(row[1])
-            print("\n")
-            display_sixel(row[0])  # Falls Sixel angezeigt werden soll
-            print("\n")
-            nr_qrcodes += 1
+            if show(row[0]):
+                print_file_title("Qr-Code", row[0])
+                print("\nQr-Code content:")
+                print(row[1])
+                print("\n")
+                display_sixel(row[0])  # Falls Sixel angezeigt werden soll
+                print("\n")
+                nr_qrcodes += 1
     else:
         table = Table(title="Qr-Codes Results")
         table.add_column("File Path", justify="left", style="cyan")
         for row in qr_code_imgs:
-            table.add_row(row[0])
+            if show(row[0]):
+                table.add_row(row[0])
 
         if len(qr_code_imgs):
             console.print(table)
@@ -1784,15 +1801,17 @@ def search_faces(conn: sqlite3.Connection) -> int:
 
     if not args.no_sixel:
         for row in person_images:
-            print_file_title("Face Recognition", row[0])
-            display_sixel(row[0])  # Falls Sixel angezeigt werden soll
-            print("\n")
-            nr_images += 1
+            if show(row[0]):
+                print_file_title("Face Recognition", row[0])
+                display_sixel(row[0])  # Falls Sixel angezeigt werden soll
+                print("\n")
+                nr_images += 1
     else:
         table = Table(title="Person Image Results")
         table.add_column("File Path", justify="left", style="cyan")
         for row in person_images:
-            table.add_row(row[0])
+            if show(row[0]):
+                table.add_row(row[0])
 
         if len(person_images):
             console.print(table)
