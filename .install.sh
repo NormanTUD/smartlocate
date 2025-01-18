@@ -216,7 +216,7 @@
 
 		set +e
 
-		PROGRESSBAR=$(generate_progress_bar_setup "$NUMBER_OF_MAIN_MODULES")
+		#PROGRESSBAR=$(generate_progress_bar_setup "$NUMBER_OF_MAIN_MODULES")
 
 		MODULES_WITHOUT_VERSIONS=$(echo "$MODULE" | sed -e 's#[=<>]=.*##' -e 's#~.*##')
 
