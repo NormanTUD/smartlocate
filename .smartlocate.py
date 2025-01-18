@@ -1,4 +1,5 @@
 import sys
+import os
 
 try:
     import warnings
@@ -38,6 +39,14 @@ try:
 
     from pyzbar.pyzbar import decode
     from typeguard import typechecked
+
+    if os.getenv("IS_TESTING") == "1":
+        from typeguard import typechecked
+
+    else:
+        # Leerer Decorator
+        def typechecked(func):
+            return func
 except KeyboardInterrupt:
     print("You pressed CTRL+c")
     sys.exit(0)

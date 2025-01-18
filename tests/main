@@ -7,6 +7,8 @@ NC='\033[0m' # No Color
 
 SCRIPT_DIR=$(dirname $(realpath "$0"))
 
+export IS_TESTING=1
+
 cd $SCRIPT_DIR
 
 cd ..
