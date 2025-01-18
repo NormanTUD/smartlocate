@@ -196,8 +196,6 @@ else:
     else:
         args.search = []
 
-    #dier("A")
-
 if args.dir is None and args.index:
     dbg("--dir is set to None and --index is set. Checking if args.search contains a dir")
     if args.search is not None and os.path.exists(args.search):
