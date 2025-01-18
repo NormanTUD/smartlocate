@@ -12,7 +12,6 @@ try:
     import tempfile
     import re
     import uuid
-    import os
     import argparse
     import sqlite3
     import random
