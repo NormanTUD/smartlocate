@@ -30,6 +30,7 @@ try:
     import rich.errors
     from rich.panel import Panel
     from rich.text import Text
+    from rich.prompt import Prompt
 
     import PIL
     from sixel import converter
@@ -157,6 +158,25 @@ do_all = not args.describe and not args.ocr and not args.yolo and not args.face_
 def dbg(msg: Any) -> None:
     if args.debug:
         console.log(f"[bold yellow]DEBUG:[/] {msg}")
+
+from rich.progress import Progress
+class PauseProgress:
+    def __init__(self, progress: Progress) -> None:
+        self._progress = progress
+
+    def _clear_line(self) -> None:
+        UP = "\x1b[1A"
+        CLEAR = "\x1b[2K"
+        for _ in self._progress.tasks:
+            print(UP + CLEAR + UP)
+
+    def __enter__(self):
+        self._progress.stop()
+        self._clear_line()
+        return self._progress
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._progress.start()
 
 if len(args.lang_ocr) == 0:
     args.lang_ocr = DEFAULT_LANG_OCR
@@ -497,7 +517,7 @@ def load_encodings(file_name: str) -> dict:
     return {}
 
 @typechecked
-def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = args.tolerance_face_detection) -> Optional[tuple[list[str], dict, bool]]:
+def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = args.tolerance_face_detection, progress: Any = None) -> Optional[tuple[list[str], dict, bool]]:
     try:
         face_encodings, face_locations = extract_face_encodings(image_path)
 
@@ -528,7 +548,12 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
                 else:
                     display_sixel_part(image_path, this_face_location)
                     try:
-                        new_id = input("What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] ")
+                        ask_string = "What is this person's name? [Just press enter if no person is visible or you don't want the person to be saved] "
+                        if progress:
+                            with PauseProgress(progress):
+                                new_id = input(ask_string)
+                        else:
+                            new_id = input(ask_string)
                         if any(char.strip() for char in new_id):
                             known_encodings[new_id] = face_encoding
                             new_ids.append(new_id)
@@ -549,10 +574,10 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
     return None
 
 @typechecked
-def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str) -> Optional[tuple[list[str], bool]]:
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str, progress: Any = None) -> Optional[tuple[list[str], bool]]:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
-    recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings)
+    recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings, args.tolerance_face_detection, progress)
 
     if recognized_faces is not None:
         new_ids, known_encodings, manually_entered_name = recognized_faces
@@ -2216,7 +2241,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
         elif option == strs["run_face_recognition"]:
             delete_no_faces_from_image_path(conn, None, file_path)
             delete_faces_from_image_path(conn, None, file_path)
-            face_res = recognize_persons_in_image(conn, file_path)
+            face_res = recognize_persons_in_image(conn, file_path, None)
 
             if face_res:
                 new_ids, manually_entered_name = face_res
@@ -2344,7 +2369,7 @@ def main() -> None:
                             file_size = os.path.getsize(image_path)
 
                             if file_size < args.max_size * 1024 * 1024:
-                                recognized_faces = recognize_persons_in_image(conn, image_path)
+                                recognized_faces = recognize_persons_in_image(conn, image_path, progress)
 
                                 if recognized_faces is None:
                                     console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
