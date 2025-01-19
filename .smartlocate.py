@@ -170,12 +170,12 @@ class PauseProgress:
         for _ in self._progress.tasks:
             print(UP + CLEAR + UP)
 
-    def __enter__(self):
+    def __enter__(self) -> Any:
         self._progress.stop()
         self._clear_line()
         return self._progress
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
         self._progress.start()
 
 if len(args.lang_ocr) == 0:
