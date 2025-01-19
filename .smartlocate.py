@@ -2507,6 +2507,8 @@ def add_current_script_to_crontab():
             arg_str = f"--index {arg_str}"
         _command = f"{_command} {arg_str}"
 
+    dbg(f"add_current_script_to_crontab: Found script [green]{_command}[/]")
+
     from crontab import CronTab
 
     cron = CronTab(user=True)
