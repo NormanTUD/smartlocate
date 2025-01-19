@@ -485,7 +485,6 @@
 		if ! hash_is_different; then
 			install_required_modules
 
-			REQUIREMENTS_HASH=$(md5sum requirements.txt | awk '{print $1}')
 			echo "$REQUIREMENTS_HASH" > "$VENV_DIR/hash"
 		fi
 	else
