@@ -672,6 +672,8 @@ def display_sixel(image_path: str) -> None:
         console.print(text)
     except FileNotFoundError:
         console.print(f"[red]Could not find {image_path}[/]")
+    except PIL.UnidentifiedImageError as e:
+        console.print(f"[red]Could not determine format of {image_path}[/]: {e}")
     finally:
         if os.path.exists(unique_filename):
             os.remove(unique_filename)
@@ -2401,6 +2403,7 @@ def main() -> None:
 
                 for image_path in image_paths:
                     if os.path.exists(image_path):
+                        display_sixel(image_path)
                         if args.describe or do_all:
                             describe_img(conn, image_path)
                         if args.yolo or do_all:
