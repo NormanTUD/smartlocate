@@ -2389,40 +2389,27 @@ def main() -> None:
         with console.status(f"[bold green]Finding images in {args.dir}..."):
             if existing_files is not None:
                 image_paths = list(find_images(existing_files))
-        total_images: int = len(image_paths)
 
         if args.shuffle_index:
             random.shuffle(image_paths)
 
-        if args.face_recognition or do_all:
-            if supports_sixel():
-                face_recognition_images: list = []
+        face_recognition_images: list = []
 
-                for image_path in image_paths:
-                    if not faces_already_recognized(conn, image_path):
-                        face_recognition_images.append(image_path)
-                    else:
-                        console.print(f"[green]The image {image_path} was already in the index")
+        with Progress(transient=True) as progress:
+            task = progress.add_task("Finding all images to be face-recognized...", total=None)
 
-                with Progress(
-                    TextColumn("[bold blue]{task.description}"),
-                    BarColumn(),
-                    "[progress.percentage]{task.percentage:>3.0f}%",
-                    "[bold green]{task.completed}/{task.total} images",
-                    TimeElapsedColumn(),
-                    "[bold]Remaining[/]",
-                    TimeRemainingColumn(),
-                    console=console,
-                ) as progress:
-                    task = progress.add_task("Face recognition...", total=total_images)
+            if args.face_recognition or do_all:
+                if supports_sixel():
 
-                    for image_path in face_recognition_images:
-                        run_face_recognition_on_single_image(conn, image_path, progress)
-                        progress.update(task, advance=1)
-            else:
-                console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+                    for image_path in image_paths:
+                        if not faces_already_recognized(conn, image_path):
+                            face_recognition_images.append(image_path)
+                        else:
+                            console.print(f"[green]The image {image_path} was already in the index")
+                else:
+                    console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
-        if args.describe or args.yolo or args.ocr or args.qrcodes or do_all:
+        if args.describe or args.yolo or args.ocr or args.qrcodes or args.face_recognition or do_all:
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
                 BarColumn(),
@@ -2432,8 +2419,14 @@ def main() -> None:
                 "[bold]Remaining[/]",
                 TimeRemainingColumn(),
                 console=console,
+                transient=True
             ) as progress:
+                total_images: int = len(image_paths) + len(face_recognition_images)
                 task = progress.add_task("Indexing images...", total=total_images)
+
+                for image_path in face_recognition_images:
+                    run_face_recognition_on_single_image(conn, image_path, progress)
+                    progress.update(task, advance=1)
 
                 for image_path in image_paths:
                     index_image_file(conn, image_path, existing_files, model)
