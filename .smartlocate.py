@@ -1157,27 +1157,24 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
     try:
         cursor = conn.cursor()
 
-        # Tabelle für die Anzeige vorbereiten
         console.print(Panel.fit(f"{title}:"))
         table = Table()
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green")
 
-        # Führe jede Abfrage einzeln aus
         results = []
         for query in queries:
             cursor_execute(cursor, query)
-            result = cursor.fetchone()  # Hole das Ergebnis der Abfrage
-            results.append(result[0] if result else 0)  # Wenn ein Ergebnis vorhanden ist, füge es hinzu
+            result = cursor.fetchone()
+            results.append(result[0] if result else 0)
 
-        # Füge alle Metriken zur Tabelle hinzu
         for (metric, _), result in zip(metrics, results):
             table.add_row(metric, str(result))
 
         console.print(table)
         cursor.close()
 
-        return sum(results)  # Summiere alle Ergebnisse
+        return sum(results)
     except Exception as e:
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
         return 0
