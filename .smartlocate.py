@@ -159,7 +159,6 @@ def dbg(msg: Any) -> None:
     if args.debug:
         console.log(f"[bold yellow]DEBUG:[/] {msg}")
 
-from rich.progress import Progress
 class PauseProgress:
     def __init__(self, progress: Progress) -> None:
         self._progress = progress
@@ -1187,7 +1186,7 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
 def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: list) -> int:
     try:
         cursor = conn.cursor()
-        
+
         # Tabelle erstellen
         table = Table()
         table.add_column("Metric", style="cyan")
@@ -1201,11 +1200,11 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
 
         for (metric, _), result in zip(metrics, results):
             table.add_row(metric, str(result))
-        
+
         # Tabelle und Überschrift in ein Panel einfügen
         panel = Panel.fit(table, title=title, title_align="left")
         console.print(panel)
-        
+
         cursor.close()
         return sum(results)
     except Exception as e:
