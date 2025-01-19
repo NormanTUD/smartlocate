@@ -209,7 +209,7 @@ else:
         dbg("args.dir is None. Checking if any search term is a valid search directory.")
         for search_elem in args.search:
             dbg(f"Checking if {search_elem} is a valid directory...")
-            if os.path.exists(search_elem):
+            if os.path.isdir(search_elem):
                 if args.dir is None:
                     dbg(f"Found {search_elem}: is a valid directory, and --dir is not set")
                     args.dir = to_absolute_path(search_elem)
