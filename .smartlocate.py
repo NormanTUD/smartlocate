@@ -1201,21 +1201,25 @@ def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: 
         cursor = conn.cursor()
         results = []
 
+        # Abfragen ausführen und Ergebnisse speichern
         for query in queries:
             cursor_execute(cursor, query)
             results.append(cursor.fetchall())
 
-        console.print(Panel.fit(f"{title}:"))
+        # Tabelle erstellen
         table = Table()
         for metric in metrics:
             table.add_column(metric[0], style="cyan")
             table.add_column("Value", style="green")
 
+        # Ergebnisse hinzufügen
         for result in results:
             for row in result:
                 table.add_row(row[0], str(row[1]))
 
-        console.print(table)
+        # Tabelle und Überschrift in ein Panel einfügen
+        panel = Panel.fit(table, title=title, title_align="left")
+        console.print(panel)
 
         return 0
     except Exception as e:
