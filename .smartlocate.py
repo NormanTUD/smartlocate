@@ -912,8 +912,8 @@ def pdf_to_text(pdf_path: str) -> Optional[str]:
     import pdfplumber
 
     try:
+        text = ""
         with pdfplumber.open(pdf_path) as pdf:
-            text = ""
             for page in pdf.pages:
                 text += page.extract_text()
         return text
