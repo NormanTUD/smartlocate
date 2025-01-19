@@ -1291,13 +1291,12 @@ def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[s
         cursor = conn.cursor()
         results = []
 
-        # Führe alle Abfragen aus
+        # Führe alle Abfragen aus und speichere die Ergebnisse
         for query in queries:
             cursor_execute(cursor, query)
             results.append(cursor.fetchall())
 
-        # Tabelle anzeigen
-        console.print(Panel.fit(f"{title}:"))
+        # Tabelle erstellen
         table = Table()
         for metric in metrics:
             table.add_column(metric[0], style="cyan")
@@ -1308,7 +1307,9 @@ def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[s
             for row in result:
                 table.add_row(row[0], str(row[1]))
 
-        console.print(table)
+        # Tabelle und Überschrift in ein Panel einfügen
+        panel = Panel.fit(table, title=title, title_align="left")
+        console.print(panel)
 
         return 0
     except Exception as e:
