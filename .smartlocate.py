@@ -2302,7 +2302,8 @@ def search_or_show_file(conn: sqlite3.Connection) -> None:
 
 def index_image_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if os.path.exists(image_path):
-        display_sixel(image_path)
+        if args.yolo or args.ocr or args.qrcodes or args.describe or do_all:
+            display_sixel(image_path)
 
         if args.describe or do_all:
             describe_img(conn, image_path)
