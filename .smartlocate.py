@@ -2184,7 +2184,7 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
     options: list[str] = []
 
     if is_valid_image_file(file_path):
-        print(f"Options for file {file_path}:")
+        console.print(f"Options for file {file_path}:")
         display_sixel(file_path)
 
         handle_file_options(conn, file_path, options, strs)
