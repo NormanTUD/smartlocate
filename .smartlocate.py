@@ -2483,7 +2483,7 @@ def reconstruct_args(namespace: Any, ignored_keys: list) -> list:
     return reconstructed
 
 @typechecked
-def add_current_script_to_crontab():
+def add_current_script_to_crontab() -> None:
     if not args.index:
         console.print("[red]--index was not defined. Without it, --run_hourly doesn't make sense. Ignoring it.[/]")
         return
