@@ -20,6 +20,9 @@ smartlocate ~/Documents --index
 # Index files (using OCR, face-recognition, qr-code detection)
 smartlocate ~/Documents --index --ocr --face_recognition --qrcodes
 
+# Index files (Using all possible indexing methods), run hourly (won't work with new faces)
+smartlocate ~/Documents --index --run_hourly
+
 # Search for cats
 smartlocate "cat"
 
