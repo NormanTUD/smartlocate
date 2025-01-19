@@ -2418,7 +2418,7 @@ def main() -> None:
 
         run_face_or_image_index = args.describe or args.yolo or args.ocr or args.qrcodes or args.face_recognition
 
-        if run_face_recognition or do_all:
+        if run_face_or_image_index or do_all:
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
                 BarColumn(),
