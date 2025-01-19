@@ -2266,10 +2266,6 @@ def main() -> None:
 
     existing_files = None
 
-    if args.vacuum:
-        vacuum(conn)
-        shown_something = True
-
     if args.index or args.delete_non_existing_files:
         existing_files = load_existing_images(conn)
 
@@ -2277,6 +2273,10 @@ def main() -> None:
         existing_files = delete_non_existing_image_files(conn, existing_files)
 
         delete_non_existing_documents(conn)
+
+    if args.vacuum:
+        vacuum(conn)
+        shown_something = True
 
     if args.person_delete:
         delete_person(conn, args.person_delete)
