@@ -17,3 +17,4 @@ types-requests
 flake8
 pylint
 flameprof
+python-crontab

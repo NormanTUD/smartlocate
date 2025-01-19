@@ -4,6 +4,7 @@ ORIGINAL_PWD=$(pwd)
 export ORIGINAL_PWD
 
 SCRIPT_DIR=$(dirname $(realpath "$0"))
+export SCRIPT_DIR
 
 cd $SCRIPT_DIR
 

@@ -144,6 +144,9 @@ face_related.add_argument("--person_delete", type=str, default=None, help="perso
 qr_related = parser.add_argument_group("QR-Codes")
 qr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
 
+crontab_related = parser.add_argument_group("Crontab")
+crontab_related.add_argument("--run_hourly", action="store_true", help="Allows you to automatically run this command hourly to update for new files")
+
 file_handling_related = parser.add_argument_group("File Handling")
 file_handling_related.add_argument("--dir", default=None, help="Directory to search or index")
 file_handling_related.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
@@ -2354,6 +2357,9 @@ def main() -> None:
 
     existing_files = None
 
+    if args.run_hourly:
+        add_current_script_to_crontab()
+
     if args.index or args.delete_non_existing_files:
         existing_files = load_existing_images(conn)
 
@@ -2462,6 +2468,64 @@ def delete_person(conn: sqlite3.Connection, name: str) -> None:
         delete_from_table(conn, None, "person", name, "name")
     else:
         console.print(f"[yellow]Not deleting {name} from database")
+
+@typechecked
+def reconstruct_args(namespace: Any, ignored_keys: list) -> list:
+    reconstructed = []
+    for key, value in vars(namespace).items():
+        if isinstance(value, bool):  # Flags
+            if value:
+                reconstructed.append(f"--{key}")
+        else:
+            if key not in ignored_keys and value is not None:
+                reconstructed.append(f"--{key}")
+                reconstructed.append(str(value))
+    return reconstructed
+
+@typechecked
+def add_current_script_to_crontab():
+    if not args.index:
+        console.print("[red]--index was not defined. Without it, --run_hourly doesn't make sense. Ignoring it.[/]")
+        return
+
+    SCRIPT_DIR = os.getenv("SCRIPT_DIR")
+
+    _command = f'bash {SCRIPT_DIR}/smartlocate';
+
+    arguments = []
+
+    i = 0
+    for arg in reconstruct_args(args, ["search", "debug", "exclude", "lang_ocr"]):
+        if i != 0:
+            if not arg.startswith("--r"):
+                arguments.append(arg)
+        i = i + 1
+
+    if len(arguments):
+        arg_str = ' '.join(arguments)
+        if not "--index" in arg_str:
+            arg_str = f"--index {arg_str}"
+        _command = f"{_command} {arg_str}"
+
+    from crontab import CronTab
+
+    cron = CronTab(user=True)
+
+    for job in cron:
+        dbg(f"job.command: {job.command}, _command: {_command}")
+
+        if _command in job.command:
+            print("Script was already in cron-tab")
+            return
+
+    job = cron.new(command=_command, comment='Hourly indexer')
+
+    job.setall('0 * * * *')
+
+    cron.write()
+
+    console.print(f"[yellow]Added cron-job: Will execute this command hourly:[/]")
+    console.print(f"{_command}")
 
 if __name__ == "__main__":
     dbg("About to start main()...")
