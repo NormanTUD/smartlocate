@@ -455,6 +455,23 @@
 	fi
 
 	if [[ -z $DONT_INSTALL_MODULES ]]; then
+		REQUIREMENTS_HASH=$(md5sum requirements.txt | awk '{print $1}')
+
+		hash_is_different() {
+			local hash_file="$VENV_DIR/hash"
+
+			if [[ -f "$hash_file" ]]; then
+				stored_hash=$(cat "$hash_file")
+				if [[ "$stored_hash" == "$REQUIREMENTS_HASH" ]]; then
+					return 0
+				else
+					return 1
+				fi
+			else
+				return 2
+			fi
+		}
+
 		set +e
 		FROZEN=$(pip --disable-pip-version-check list --format=freeze)
 		exit_code_pip=$?
@@ -465,7 +482,12 @@
 			exit 12
 		fi
 
-		install_required_modules
+		if ! hash_is_different; then
+			install_required_modules
+
+			REQUIREMENTS_HASH=$(md5sum requirements.txt | awk '{print $1}')
+			echo "$REQUIREMENTS_HASH" > "$VENV_DIR/hash"
+		fi
 	else
 		if [[ -z $DONT_SHOW_DONT_INSTALL_MESSAGE ]]; then
 			red_text "\$DONT_INSTALL_MODULES is set. Don't install modules.\n"
