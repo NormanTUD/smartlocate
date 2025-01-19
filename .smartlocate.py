@@ -1156,8 +1156,8 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
 def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: list) -> int:
     try:
         cursor = conn.cursor()
-
-        console.print(Panel.fit(f"{title}:"))
+        
+        # Tabelle erstellen
         table = Table()
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green")
@@ -1170,10 +1170,12 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
 
         for (metric, _), result in zip(metrics, results):
             table.add_row(metric, str(result))
-
-        console.print(table)
+        
+        # Tabelle und Überschrift in ein Panel einfügen
+        panel = Panel.fit(table, title=title, title_align="left")
+        console.print(panel)
+        
         cursor.close()
-
         return sum(results)
     except Exception as e:
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
