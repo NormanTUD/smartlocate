@@ -2416,7 +2416,9 @@ def main() -> None:
                 else:
                     console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
-        if args.describe or args.yolo or args.ocr or args.qrcodes or args.face_recognition or do_all:
+        run_face_or_image_index = args.describe or args.yolo or args.ocr or args.qrcodes or args.face_recognition
+
+        if run_face_recognition or do_all:
             with Progress(
                 TextColumn("[bold blue]{task.description}"),
                 BarColumn(),
