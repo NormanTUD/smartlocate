@@ -2293,6 +2293,37 @@ def vacuum(conn: sqlite3.Connection) -> None:
         conn_execute(conn, "VACUUM")
     console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
 
+def search_or_show_file(conn: sqlite3.Connection) -> None:
+    if is_valid_file_path(args.search):
+        while True:
+            show_options_for_file(conn, args.search)
+    else:
+        search(conn)
+
+def index_image_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
+    if os.path.exists(image_path):
+        display_sixel(image_path)
+
+        if args.describe or do_all:
+            describe_img(conn, image_path)
+        if args.yolo or do_all:
+            if model is not None:
+                yolo_file(conn, image_path, existing_files, model)
+            else:
+                global yolo_error_already_shown
+
+                if not yolo_error_already_shown:
+                    console.print("[red]--yolo was set, but model could not be loaded[/]")
+
+                    yolo_error_already_shown = True
+        if args.ocr or do_all:
+            ocr_file(conn, image_path)
+
+        if args.qrcodes or do_all:
+            add_qrcodes_from_image(conn, image_path)
+    else:
+        console.print(f"[red]Could not find {image_path}[/]")
+
 def main() -> None:
     dbg(f"Arguments: {args}")
 
@@ -2402,38 +2433,13 @@ def main() -> None:
                 task = progress.add_task("Indexing images...", total=total_images)
 
                 for image_path in image_paths:
-                    if os.path.exists(image_path):
-                        display_sixel(image_path)
-                        if args.describe or do_all:
-                            describe_img(conn, image_path)
-                        if args.yolo or do_all:
-                            if model is not None:
-                                yolo_file(conn, image_path, existing_files, model)
-                            else:
-                                global yolo_error_already_shown
-
-                                if not yolo_error_already_shown:
-                                    console.print("[red]--yolo was set, but model could not be loaded[/]")
-
-                                    yolo_error_already_shown = True
-                        if args.ocr or do_all:
-                            ocr_file(conn, image_path)
-
-                        if args.qrcodes or do_all:
-                            add_qrcodes_from_image(conn, image_path)
-                    else:
-                        console.print(f"[red]Could not find {image_path}[/]")
-
+                    index_image_file(conn, image_path, existing_files, model)
                     progress.update(task, advance=1)
 
     if args.search:
         shown_something = True
 
-        if is_valid_file_path(args.search):
-            while True:
-                show_options_for_file(conn, args.search)
-        else:
-            search(conn)
+        search_or_show_file(conn)
 
     if not shown_something:
         show_statistics(conn)
