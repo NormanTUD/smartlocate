@@ -2495,10 +2495,9 @@ def add_current_script_to_crontab():
     arguments = []
 
     i = 0
-    for arg in reconstruct_args(args, ["search", "debug", "exclude", "lang_ocr"]):
+    for arg in reconstruct_args(args, ["search", "debug", "exclude", "lang_ocr", "run_hourly"]):
         if i != 0:
-            if not arg.startswith("--r"):
-                arguments.append(arg)
+            arguments.append(arg)
         i = i + 1
 
     if len(arguments):
