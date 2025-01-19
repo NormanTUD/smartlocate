@@ -2324,6 +2324,26 @@ def index_image_file(conn: sqlite3.Connection, image_path: str, existing_files: 
     else:
         console.print(f"[red]Could not find {image_path}[/]")
 
+def run_face_recognition_on_single_image(conn: sqlite3.Connection, image_path: str, progress: Any) -> None:
+    try:
+        file_size = os.path.getsize(image_path)
+
+        if file_size < args.max_size * 1024 * 1024:
+            recognized_faces = recognize_persons_in_image(conn, image_path, progress)
+
+            if recognized_faces is None:
+                console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
+            else:
+                new_ids, manually_entered_name = recognized_faces
+
+                if len(new_ids) and not manually_entered_name:
+                    console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
+                    display_sixel(image_path)
+        else:
+            console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
+    except FileNotFoundError:
+        console.print(f"[red]The file {image_path} was not found[/]")
+
 def main() -> None:
     dbg(f"Arguments: {args}")
 
@@ -2397,24 +2417,7 @@ def main() -> None:
                     task = progress.add_task("Face recognition...", total=total_images)
 
                     for image_path in face_recognition_images:
-                        try:
-                            file_size = os.path.getsize(image_path)
-
-                            if file_size < args.max_size * 1024 * 1024:
-                                recognized_faces = recognize_persons_in_image(conn, image_path, progress)
-
-                                if recognized_faces is None:
-                                    console.print(f"[red]There was an error analyzing the file {image_path} for faces[/]")
-                                else:
-                                    new_ids, manually_entered_name = recognized_faces
-
-                                    if len(new_ids) and not manually_entered_name:
-                                        console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
-                                        display_sixel(image_path)
-                            else:
-                                console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
-                        except FileNotFoundError:
-                            console.print(f"[red]The file {image_path} was not found[/]")
+                        run_face_recognition_on_single_image(conn, image_path, progress)
                         progress.update(task, advance=1)
             else:
                 console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
