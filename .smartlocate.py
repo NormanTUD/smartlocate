@@ -2490,7 +2490,7 @@ def add_current_script_to_crontab() -> None:
 
     SCRIPT_DIR = os.getenv("SCRIPT_DIR")
 
-    _command = f'bash {SCRIPT_DIR}/smartlocate';
+    _command = f'bash {SCRIPT_DIR}/smartlocate'
 
     arguments = []
 
@@ -2502,7 +2502,7 @@ def add_current_script_to_crontab() -> None:
 
     if len(arguments):
         arg_str = ' '.join(arguments)
-        if not "--index" in arg_str:
+        if "--index" not in arg_str:
             arg_str = f"--index {arg_str}"
         _command = f"{_command} {arg_str}"
 
@@ -2525,7 +2525,7 @@ def add_current_script_to_crontab() -> None:
 
     cron.write()
 
-    console.print(f"[yellow]Added cron-job: Will execute this command hourly:[/]")
+    console.print("[yellow]Added cron-job: Will execute this command hourly:[/]")
     console.print(f"{_command}")
 
 if __name__ == "__main__":
