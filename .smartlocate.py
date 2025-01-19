@@ -29,6 +29,7 @@ try:
     from rich.theme import Theme
     import rich.errors
     from rich.panel import Panel
+    from rich.text import Text
 
     import PIL
     from sixel import converter
@@ -638,8 +639,13 @@ def display_sixel(image_path: str) -> None:
     try:
         resize_image(image_path, unique_filename, args.size)
 
-        c = converter.SixelConverter(unique_filename)
-        c.write(sys.stdout)
+        sixel_converter = converter.SixelConverter(unique_filename)
+
+        output_text = sixel_converter.getvalue()
+
+        text = Text(output_text, end="")
+
+        console.print(text)
     except FileNotFoundError:
         console.print(f"[red]Could not find {image_path}[/]")
     finally:
