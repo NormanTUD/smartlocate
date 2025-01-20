@@ -5,15 +5,10 @@ authors = [
   {email = "norman.koch@tu-dresden.de"},
   {name = "Norman Koch"}
 ]
-dynamic = ["version", "dependencies"]
+version = "2025.01.20-1"
+
 readme = "README.md"
-
-[build-system]
-requires = ["setuptools>=42", "wheel", "setuptools-git-versioning"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools-git-versioning]
-enabled = true
+dynamic = ["dependencies"]
 
 [tool.setuptools]
 py-modules = []
