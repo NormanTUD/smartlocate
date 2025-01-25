@@ -629,14 +629,14 @@ def ocr_img(img: str) -> Optional[list[str]]:
 
 @typechecked
 def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
-    with PIL.Image.open(input_path) as img:
-        try:
+    try:
+        with PIL.Image.open(input_path) as img:
             img.thumbnail((max_size, max_size))
             img.save(output_path)
 
             return True
-        except OSError as e:
-            console.print(f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
+    except (PIL.Image.DecompressionBombError, OSError) as e:
+        console.print(f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
 
     return False
 
