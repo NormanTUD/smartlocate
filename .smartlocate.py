@@ -1554,13 +1554,14 @@ def delete_non_existing_image_files(conn: sqlite3.Connection, existing_files: Op
 def add_file_type(conn: sqlite3.Connection, file_path: str) -> None:
     dbg(f"add_file_type(conn, {file_path})")
 
-    # MD5-Hash der Datei berechnen
-    md5_hash = get_md5(file_path)
+    try:
+        md5_hash = get_md5(file_path)
+    except FileNotFoundError:
+        print(f"Error trying to get md5 hash for file {file_path}")
+        return
 
-    # Datei-Typen bestimmen
     general_type, specific_type = determine_file_types(file_path)
 
-    # Eintrag in die Tabelle vornehmen
     try:
         execute_with_retry(
             conn,
@@ -1574,7 +1575,6 @@ def add_file_type(conn: sqlite3.Connection, file_path: str) -> None:
 def determine_file_types(file_path: str) -> tuple[str, str]:
     import mimetypes
 
-    # MIME-Typ und spezifischen Typ bestimmen
     mime_type, _ = mimetypes.guess_type(file_path)
     if not mime_type:
         return "unknown", "unknown"
