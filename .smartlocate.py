@@ -1019,6 +1019,9 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
             for file_name in files:
                 file_path = os.path.join(root, file_name)
 
+
+                add_file_type(conn, file_path)
+
                 # Check if file has an allowed extension
                 if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
                     try:
@@ -2471,6 +2474,7 @@ def main() -> None:
 
                 for image_path in image_paths:
                     index_image_file(conn, image_path, existing_files, model)
+                    add_file_type(conn, image_path)
                     progress.update(task, advance=1)
 
     if args.search:
