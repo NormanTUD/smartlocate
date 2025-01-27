@@ -1019,7 +1019,6 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
             for file_name in files:
                 file_path = os.path.join(root, file_name)
 
-
                 add_file_type(conn, file_path)
 
                 # Check if file has an allowed extension
