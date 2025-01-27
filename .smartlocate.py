@@ -905,6 +905,7 @@ def init_database(db_path: str) -> sqlite3.Connection:
             'CREATE TABLE IF NOT EXISTS no_faces (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE NOT NULL)',
             'CREATE TABLE IF NOT EXISTS no_qrcodes(id INTEGER PRIMARY KEY, file_path TEXT UNIQUE NOT NULL)',
             'CREATE TABLE IF NOT EXISTS qrcodes (image_id INTEGER NOT NULL, content, FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE)',
+            'CREATE TABLE IF NOT EXISTS file_types (file_path TEXT UNIQUE NOT NULL, general_type TEXT NOT NULL, specific_type TEXT NOT NULL, md5 TEXT NOT NULL)',
 
             'CREATE VIRTUAL TABLE IF NOT EXISTS documents USING fts5(file_path, content, tokenize = "porter")',
 
@@ -1546,6 +1547,35 @@ def delete_non_existing_image_files(conn: sqlite3.Connection, existing_files: Op
         existing_files = load_existing_images(conn)
 
     return existing_files
+
+@typechecked
+def add_file_type(conn: sqlite3.Connection, file_path: str) -> None:
+    dbg(f"add_file_type(conn, {file_path})")
+
+    # MD5-Hash der Datei berechnen
+    md5_hash = get_md5(file_path)
+
+    # Datei-Typen bestimmen
+    general_type, specific_type = determine_file_types(file_path)
+
+    # Eintrag in die Tabelle vornehmen
+    execute_with_retry(
+        conn,
+        'INSERT INTO file_types (file_path, general_type, specific_type, md5) VALUES (?, ?, ?, ?)',
+        (file_path, general_type, specific_type, md5_hash)
+    )
+
+@typechecked
+def determine_file_types(file_path: str) -> tuple[str, str]:
+    import mimetypes
+
+    # MIME-Typ und spezifischen Typ bestimmen
+    mime_type, _ = mimetypes.guess_type(file_path)
+    if not mime_type:
+        return "unknown", "unknown"
+
+    general_type, specific_type = mime_type.split('/')
+    return general_type, specific_type
 
 @typechecked
 def add_description(conn: sqlite3.Connection, file_path: str, desc: str) -> None:
