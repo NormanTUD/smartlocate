@@ -1561,11 +1561,14 @@ def add_file_type(conn: sqlite3.Connection, file_path: str) -> None:
     general_type, specific_type = determine_file_types(file_path)
 
     # Eintrag in die Tabelle vornehmen
-    execute_with_retry(
-        conn,
-        'INSERT INTO file_types (file_path, general_type, specific_type, md5) VALUES (?, ?, ?, ?)',
-        (file_path, general_type, specific_type, md5_hash)
-    )
+    try:
+        execute_with_retry(
+            conn,
+            'INSERT INTO file_types (file_path, general_type, specific_type, md5) VALUES (?, ?, ?, ?)',
+            (file_path, general_type, specific_type, md5_hash)
+        )
+    except sqlite3.IntegrityError:
+        print(f"File path {file_path} already in file_types database")
 
 @typechecked
 def determine_file_types(file_path: str) -> tuple[str, str]:
