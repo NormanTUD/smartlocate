@@ -139,6 +139,10 @@
 
 	ROOT_VENV_DIR=$HOME
 
+	if [[ -n $VIRTUAL_ENV ]]; then
+		ROOT_VENV_DIR="$VIRTUAL_ENV"
+	fi
+
 	if [[ -n $root_venv_dir ]] && [[ -d $root_venv_dir ]]; then
 		ROOT_VENV_DIR=$root_venv_dir
 	fi
