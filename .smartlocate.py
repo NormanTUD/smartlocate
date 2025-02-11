@@ -1,6 +1,8 @@
 import sys
 import os
 
+loaded_pyzbar = False
+
 try:
     import warnings
     warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -38,7 +40,12 @@ try:
 
     from pathlib import Path
 
-    from pyzbar.pyzbar import decode
+    try:
+        from pyzbar.pyzbar import decode
+
+        loaded_pyzbar = True
+    except ImportError as e:
+        print(f"Error while loading pyzbar: {e}. Qr-Codes in images will not be able to be decoded. Try installing 'sudo apt install libzbar0 libzbar-dev'.")
 
     from typing import Callable, TypeVar
 
@@ -399,6 +406,10 @@ dbg("Done loading further modules")
 
 @typechecked
 def get_qr_codes_from_image(file_path: str) -> list[str]:
+    if not loaded_pyzbar:
+        print("Cannot load pyzbar. Qr-Code detection not possible.")
+        return
+
     try:
         try:
             img = PIL.Image.open(file_path)
