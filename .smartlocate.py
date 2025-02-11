@@ -408,7 +408,7 @@ dbg("Done loading further modules")
 def get_qr_codes_from_image(file_path: str) -> list[str]:
     if not loaded_pyzbar:
         print("Cannot load pyzbar. Qr-Code detection not possible.")
-        return
+        return []
 
     try:
         try:
