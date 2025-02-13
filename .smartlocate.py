@@ -5,6 +5,7 @@ loaded_pyzbar = False
 
 try:
     import warnings
+
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
     import numpy
@@ -45,7 +46,8 @@ try:
 
         loaded_pyzbar = True
     except ImportError as e:
-        print(f"Error while loading pyzbar: {e}. Qr-Codes in images will not be able to be decoded. Try installing 'sudo apt install libzbar0 libzbar-dev'.")
+        print(
+            f"Error while loading pyzbar: {e}. Qr-Codes in images will not be able to be decoded. Try installing 'sudo apt install libzbar0 libzbar-dev'.")
 
     from typing import Callable, TypeVar
 
@@ -53,6 +55,7 @@ try:
 
     if os.getenv("OO_MAIN_TESTS") == "1":
         import importlib
+
         typechecked = importlib.import_module("typeguard").typechecked
     else:
         def typechecked(func: F) -> F:
@@ -64,10 +67,12 @@ except ModuleNotFoundError as e:
     print(f"The following module could not be found: {e}")
     sys.exit(1)
 
+
 @typechecked
 def dier(msg: Any) -> None:
     pprint(msg)
     sys.exit(10)
+
 
 console: Console = Console(
     force_interactive=True,
@@ -76,12 +81,14 @@ console: Console = Console(
     force_terminal=True
 )
 
+
 @typechecked
 def to_absolute_path(path: str) -> str:
     if os.path.isabs(path):
         return path
 
     return os.path.abspath(path)
+
 
 original_pwd = os.getenv("ORIGINAL_PWD")
 
@@ -115,59 +122,77 @@ index_related.add_argument("--shuffle_index", action="store_true", help="Shuffle
 index_related.add_argument("--delete_non_existing_files", action="store_true", help="Delete non-existing files")
 index_related.add_argument("--describe", action="store_true", help="Enable image description")
 index_related.add_argument("--documents", action="store_true", help="Enable document indexing")
+index_related.add_argument("--abstracts_only", action="store_true", help="index documents abstract page only")
 
 search_related = parser.add_argument_group("Search Related")
 search_related.add_argument("search", nargs="*", help="Search term for indexed results", default=[])
 search_related.add_argument("--exact", action="store_true", help="Exact search")
-search_related.add_argument("--full_results", action="store_true", help="Show full results for OCR and file content search, not only the matching lines")
+search_related.add_argument("--full_results", action="store_true",
+                            help="Show full results for OCR and file content search, not only the matching lines")
 
 visualization_related = parser.add_argument_group("Visualization Related")
-visualization_related.add_argument("--size", type=int, default=DEFAULT_SIXEL_WIDTH, help=f"Size to resize images for sixel display (default: {DEFAULT_SIXEL_WIDTH}).")
+visualization_related.add_argument("--size", type=int, default=DEFAULT_SIXEL_WIDTH,
+                                   help=f"Size to resize images for sixel display (default: {DEFAULT_SIXEL_WIDTH}).")
 visualization_related.add_argument("--no_sixel", action="store_true", help="Hide sixel graphics")
 
 debug_related = parser.add_argument_group("Debug & Maintenance")
 debug_related.add_argument("--debug", action="store_true", help="Enable debug mode")
-debug_related.add_argument("--vacuum", action="store_true", help="Vacuum the SQLite database file (reduces size without deleting data)")
+debug_related.add_argument("--vacuum", action="store_true",
+                           help="Vacuum the SQLite database file (reduces size without deleting data)")
 
 model_related = parser.add_argument_group("Model & Detection")
-model_related.add_argument("--blip_model_name", default=DEFAULT_BLIP_MODEL_NAME, help=f"Name of the blip model. Default: {DEFAULT_BLIP_MODEL_NAME}")
+model_related.add_argument("--blip_model_name", default=DEFAULT_BLIP_MODEL_NAME,
+                           help=f"Name of the blip model. Default: {DEFAULT_BLIP_MODEL_NAME}")
 model_related.add_argument("--yolo", action="store_true", help="Use YOLO for indexing")
 model_related.add_argument("--yolo_model", default=DEFAULT_MODEL, help="Model to use for detection")
-model_related.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD, help=f"YOLO confidence threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
-model_related.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING, help=f"Min YOLO confidence to save detections (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}")
+model_related.add_argument("--yolo_threshold", type=float, default=DEFAULT_YOLO_THRESHOLD,
+                           help=f"YOLO confidence threshold (0-1), default: {DEFAULT_YOLO_THRESHOLD}")
+model_related.add_argument("--yolo_min_confidence_for_saving", type=float, default=DEFAULT_MIN_CONFIDENCE_FOR_SAVING,
+                           help=f"Min YOLO confidence to save detections (0-1), default: {DEFAULT_MIN_CONFIDENCE_FOR_SAVING}")
 
 ocr_related = parser.add_argument_group("OCR")
 ocr_related.add_argument("--ocr", action="store_true", help="Enable OCR")
-ocr_related.add_argument("--lang_ocr", nargs='+', default=[], help=f"OCR languages, default: {', '.join(DEFAULT_LANG_OCR)}. Accepts multiple languages.")
+ocr_related.add_argument("--lang_ocr", nargs='+', default=[],
+                         help=f"OCR languages, default: {', '.join(DEFAULT_LANG_OCR)}. Accepts multiple languages.")
 
 face_related = parser.add_argument_group("Face Recognition")
-face_related.add_argument("--face_recognition", action="store_true", help="Enable face recognition (needs user interaction)")
-face_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE, help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
-face_related.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION, help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
-face_related.add_argument("--dont_ask_new_faces", action="store_true", help="Don't ask for new faces (useful for automatic tagging)")
-face_related.add_argument("--dont_save_new_encoding", action="store_true", help="Don't save new encodings for faces automatically")
+face_related.add_argument("--face_recognition", action="store_true",
+                          help="Enable face recognition (needs user interaction)")
+face_related.add_argument("--encoding_face_recognition_file", default=DEFAULT_ENCODINGS_FILE,
+                          help=f"Default file for saving encodings (default: {DEFAULT_ENCODINGS_FILE})")
+face_related.add_argument("--tolerance_face_detection", type=float, default=DEFAULT_TOLERANCE_FACE_DETECTION,
+                          help=f"Tolerance for face detection (0-1), default: {DEFAULT_TOLERANCE_FACE_DETECTION}")
+face_related.add_argument("--dont_ask_new_faces", action="store_true",
+                          help="Don't ask for new faces (useful for automatic tagging)")
+face_related.add_argument("--dont_save_new_encoding", action="store_true",
+                          help="Don't save new encodings for faces automatically")
 face_related.add_argument("--person_delete", type=str, default=None, help="person_delete")
 
 qr_related = parser.add_argument_group("QR-Codes")
 qr_related.add_argument("--qrcodes", action="store_true", help="Enable OCR")
 
 crontab_related = parser.add_argument_group("Crontab")
-crontab_related.add_argument("--run_hourly", action="store_true", help="Allows you to automatically run this command hourly to update for new files")
+crontab_related.add_argument("--run_hourly", action="store_true",
+                             help="Allows you to automatically run this command hourly to update for new files")
 
 file_handling_related = parser.add_argument_group("File Handling")
 file_handling_related.add_argument("--dir", default=None, help="Directory to search or index")
 file_handling_related.add_argument("--dbfile", default=DEFAULT_DB_PATH, help="Path to the SQLite database file")
-file_handling_related.add_argument("--exclude", action='append', default=[], help="Folders or paths to ignore. Can be used multiple times.")
-file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE, help=f"Max size in MB (default: {DEFAULT_MAX_SIZE})")
+file_handling_related.add_argument("--exclude", action='append', default=[],
+                                   help="Folders or paths to ignore. Can be used multiple times.")
+file_handling_related.add_argument("--max_size", type=int, default=DEFAULT_MAX_SIZE,
+                                   help=f"Max size in MB (default: {DEFAULT_MAX_SIZE})")
 
 args = parser.parse_args()
 
 do_all = not args.describe and not args.ocr and not args.yolo and not args.face_recognition and not args.documents and not args.qrcodes
 
+
 @typechecked
 def dbg(msg: Any) -> None:
     if args.debug:
         console.log(f"[bold yellow]DEBUG:[/] {msg}")
+
 
 class PauseProgress:
     def __init__(self, progress: Progress) -> None:
@@ -187,11 +212,13 @@ class PauseProgress:
     def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
         self._progress.start()
 
+
 if len(args.lang_ocr) == 0:
     args.lang_ocr = DEFAULT_LANG_OCR
 
 if not 0 <= args.yolo_min_confidence_for_saving <= 1:
-    console.print(f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
+    console.print(
+        f"[red]--yolo_min_confidence_for_saving must be between 0 and 1, is {args.yolo_min_confidence_for_saving}[/]")
     sys.exit(2)
 
 if not 0 <= args.yolo_threshold <= 1:
@@ -263,6 +290,7 @@ yolo_error_already_shown: bool = False
 
 dbg("Finished declaring global variables")
 
+
 @typechecked
 def show(path: str) -> bool:
     if args.dir:
@@ -271,11 +299,13 @@ def show(path: str) -> bool:
         return False
     return True
 
+
 @typechecked
 def conn_execute(conn: sqlite3.Connection, query: str) -> sqlite3.Cursor:
     dbg(query)
     res = conn.execute(query)
     return res
+
 
 @typechecked
 def get_file_size_in_mb(file_path: str) -> str:
@@ -292,6 +322,7 @@ def get_file_size_in_mb(file_path: str) -> str:
     except Exception as e:
         return f"An error occured while trying to get file size from {file_path}: {e}"
 
+
 @typechecked
 def print_file_title(_title: str, file_path: str, after: Optional[str] = None) -> None:
     if os.path.exists(file_path):
@@ -305,6 +336,7 @@ def print_file_title(_title: str, file_path: str, after: Optional[str] = None) -
             console.print(Panel.fit(f"File: {file_path} (not found!)\n{after}", title=_title))
         else:
             console.print(Panel.fit(f"File: {file_path} (not found!)", title=_title))
+
 
 @typechecked
 def cursor_execute(cursor: sqlite3.Cursor, query: str, entries: Optional[tuple] = None) -> sqlite3.Cursor:
@@ -331,6 +363,7 @@ def cursor_execute(cursor: sqlite3.Cursor, query: str, entries: Optional[tuple] 
                 time.sleep(1)
     return None
 
+
 @typechecked
 def supports_sixel() -> bool:
     term = os.environ.get("TERM", "").lower()
@@ -345,6 +378,7 @@ def supports_sixel() -> bool:
         pass
 
     return False
+
 
 dbg("Defining console")
 console = Console()
@@ -372,7 +406,8 @@ try:
                 try:
                     reader = easyocr.Reader(args.lang_ocr)
                 except ValueError as e:
-                    console.print(f"[red]Loading OCR failed. This is probably an error with the --lang_ocr option. Error:[/] {e}")
+                    console.print(
+                        f"[red]Loading OCR failed. This is probably an error with the --lang_ocr option. Error:[/] {e}")
 
         if args.ocr or args.face_recognition:
             with console.status("[bold green]Loading face_recognition..."):
@@ -404,6 +439,7 @@ except KeyboardInterrupt:
 
 dbg("Done loading further modules")
 
+
 @typechecked
 def get_qr_codes_from_image(file_path: str) -> list[str]:
     if not loaded_pyzbar:
@@ -430,6 +466,7 @@ def get_qr_codes_from_image(file_path: str) -> list[str]:
         console.print(f"[red]Error while reading QR-Codes: {e}[/]")
         return []
 
+
 @typechecked
 def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor = conn.cursor()
@@ -439,13 +476,16 @@ def qr_code_already_existing(conn: sqlite3.Connection, image_path: str) -> bool:
         cursor.close()
         return True
 
-    cursor_execute(cursor, 'SELECT 1 FROM qrcodes JOIN images ON images.id = qrcodes.image_id WHERE images.file_path = ?', (image_path,))
+    cursor_execute(cursor,
+                   'SELECT 1 FROM qrcodes JOIN images ON images.id = qrcodes.image_id WHERE images.file_path = ?',
+                   (image_path,))
     if cursor.fetchone():
         cursor.close()
         return True
 
     cursor.close()
     return False
+
 
 @typechecked
 def add_qrcodes_from_image(conn: sqlite3.Connection, file_path: str) -> None:
@@ -462,6 +502,7 @@ def add_qrcodes_from_image(conn: sqlite3.Connection, file_path: str) -> None:
     else:
         console.print(f"[yellow]No Qr-Codes found in {file_path}[/]")
         insert_into_no_qrcodes(conn, file_path)
+
 
 @typechecked
 def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) -> None:
@@ -480,7 +521,8 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
             else:
                 image_id = image_id[0]
 
-            cursor_execute(cursor, 'INSERT OR IGNORE INTO qrcodes (image_id, content) VALUES (?, ?)', (image_id, content))
+            cursor_execute(cursor, 'INSERT OR IGNORE INTO qrcodes (image_id, content) VALUES (?, ?)',
+                           (image_id, content))
             conn.commit()
 
             cursor.close()
@@ -493,6 +535,7 @@ def add_qrcode_to_image(conn: sqlite3.Connection, file_path: str, content: str) 
             else:
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
+
 
 @typechecked
 def extract_face_encodings(image_path: str) -> tuple[list, list]:
@@ -508,19 +551,23 @@ def extract_face_encodings(image_path: str) -> tuple[list, list]:
         console.print(f"[red]Error while trying to extract face encodings: {e}[/]")
         return ([], [],)
 
+
 @typechecked
-def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray, tolerance: float = args.tolerance_face_detection) -> list:
+def compare_faces(known_encodings: list, unknown_encoding: numpy.ndarray,
+                  tolerance: float = args.tolerance_face_detection) -> list:
     import face_recognition
 
     results = face_recognition.compare_faces(known_encodings, unknown_encoding, tolerance)
 
     return results
 
+
 @typechecked
 def save_encodings(encodings: dict, file_name: str) -> None:
     if not args.dont_save_new_encoding:
         with open(file_name, "wb") as file:
             pickle.dump(encodings, file)
+
 
 @typechecked
 def load_encodings(file_name: str) -> dict:
@@ -529,8 +576,11 @@ def load_encodings(file_name: str) -> dict:
             return pickle.load(file)
     return {}
 
+
 @typechecked
-def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict, tolerance: float = args.tolerance_face_detection, progress: Any = None) -> Optional[tuple[list[str], dict, bool]]:
+def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dict,
+                                           tolerance: float = args.tolerance_face_detection, progress: Any = None) -> \
+        Optional[tuple[list[str], dict, bool]]:
     try:
         face_encodings, face_locations = extract_face_encodings(image_path)
 
@@ -557,7 +607,8 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
 
                 if args.dont_ask_new_faces:
                     if nr_new_faces == 0:
-                        console.print(f"[yellow]Ignoring face(s) detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
+                        console.print(
+                            f"[yellow]Ignoring face(s) detected {image_path}, since --dont_ask_new_faces was set and new faces were detected[/]")
                 else:
                     display_sixel_part(image_path, this_face_location)
                     try:
@@ -586,11 +637,14 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
 
     return None
 
+
 @typechecked
-def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str, progress: Any = None) -> Optional[tuple[list[str], bool]]:
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str, progress: Any = None) -> Optional[
+    tuple[list[str], bool]]:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
-    recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings, args.tolerance_face_detection, progress)
+    recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings,
+                                                              args.tolerance_face_detection, progress)
 
     if recognized_faces is not None:
         new_ids, known_encodings, manually_entered_name = recognized_faces
@@ -607,7 +661,8 @@ def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str, progre
 
     return None
 
-#@typechecked
+
+# @typechecked
 def ocr_img(img: str) -> Optional[list[str]]:
     global reader
 
@@ -638,6 +693,7 @@ def ocr_img(img: str) -> Optional[list[str]]:
         console.print(f"[red]ocr_img: file {img} caused an error: {e}[/]")
         return None
 
+
 @typechecked
 def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
     try:
@@ -647,9 +703,11 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
 
             return True
     except (PIL.Image.DecompressionBombError, OSError) as e:
-        console.print(f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
+        console.print(
+            f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
 
     return False
+
 
 @typechecked
 def display_sixel_part(image_path: str, location: Union[tuple, list]) -> None:
@@ -665,6 +723,7 @@ def display_sixel_part(image_path: str, location: Union[tuple, list]) -> None:
         pil_image.save(jpg.name, format="JPEG")
 
         display_sixel(jpg.name)
+
 
 @typechecked
 def display_sixel(image_path: str) -> None:
@@ -692,6 +751,7 @@ def display_sixel(image_path: str) -> None:
         if os.path.exists(unique_filename):
             os.remove(unique_filename)
 
+
 @typechecked
 def load_existing_images(conn: sqlite3.Connection) -> dict[Any, Any]:
     cursor = conn.cursor()
@@ -700,8 +760,10 @@ def load_existing_images(conn: sqlite3.Connection) -> dict[Any, Any]:
     cursor.close()
     return {row[0]: row[1] for row in rows}
 
+
 @typechecked
-def is_file_in_db(conn: sqlite3.Connection, file_path: str, table_name: str, existing_files: Optional[dict] = None) -> bool:
+def is_file_in_db(conn: sqlite3.Connection, file_path: str, table_name: str,
+                  existing_files: Optional[dict] = None) -> bool:
     if existing_files and file_path in existing_files:
         return True
 
@@ -713,17 +775,21 @@ def is_file_in_db(conn: sqlite3.Connection, file_path: str, table_name: str, exi
 
     return res > 0
 
+
 @typechecked
 def is_file_in_img_desc_db(conn: sqlite3.Connection, file_path: str) -> bool:
     return is_file_in_db(conn, file_path, "image_description")
+
 
 @typechecked
 def is_file_in_ocr_db(conn: sqlite3.Connection, file_path: str) -> bool:
     return is_file_in_db(conn, file_path, "ocr_results")
 
+
 @typechecked
 def is_file_in_yolo_db(conn: sqlite3.Connection, file_path: str, existing_files: Optional[dict]) -> bool:
     return is_file_in_db(conn, file_path, "images", existing_files)
+
 
 @typechecked
 def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
@@ -734,6 +800,7 @@ def is_existing_detections_label(conn: sqlite3.Connection, label: str) -> bool:
 
     return res is not None
 
+
 @typechecked
 def get_md5(file_path: str) -> str:
     hash_md5 = hashlib.md5()
@@ -741,6 +808,7 @@ def get_md5(file_path: str) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
 
 @typechecked
 def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
@@ -773,10 +841,12 @@ def add_empty_image(conn: sqlite3.Connection, file_path: str) -> None:
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
+
 @typechecked
 def add_image_persons_mapping(conn: sqlite3.Connection, file_path: str, person_names: list[str]) -> None:
     for elem in person_names:
         add_image_and_person_mapping(conn, file_path, elem)
+
 
 @typechecked
 def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, person_name: str) -> None:
@@ -805,7 +875,8 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
             else:
                 person_id = person_id[0]
 
-            cursor_execute(cursor, 'INSERT OR IGNORE INTO image_person_mapping (image_id, person_id) VALUES (?, ?)', (image_id, person_id))
+            cursor_execute(cursor, 'INSERT OR IGNORE INTO image_person_mapping (image_id, person_id) VALUES (?, ?)',
+                           (image_id, person_id))
             conn.commit()
 
             dbg(f"Mapped image '{file_path}' (ID: {image_id}) to person '{person_name}' (ID: {person_id})")
@@ -820,13 +891,16 @@ def add_image_and_person_mapping(conn: sqlite3.Connection, file_path: str, perso
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(13)
 
+
 @typechecked
 def insert_into_no_qrcodes(conn: sqlite3.Connection, file_path: str) -> None:
-    execute_with_retry(conn, 'INSERT OR IGNORE INTO no_qrcodes (file_path) VALUES (?)', (file_path, ))
+    execute_with_retry(conn, 'INSERT OR IGNORE INTO no_qrcodes (file_path) VALUES (?)', (file_path,))
+
 
 @typechecked
 def insert_into_no_faces(conn: sqlite3.Connection, file_path: str) -> None:
-    execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path, ))
+    execute_with_retry(conn, 'INSERT OR IGNORE INTO no_faces (file_path) VALUES (?)', (file_path,))
+
 
 @typechecked
 def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
@@ -847,6 +921,7 @@ def faces_already_recognized(conn: sqlite3.Connection, image_path: str) -> bool:
     cursor.close()
     return False  # Bild wurde noch nicht durchsucht
 
+
 @typechecked
 def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optional[int]:
     try:
@@ -865,6 +940,7 @@ def get_image_id_by_file_path(conn: sqlite3.Connection, file_path: str) -> Optio
     except Exception as e:
         print(f"Error while fetching image ID for file_path '{file_path}': {e}")
         return None
+
 
 @typechecked
 def execute_queries(conn: sqlite3.Connection, queries: list[str], status: Any) -> None:
@@ -898,6 +974,7 @@ def execute_queries(conn: sqlite3.Connection, queries: list[str], status: Any) -
 
     cursor.close()
     conn.commit()
+
 
 @typechecked
 def init_database(db_path: str) -> sqlite3.Connection:
@@ -942,6 +1019,7 @@ def init_database(db_path: str) -> sqlite3.Connection:
 
         return conn
 
+
 @typechecked
 def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor = conn.cursor()
@@ -954,25 +1032,36 @@ def document_already_exists(conn: sqlite3.Connection, file_path: str) -> bool:
     cursor.close()
     return False
 
-@typechecked
-def pdf_to_text(pdf_path: str) -> Optional[str]:
-    import pdfplumber
 
+@typechecked
+def pdf_to_text(pdf_path: str, abstract_only: bool) -> Optional[str]:
+    import pdfplumber
+    import re
     try:
         text = ""
+
         with pdfplumber.open(pdf_path) as pdf:
-            for page in pdf.pages:
-                text += page.extract_text()
-        return text
+            if abstract_only:
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    abstract = re.search("abstract", text, re.IGNORECASE)
+                    if abstract:
+                        start, end = abstract.span()
+                        return text[start:]
+            else:
+                for page in pdf.pages:
+                    text += page.extract_text()
+            return text
     except Exception as e:
         console.print(f"[red]Error while reading the PDF: {e}[/]")
         return None
 
+
 @typechecked
-def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str]:
+def convert_file_to_text(file_path: str, _format: str = "plain", abstract_only: bool = False) -> Optional[str]:
     try:
         if file_path.endswith(".pdf"):
-            pdf_text = pdf_to_text(file_path)
+            pdf_text = pdf_to_text(file_path, abstract_only=abstract_only)
 
             return pdf_text
 
@@ -990,15 +1079,17 @@ def convert_file_to_text(file_path: str, _format: str = "plain") -> Optional[str
 
     return None
 
+
 @typechecked
-def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pandoc: bool = True) -> bool:
+def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pandoc: bool = True,
+                                  abstract_only: bool = False) -> bool:
     if document_already_exists(conn, file_path):
         return False
 
     text: Optional[str] = ""
 
     if _pandoc:
-        text = convert_file_to_text(file_path)
+        text = convert_file_to_text(file_path, abstract_only=abstract_only)
     else:
         text = open(file_path, encoding="utf-8", mode="r").read()
 
@@ -1007,9 +1098,11 @@ def insert_document_if_not_exists(conn: sqlite3.Connection, file_path: str, _pan
 
     return True
 
+
 @typechecked
 def insert_document(conn: sqlite3.Connection, file_path: str, document: str) -> None:
-    execute_with_retry(conn, 'INSERT INTO documents (file_path, content) VALUES (?, ?);', (file_path, document, ))
+    execute_with_retry(conn, 'INSERT INTO documents (file_path, content) VALUES (?, ?);', (file_path, document,))
+
 
 @typechecked
 def get_extension(path: str) -> str:
@@ -1017,8 +1110,9 @@ def get_extension(path: str) -> str:
 
     return file_extension
 
+
 @typechecked
-def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bool:
+def traverse_document_files(conn: sqlite3.Connection, directory_path: str,abstract_only:bool=False) -> bool:
     if not os.path.isdir(directory_path):
         console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
         return False
@@ -1036,17 +1130,19 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                 if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
                     try:
                         status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
-                        found_something = insert_document_if_not_exists(conn, file_path)
+                        found_something = insert_document_if_not_exists(conn, file_path,abstract_only=abstract_only)
 
                         if found_something:
                             console.print(f"[bold green]Indexed {file_path}[/]")
                             found_and_converted_some = True
                         else:
-                            status.update(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                            status.update(
+                                f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
                         status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
                         console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
-                elif file_name.lower().endswith(".md") or file_name.lower().endswith(".txt") or file_name.lower().endswith(".tex"):
+                elif file_name.lower().endswith(".md") or file_name.lower().endswith(
+                        ".txt") or file_name.lower().endswith(".tex"):
                     try:
                         status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
                         found_something = insert_document_if_not_exists(conn, file_path, False)
@@ -1055,12 +1151,14 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str) -> bo
                             console.print(f"[bold green]Indexed {file_path}[/]")
                             found_and_converted_some = True
                         else:
-                            status.update(f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
+                            status.update(
+                                f"[bold green]Skipping {file_path} because nothing was found in it, it was not a valid file or it was already indexed.[/]")
                         status.update(f"[bold green]Finished {get_extension(file_path)}-document {file_path}[/]")
                     except Exception as e:
                         console.print(f"[red]Error processing file '{file_path}'[/]: {e}")
 
     return found_and_converted_some
+
 
 @typechecked
 def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> None:
@@ -1089,6 +1187,7 @@ def execute_with_retry(conn: sqlite3.Connection, query: str, params: tuple) -> N
             else:
                 raise e
 
+
 @typechecked
 def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> int:
     dbg(f"add_image_metadata(conn, {file_path})")
@@ -1098,12 +1197,15 @@ def add_image_metadata(conn: sqlite3.Connection, file_path: str) -> int:
     created_at = datetime.fromtimestamp(stats.st_ctime).isoformat()
     last_modified_at = datetime.fromtimestamp(stats.st_mtime).isoformat()
 
-    execute_with_retry(conn, 'INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)', (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
+    execute_with_retry(conn,
+                       'INSERT OR IGNORE INTO images (file_path, size, created_at, last_modified_at, md5) VALUES (?, ?, ?, ?, ?)',
+                       (file_path, stats.st_size, created_at, last_modified_at, md5_hash))
 
     cursor_execute(cursor, 'SELECT id FROM images WHERE file_path = ?', (file_path,))
     image_id = cursor.fetchone()[0]
 
     return image_id
+
 
 @typechecked
 def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
@@ -1120,7 +1222,7 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
                    WHERE images.file_path = ?
                    AND detections.model = ?
                    AND images.last_modified_at = ?''',
-               (file_path, args.yolo_model, last_modified_at))
+                           (file_path, args.yolo_model, last_modified_at))
 
             res = cursor.fetchone()[0]
             cursor.close()
@@ -1138,11 +1240,14 @@ def is_image_indexed(conn: sqlite3.Connection, file_path: str) -> bool:
 
     return False
 
+
 @typechecked
 def add_detections(conn: sqlite3.Connection, image_id: int, model_name: str, detections: list) -> None:
     dbg(f"add_detections(conn, {image_id}, detections)")
     for label, confidence in detections:
-        execute_with_retry(conn, 'INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)', (image_id, model_name, label, confidence))
+        execute_with_retry(conn, 'INSERT INTO detections (image_id, model, label, confidence) VALUES (?, ?, ?, ?)',
+                           (image_id, model_name, label, confidence))
+
 
 @typechecked
 def is_ignored_path(path: str) -> bool:
@@ -1153,6 +1258,7 @@ def is_ignored_path(path: str) -> bool:
 
     return False
 
+
 @typechecked
 def find_images(existing_files: dict) -> Generator:
     for root, _, files in os.walk(args.dir):
@@ -1162,6 +1268,7 @@ def find_images(existing_files: dict) -> Generator:
                 if not is_ignored_path(_path):
                     yield _path
 
+
 @typechecked
 def analyze_image(model: Any, image_path: str) -> Optional[list]:
     dbg(f"analyze_image(model, {image_path})")
@@ -1170,7 +1277,8 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
 
         results = model(image_path)
         predictions = results.pred[0]
-        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if float(pred[4]) >= args.yolo_min_confidence_for_saving]
+        detections = [(model.names[int(pred[5])], float(pred[4])) for pred in predictions if
+                      float(pred[4]) >= args.yolo_min_confidence_for_saving]
         return detections
     except RuntimeError:
         return None
@@ -1189,6 +1297,7 @@ def analyze_image(model: Any, image_path: str) -> Optional[list]:
         console.print(f"[red]Error while analyzing image {image_path}: {e}[/]")
         return None
 
+
 @typechecked
 def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None:
     dbg(f"process_image({image_path}, model, conn)")
@@ -1200,6 +1309,7 @@ def process_image(image_path: str, model: Any, conn: sqlite3.Connection) -> None
         add_detections(conn, image_id, args.yolo_model, detections)
     else:
         add_empty_image(conn, image_path)
+
 
 @typechecked
 def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: list) -> int:
@@ -1230,6 +1340,7 @@ def show_stats(conn: sqlite3.Connection, queries: list, title: str, metrics: lis
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
         return 0
 
+
 @typechecked
 def show_general_stats(conn: sqlite3.Connection) -> int:
     queries = [
@@ -1243,6 +1354,7 @@ def show_general_stats(conn: sqlite3.Connection) -> int:
         ("Total Documents", "documents")
     ]
     return show_stats(conn, queries, "General Statistics", metrics)
+
 
 @typechecked
 def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: str, metrics: list) -> int:
@@ -1275,6 +1387,7 @@ def show_yolo_custom_stats(conn: sqlite3.Connection, queries: list[str], title: 
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
         return 0
 
+
 @typechecked
 def show_yolo_stats(conn: sqlite3.Connection) -> int:
     query = '''
@@ -1291,11 +1404,13 @@ def show_yolo_stats(conn: sqlite3.Connection) -> int:
         console.print(f"[bold red]Error for YOLO Detection Statistics:[/bold red] {str(e)}")
         return 0
 
+
 @typechecked
 def show_empty_images_stats(conn: sqlite3.Connection) -> int:
     query = 'SELECT COUNT(*) FROM empty_images'
     metrics = [("Total Empty Images", "empty_images")]
     return show_stats(conn, [query], "Empty Images Statistics", metrics)
+
 
 @typechecked
 def show_documents_stats(conn: sqlite3.Connection) -> int:
@@ -1303,11 +1418,13 @@ def show_documents_stats(conn: sqlite3.Connection) -> int:
     metrics = [("Total Documents Results", "documents")]
     return show_stats(conn, [query], "Documents Results Statistics", metrics)
 
+
 @typechecked
 def show_ocr_stats(conn: sqlite3.Connection) -> int:
     query = 'SELECT COUNT(*) FROM ocr_results'
     metrics = [("Total OCR Results", "ocr_results")]
     return show_stats(conn, [query], "OCR Results Statistics", metrics)
+
 
 @typechecked
 def show_image_description_stats(conn: sqlite3.Connection) -> int:
@@ -1315,11 +1432,13 @@ def show_image_description_stats(conn: sqlite3.Connection) -> int:
     metrics = [("Total Image Descriptions", "image_description")]
     return show_stats(conn, [query], "Image Description Statistics", metrics)
 
+
 @typechecked
 def show_qrcodes_stats(conn: sqlite3.Connection) -> int:
     query = 'SELECT COUNT(*) FROM qrcodes'
     metrics = [("Total images with QR-Codes", "qrcodes")]
     return show_stats(conn, [query], "QR-Codes Statistics", metrics)
+
 
 @typechecked
 def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
@@ -1333,6 +1452,7 @@ def show_person_mapping_stats(conn: sqlite3.Connection) -> int:
         ("Total Image-Person Mappings", "image_person_mapping")
     ]
     return show_stats(conn, queries, "Person Mapping Statistics", metrics)
+
 
 @typechecked
 def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[str], title: str, metrics: list) -> int:
@@ -1365,6 +1485,7 @@ def show_face_recognition_custom_stats(conn: sqlite3.Connection, queries: list[s
         console.print(f"[bold red]Error for {title}:[/bold red] {str(e)}")
         return 0
 
+
 @typechecked
 def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
     query = '''
@@ -1382,6 +1503,7 @@ def show_face_recognition_stats(conn: sqlite3.Connection) -> int:
     except Exception as e:
         console.print(f"[bold red]Error for Face Recognition Statistics:[/bold red] {str(e)}")
         return 0
+
 
 @typechecked
 def show_statistics(conn: sqlite3.Connection) -> None:
@@ -1413,8 +1535,10 @@ def show_statistics(conn: sqlite3.Connection) -> None:
     if whole == 0:
         console.print("No data indexed yet.")
 
+
 @typechecked
-def delete_from_table(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str, condition_column: str = "file_path") -> None:
+def delete_from_table(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str,
+                      condition_column: str = "file_path") -> None:
     if delete_status:
         delete_status.update(f"[bold green]Deleting from {table_name} for {file_path}...")
     query = f'DELETE FROM {table_name} WHERE {condition_column} = ?'
@@ -1423,36 +1547,45 @@ def delete_from_table(conn: sqlite3.Connection, delete_status: Any, table_name: 
     if delete_status:
         delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
 
+
 @typechecked
 def delete_yolo_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_by_image_id(conn, delete_status, "detections", file_path, "image_id")
+
 
 @typechecked
 def delete_empty_images_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "empty_images", file_path)
 
+
 @typechecked
 def delete_image_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "images", file_path)
+
 
 @typechecked
 def delete_ocr_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "ocr_results", file_path)
 
+
 @typechecked
 def delete_no_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "no_faces", file_path)
+
 
 @typechecked
 def delete_image_description_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "image_description", file_path)
 
+
 @typechecked
 def delete_document_from_document_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_from_table(conn, delete_status, "documents", file_path)
 
+
 @typechecked
-def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str, foreign_key_column: str = "image_id") -> None:
+def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name: str, file_path: str,
+                       foreign_key_column: str = "image_id") -> None:
     try:
         image_id = get_image_id_by_file_path(conn, file_path)
 
@@ -1467,17 +1600,21 @@ def delete_by_image_id(conn: sqlite3.Connection, delete_status: Any, table_name:
         if delete_status:
             delete_status.update(f"[bold green]Deleted from {table_name} for {file_path}.")
     except sqlite3.IntegrityError as e:
-        console.print(f"[red]Error while trying to delete_by_image_id(conn, delete_status, table_name = {table_name}, file_path = {file_path}, foreign_key_column = {foreign_key_column}): {e}[/]")
+        console.print(
+            f"[red]Error while trying to delete_by_image_id(conn, delete_status, table_name = {table_name}, file_path = {file_path}, foreign_key_column = {foreign_key_column}): {e}[/]")
 
     return
+
 
 @typechecked
 def delete_qr_codes_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_by_image_id(conn, delete_status, "qrcodes", file_path)
 
+
 @typechecked
 def delete_faces_from_image_path(conn: sqlite3.Connection, delete_status: Any, file_path: str) -> None:
     delete_by_image_id(conn, delete_status, "image_person_mapping", file_path)
+
 
 @typechecked
 def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None:
@@ -1520,8 +1657,10 @@ def delete_entries_by_filename(conn: sqlite3.Connection, file_path: str) -> None
                 console.print(f"\n[red]Error: {e}[/]")
                 sys.exit(12)
 
+
 @typechecked
-def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path: str | int, where_name: str = "file_path") -> int:
+def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path: str | int,
+                           where_name: str = "file_path") -> int:
     query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_name} = ?"
 
     try:
@@ -1537,6 +1676,7 @@ def check_entries_in_table(conn: sqlite3.Connection, table_name: str, file_path:
         print(f"Error while checking entries in table '{table_name}': {e}. Full query:\n{query}")
         return 0
 
+
 @typechecked
 def get_existing_documents(conn: sqlite3.Connection) -> set[Any]:
     cursor = conn.cursor()
@@ -1545,11 +1685,13 @@ def get_existing_documents(conn: sqlite3.Connection) -> set[Any]:
     cursor.close()
     return {row[0] for row in rows}
 
+
 @typechecked
 def delete_non_existing_documents(conn: sqlite3.Connection) -> None:
     for file in get_existing_documents(conn):
         if not os.path.exists(file):
             delete_entries_by_filename(conn, file)
+
 
 @typechecked
 def delete_non_existing_image_files(conn: sqlite3.Connection, existing_files: Optional[dict]) -> Optional[dict]:
@@ -1560,6 +1702,7 @@ def delete_non_existing_image_files(conn: sqlite3.Connection, existing_files: Op
         existing_files = load_existing_images(conn)
 
     return existing_files
+
 
 @typechecked
 def add_file_type(conn: sqlite3.Connection, file_path: str) -> None:
@@ -1582,6 +1725,7 @@ def add_file_type(conn: sqlite3.Connection, file_path: str) -> None:
     except sqlite3.IntegrityError:
         print(f"File path {file_path} already in file_types database")
 
+
 @typechecked
 def determine_file_types(file_path: str) -> tuple[str, str]:
     import mimetypes
@@ -1593,17 +1737,22 @@ def determine_file_types(file_path: str) -> tuple[str, str]:
     general_type, specific_type = mime_type.split('/')
     return general_type, specific_type
 
+
 @typechecked
 def add_description(conn: sqlite3.Connection, file_path: str, desc: str) -> None:
     dbg(f"add_description(conn, {file_path}, <desc>)")
     md5_hash = get_md5(file_path)
-    execute_with_retry(conn, 'INSERT INTO image_description (file_path, image_description, md5) VALUES (?, ?, ?)', (file_path, desc, md5_hash))
+    execute_with_retry(conn, 'INSERT INTO image_description (file_path, image_description, md5) VALUES (?, ?, ?)',
+                       (file_path, desc, md5_hash))
+
 
 @typechecked
 def add_ocr_result(conn: sqlite3.Connection, file_path: str, extracted_text: str) -> None:
     dbg(f"add_ocr_result(conn, {file_path}, <extracted_text>)")
     md5_hash = get_md5(file_path)
-    execute_with_retry(conn, 'INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)', (file_path, extracted_text, md5_hash))
+    execute_with_retry(conn, 'INSERT INTO ocr_results (file_path, extracted_text, md5) VALUES (?, ?, ?)',
+                       (file_path, extracted_text, md5_hash))
+
 
 @typechecked
 def search_yolo(conn: sqlite3.Connection) -> int:
@@ -1652,12 +1801,14 @@ def search_yolo(conn: sqlite3.Connection) -> int:
 
     return nr_yolo
 
+
 @typechecked
 def build_sql_query_description(words: list[str]) -> tuple[str, tuple[str, ...]]:
     conditions = ["image_description LIKE ? COLLATE NOCASE" for _ in words]
     sql_query = f"SELECT file_path, image_description FROM image_description WHERE {' AND '.join(conditions)}"
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
+
 
 @typechecked
 def clean_search_query(query: str) -> list[str]:
@@ -1667,6 +1818,7 @@ def clean_search_query(query: str) -> list[str]:
     cleaned_query = re.sub(r"[^a-zA-Z\s]", "", query)
     sp = cleaned_query.split()
     return sp
+
 
 @typechecked
 def search_description(conn: sqlite3.Connection) -> int:
@@ -1708,6 +1860,7 @@ def search_description(conn: sqlite3.Connection) -> int:
 
     return nr_desc
 
+
 @typechecked
 def build_sql_query_documents(words: list[str]) -> tuple[str, tuple[str, ...]]:
     conditions = ["content LIKE ? COLLATE NOCASE" for _ in words]
@@ -1715,12 +1868,14 @@ def build_sql_query_documents(words: list[str]) -> tuple[str, tuple[str, ...]]:
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
 
+
 @typechecked
 def build_sql_query_ocr(words: list[str]) -> tuple[str, tuple[str, ...]]:
     conditions = ["extracted_text LIKE ? COLLATE NOCASE" for _ in words]
     sql_query = f"SELECT file_path, extracted_text FROM ocr_results WHERE {' AND '.join(conditions)}"
     values = tuple(f"%{word}%" for word in words)
     return sql_query, values
+
 
 @typechecked
 def print_text_with_keywords(file_path: str, text: str, keywords: list[str], full_results: bool) -> None:
@@ -1748,6 +1903,7 @@ def print_text_with_keywords(file_path: str, text: str, keywords: list[str], ful
         joined_matching_lines = "\n".join(matching_lines)
 
         highlighter_console.print(Panel.fit(joined_matching_lines, title=file_path))
+
 
 @typechecked
 def search_documents(conn: sqlite3.Connection) -> int:
@@ -1781,6 +1937,7 @@ def search_documents(conn: sqlite3.Connection) -> int:
                 nr_documents += 1
 
     return nr_documents
+
 
 @typechecked
 def search_ocr(conn: sqlite3.Connection) -> int:
@@ -1824,6 +1981,7 @@ def search_ocr(conn: sqlite3.Connection) -> int:
 
     return nr_ocr
 
+
 @typechecked
 def search_qrcodes(conn: sqlite3.Connection) -> int:
     qr_code_imgs = []
@@ -1865,6 +2023,7 @@ def search_qrcodes(conn: sqlite3.Connection) -> int:
         nr_qrcodes = len(qr_code_imgs)
 
     return nr_qrcodes
+
 
 @typechecked
 def search_faces(conn: sqlite3.Connection) -> int:
@@ -1917,6 +2076,7 @@ def search_faces(conn: sqlite3.Connection) -> int:
 
     return nr_images
 
+
 @typechecked
 def search(conn: sqlite3.Connection) -> None:
     try:
@@ -1959,6 +2119,7 @@ def search(conn: sqlite3.Connection) -> None:
     except sqlite3.OperationalError as e:
         console.print(f"[red]Error while running sqlite-query: {e}[/]")
 
+
 @typechecked
 def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if model is None:
@@ -1973,6 +2134,7 @@ def yolo_file(conn: sqlite3.Connection, image_path: str, existing_files: Optiona
             process_image(image_path, model, conn)
             if existing_files is not None:
                 existing_files[image_path] = get_md5(image_path)
+
 
 @typechecked
 def get_image_description(image_path: str) -> str:
@@ -2006,6 +2168,7 @@ def get_image_description(image_path: str) -> str:
         console.print(f"File {image_path} failed with error {e}")
         return ""
 
+
 @typechecked
 def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
     if is_file_in_img_desc_db(conn, image_path):
@@ -2022,6 +2185,7 @@ def describe_img(conn: sqlite3.Connection, image_path: str) -> None:
 
         except FileNotFoundError:
             console.print(f"[red]File {image_path} not found[/]")
+
 
 @typechecked
 def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
@@ -2047,9 +2211,11 @@ def ocr_file(conn: sqlite3.Connection, image_path: str) -> None:
                     add_ocr_result(conn, image_path, "")
 
             else:
-                console.print(f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_size}MB, is {file_size / 1024 / 1024}MB[/]")
+                console.print(
+                    f"[red]Image {image_path} is too large. Will skip OCR. Max-Size: {args.max_size}MB, is {file_size / 1024 / 1024}MB[/]")
         except FileNotFoundError:
             console.print(f"[red]File {image_path} not found[/]")
+
 
 @typechecked
 def is_valid_file_path(path: str) -> bool:
@@ -2060,6 +2226,7 @@ def is_valid_file_path(path: str) -> bool:
         print(f"Error checking the path {path}: {e}")
 
     return False
+
 
 @typechecked
 def is_valid_image_file(path: str) -> bool:
@@ -2073,8 +2240,10 @@ def is_valid_image_file(path: str) -> bool:
     except Exception:
         return False
 
+
 @typechecked
-def display_menu(options: list, prompt: str = "Choose an option (enter the number) or enter a new file path: ") -> Optional[str]:
+def display_menu(options: list, prompt: str = "Choose an option (enter the number) or enter a new file path: ") -> \
+        Optional[str]:
     for idx, option in enumerate(options, start=1):
         prompt_color = ""
         if "Run" in option:
@@ -2114,6 +2283,7 @@ def display_menu(options: list, prompt: str = "Choose an option (enter the numbe
         except EOFError:
             sys.exit(0)
 
+
 @typechecked
 def ask_confirmation() -> bool:
     try:
@@ -2124,8 +2294,10 @@ def ask_confirmation() -> bool:
 
     return False
 
+
 @typechecked
-def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, search_by: str, where_column: str) -> Optional[str]:
+def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, search_by: str, where_column: str) -> \
+        Optional[str]:
     query = ""
     try:
         # Construct the SQL query with placeholders
@@ -2147,11 +2319,13 @@ def get_value_by_condition(conn: sqlite3.Connection, table: str, field: str, sea
             print(f"Error while fetching value from table '{table}': {e}")
         return None
 
+
 @typechecked
 def list_document(conn: sqlite3.Connection, file_path: str) -> None:
     print("==================")
     print(get_value_by_condition(conn, "documents", "content", file_path, "file_path"))
     print("==================")
+
 
 @typechecked
 def list_desc(conn: sqlite3.Connection, file_path: str) -> None:
@@ -2159,11 +2333,13 @@ def list_desc(conn: sqlite3.Connection, file_path: str) -> None:
     print(get_value_by_condition(conn, "image_description", "image_description", file_path, "file_path"))
     print("==================")
 
+
 @typechecked
 def list_ocr(conn: sqlite3.Connection, file_path: str) -> None:
     print("==================")
     print(get_value_by_condition(conn, "ocr_results", "extracted_text", file_path, "file_path"))
     print("==================")
+
 
 @typechecked
 def add_option(options: list[str], condition: bool, option: str, insert_at_start: bool = False) -> None:
@@ -2173,19 +2349,24 @@ def add_option(options: list[str], condition: bool, option: str, insert_at_start
         else:
             options.append(option)
 
+
 @typechecked
 def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[str], strs: dict) -> None:
     image_id = get_image_id_by_file_path(conn, file_path)
 
     # Bildspezifische Optionen
     add_option(options, is_valid_image_file(file_path), strs["show_image_again"], True)
-    add_option(options, image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id") > 0, strs["delete_yolo"], True)
-    add_option(options, image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id") > 0, strs["delete_face_recognition"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "detections", image_id, "image_id") > 0,
+               strs["delete_yolo"], True)
+    add_option(options,
+               image_id is not None and check_entries_in_table(conn, "image_person_mapping", image_id, "image_id") > 0,
+               strs["delete_face_recognition"], True)
     add_option(options, check_entries_in_table(conn, "no_faces", file_path) > 0, strs["delete_entry_no_faces"], True)
     add_option(options, True, strs["mark_image_as_no_face"], False)
     add_option(options, check_entries_in_table(conn, "image_description", file_path) > 0, strs["delete_desc"], True)
     add_option(options, check_entries_in_table(conn, "ocr_results", file_path) > 0, strs["delete_ocr"], True)
-    add_option(options, image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id") > 0, strs["delete_qr_codes"], True)
+    add_option(options, image_id is not None and check_entries_in_table(conn, "qrcodes", image_id, "image_id") > 0,
+               strs["delete_qr_codes"], True)
 
     # Gemeinsame Optionen
     options.insert(0, strs["run_desc"])
@@ -2200,11 +2381,13 @@ def handle_file_options(conn: sqlite3.Connection, file_path: str, options: list[
     options.append(strs["delete_all"])
     options.append("quit")
 
+
 @typechecked
 def handle_document_options(conn: sqlite3.Connection, file_path: str, options: list[str], strs: dict) -> None:
     add_option(options, check_entries_in_table(conn, "documents", file_path) > 0, strs["delete_document"], True)
     options.append(strs["run_document"])
     options.append("quit")
+
 
 @typechecked
 def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
@@ -2308,7 +2491,8 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             return
         else:
             console.print(f"[red]Invalid option {option}[/]")
-    elif document_already_exists(conn, file_path) or any(file_path.endswith(ext) for ext in allowed_document_extensions):
+    elif document_already_exists(conn, file_path) or any(
+            file_path.endswith(ext) for ext in allowed_document_extensions):
         while True:
             handle_document_options(conn, file_path, options, strs)
             option = display_menu(options)
@@ -2333,14 +2517,18 @@ def show_options_for_file(conn: sqlite3.Connection, file_path: str) -> None:
             else:
                 console.print(f"[red]Unhandled option {option}[/]")
     else:
-        console.print(f"[red]The file {file_path} is not a searchable file. Currently, Only image files are supported.[/]")
+        console.print(
+            f"[red]The file {file_path} is not a searchable file. Currently, Only image files are supported.[/]")
+
 
 @typechecked
 def vacuum(conn: sqlite3.Connection) -> None:
     console.print(f"[green]File size of {args.dbfile} before vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
     with console.status(f"[yellow]Vacuuming {args.dbfile}..."):
         conn_execute(conn, "VACUUM")
-    console.print(f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
+    console.print(
+        f"[green]Vacuuming done. File size of {args.dbfile} after vacuuming: {get_file_size_in_mb(args.dbfile)}[/]")
+
 
 def search_or_show_file(conn: sqlite3.Connection) -> None:
     if is_valid_file_path(args.search):
@@ -2348,6 +2536,7 @@ def search_or_show_file(conn: sqlite3.Connection) -> None:
             show_options_for_file(conn, args.search)
     else:
         search(conn)
+
 
 def index_image_file(conn: sqlite3.Connection, image_path: str, existing_files: Optional[dict], model: Any) -> None:
     if os.path.exists(image_path):
@@ -2376,6 +2565,7 @@ def index_image_file(conn: sqlite3.Connection, image_path: str, existing_files: 
     else:
         console.print(f"[red]Could not find {image_path}[/]")
 
+
 def run_face_recognition_on_single_image(conn: sqlite3.Connection, image_path: str, progress: Any) -> None:
     try:
         file_size = os.path.getsize(image_path)
@@ -2392,9 +2582,11 @@ def run_face_recognition_on_single_image(conn: sqlite3.Connection, image_path: s
                     console.print(f"[green]In the following image, those persons were detected: {', '.join(new_ids)}")
                     display_sixel(image_path)
         else:
-            console.print(f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
+            console.print(
+                f"[yellow]The image {image_path} is too large for face recognition (), --max_size: {args.max_size}MB, file-size: ~{int(file_size / 1024 / 1024)}MB. Try increasing --max_size")
     except FileNotFoundError:
         console.print(f"[red]The file {image_path} was not found[/]")
+
 
 def main() -> None:
     dbg(f"Arguments: {args}")
@@ -2429,7 +2621,7 @@ def main() -> None:
         model = None
 
         if args.documents or do_all:
-            traverse_document_files(conn, args.dir)
+            traverse_document_files(conn, args.dir,args.abstracts_only)
 
         if args.yolo or do_all:
             try:
@@ -2462,21 +2654,22 @@ def main() -> None:
                         else:
                             console.print(f"[green]The image {image_path} was already in the index")
                 else:
-                    console.print("[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
+                    console.print(
+                        "[red]Cannot use --face_recognition without a terminal that supports sixel. You could not label images without it.")
 
         run_face_or_image_index = args.describe or args.yolo or args.ocr or args.qrcodes or args.face_recognition
 
         if run_face_or_image_index or do_all:
             with Progress(
-                TextColumn("[bold blue]{task.description}"),
-                BarColumn(),
-                "[progress.percentage]{task.percentage:>3.0f}%",
-                "[bold green]{task.completed}/{task.total} images",
-                TimeElapsedColumn(),
-                "[bold]Remaining[/]",
-                TimeRemainingColumn(),
-                console=console,
-                transient=True
+                    TextColumn("[bold blue]{task.description}"),
+                    BarColumn(),
+                    "[progress.percentage]{task.percentage:>3.0f}%",
+                    "[bold green]{task.completed}/{task.total} images",
+                    TimeElapsedColumn(),
+                    "[bold]Remaining[/]",
+                    TimeRemainingColumn(),
+                    console=console,
+                    transient=True
             ) as progress:
                 total_images: int = len(image_paths) + len(face_recognition_images)
                 task = progress.add_task("Indexing images...", total=total_images)
@@ -2500,6 +2693,7 @@ def main() -> None:
 
     conn.close()
 
+
 @typechecked
 def delete_person(conn: sqlite3.Connection, name: str) -> None:
     dbg(f"delete_person(conn, {name})")
@@ -2510,7 +2704,8 @@ def delete_person(conn: sqlite3.Connection, name: str) -> None:
             del known_encodings[name]
             save_encodings(known_encodings, args.encoding_face_recognition_file)
         else:
-            console.print(f"[yellow]{name} found in {args.encoding_face_recognition_file}, but deletion was cancelled.[/]")
+            console.print(
+                f"[yellow]{name} found in {args.encoding_face_recognition_file}, but deletion was cancelled.[/]")
     else:
         console.print(f"[red]{name} not found in {args.encoding_face_recognition_file}. Not deleting it.[/]")
 
@@ -2519,6 +2714,7 @@ def delete_person(conn: sqlite3.Connection, name: str) -> None:
         delete_from_table(conn, None, "person", name, "name")
     else:
         console.print(f"[yellow]Not deleting {name} from database")
+
 
 @typechecked
 def reconstruct_args(namespace: Any, ignored_keys: list) -> list:
@@ -2532,6 +2728,7 @@ def reconstruct_args(namespace: Any, ignored_keys: list) -> list:
                 reconstructed.append(f"--{key}")
                 reconstructed.append(str(value))
     return reconstructed
+
 
 @typechecked
 def add_current_script_to_crontab() -> None:
@@ -2578,6 +2775,7 @@ def add_current_script_to_crontab() -> None:
 
     console.print("[yellow]Added cron-job: Will execute this command hourly:[/]")
     console.print(f"{_command}")
+
 
 if __name__ == "__main__":
     dbg("About to start main()...")
