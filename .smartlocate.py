@@ -997,7 +997,7 @@ def pdf_to_text(pdf_path: str, abstract_only: bool) -> Optional[str]:
                     text = page.extract_text()
                     abstract = re.search("abstract", text, re.IGNORECASE)
                     if abstract:
-                        start, end = abstract.span()
+                        start, _ = abstract.span()
                         return text[start:]
             else:
                 for page in pdf.pages:
