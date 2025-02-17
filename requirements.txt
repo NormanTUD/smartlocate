@@ -11,7 +11,7 @@ pypandoc
 pdfplumber
 imageio
 pyzbar
-typeguard
+beartype
 mypy
 types-requests
 flake8
