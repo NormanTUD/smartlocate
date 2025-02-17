@@ -610,8 +610,7 @@ def detect_faces_and_name_them_when_needed(image_path: str, known_encodings: dic
     return None
 
 @beartype
-def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str, progress: Any = None) -> Optional[
-    tuple[list[str], bool]]:
+def recognize_persons_in_image(conn: sqlite3.Connection, image_path: str, progress: Any = None) -> Optional[tuple[list[str], bool]]:
     known_encodings = load_encodings(args.encoding_face_recognition_file)
 
     recognized_faces = detect_faces_and_name_them_when_needed(image_path, known_encodings,
@@ -1060,7 +1059,7 @@ def get_extension(path: str) -> str:
     return file_extension
 
 @beartype
-def traverse_document_files(conn: sqlite3.Connection, directory_path: str,abstract_only:bool=False) -> bool:
+def traverse_document_files(conn: sqlite3.Connection, directory_path: str, abstract_only: bool = False) -> bool:
     if not os.path.isdir(directory_path):
         console.print(f"[red]The provided path '{directory_path}' is not a valid directory.[/]")
         return False
@@ -1078,7 +1077,7 @@ def traverse_document_files(conn: sqlite3.Connection, directory_path: str,abstra
                 if any(file_name.lower().endswith(ext) for ext in allowed_document_extensions):
                     try:
                         status.update(f"[bold green]Found {get_extension(file_path)}-document {file_path}[/]")
-                        found_something = insert_document_if_not_exists(conn, file_path,abstract_only=abstract_only)
+                        found_something = insert_document_if_not_exists(conn, file_path, abstract_only=abstract_only)
 
                         if found_something:
                             console.print(f"[bold green]Indexed {file_path}[/]")
@@ -2512,7 +2511,7 @@ def main() -> None:
         model = None
 
         if args.documents or do_all:
-            traverse_document_files(conn, args.dir,args.abstracts_only)
+            traverse_document_files(conn, args.dir, args.abstracts_only)
 
         if args.yolo or do_all:
             try:
