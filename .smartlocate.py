@@ -667,7 +667,7 @@ def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
     try:
         with PIL.Image.open(input_path) as img:
             try:
-                exif = img._getexif()
+                exif = img.getexif()
                 if exif:
                     orientation_key = next(
                         key for key, val in ExifTags.TAGS.items() if val == "Orientation"
