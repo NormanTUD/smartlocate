@@ -36,6 +36,7 @@ try:
     from rich.prompt import Prompt
 
     import PIL
+    from PIL import ExifTags
     from sixel import converter
     import cv2
 
@@ -665,13 +666,32 @@ def ocr_img(img: str) -> Optional[list[str]]:
 def resize_image(input_path: str, output_path: str, max_size: int) -> bool:
     try:
         with PIL.Image.open(input_path) as img:
+            try:
+                exif = img._getexif()
+                if exif:
+                    orientation_key = next(
+                        key for key, val in ExifTags.TAGS.items() if val == "Orientation"
+                    )
+                    orientation = exif.get(orientation_key)
+
+                    rotations = {
+                        3: 180,
+                        6: 270,
+                        8: 90
+                    }
+                    if orientation in rotations:
+                        img = img.rotate(rotations[orientation], expand=True)
+            except Exception:
+                pass
+
             img.thumbnail((max_size, max_size))
             img.save(output_path)
 
             return True
     except (PIL.Image.DecompressionBombError, OSError) as e:
         console.print(
-            f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]")
+            f"[red]resize_image(input_path = {input_path}, output_path = {output_path}, max_size = {max_size}) failed with error: {e}[/]"
+        )
 
     return False
 
